@@ -1,0 +1,33 @@
+body {
+    background-color: #f8f9fa;
+    color: #333333;
+    line-height: 1.6;
+}
+
+.admin-body {
+    background-color: #f1f5f9;
+}
+
+.admin-topbar {
+    background: #1e293b;
+    color: #ffffff;
+    height: 60px;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+.logo-badge {
+    background-color: #1a202c;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
