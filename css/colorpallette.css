@@ -1,0 +1,32 @@
+:root {
+  /* Primary / Accent Colors */
+    --color-primary: #b85434;
+    --color-primary-hover: #9c4327;
+    --color-secondary: #c88142;
+    --color-secondary-hover: #a66e2f;
+    --color-accent-green: #596b58;
+
+    /* Neutral Backgrounds */
+    --color-bg-main: #f5f3ee;
+    --color-bg-card: #ffffff;
+    --color-bg-muted: #ece7de;
+    --color-bg-dark: #2b2623;
+    --color-bg-sidebar: #ffffff;
+
+    /* Text Colors */
+    --color-text-main: #2b2623;
+    --color-text-muted: #6b655f;
+    --color-text-light: #f5f3ee;
+
+    /* Status Badges & Accents */
+    --color-badge-success-bg: #e1ebe2;
+    --color-badge-success-text: #2f5332;
+    --color-badge-warning-bg: #f7ebe1;
+    --color-badge-warning-text: #925425;
+    --color-badge-info-bg: #e2ecf5;
+    --color-badge-info-text: #204d73;
+
+    /* Borders & Dividers */
+    --color-border: #e2ddd3;
+    --color-border-dark: #3e3733;
+}

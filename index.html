@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | SIMART RBR</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body class="admin-body">
+    <!-- Top Admin Bar -->
+    <header class="admin-topbar">
+        <div class="logo">
+            <span class="logo-badge">RBR</span>
+            <span class="logo-text">SIMART ADMIN</span>
+        </div>
+        <div class="admin-user-info">
+            <span>Halo, <strong>Skibidi Admin!</strong></span>
+            <a href="index.html" class="btn-sm btn-secondary">Keluar Panel</a>
+        </div>
+    </header>
+    <div class="admin-container"> 
+         <!--sidebar  -->
+        <aside class="admin-sidebar">
+            <nav class="sidebar-menu">
+                <button class="sidebar-btn active" data-tab="analytics">
+                    📊 Analytics Dashboard
+                </button>
+                <button class="sidebar-btn" data-tab="buku">
+                    📚 Master Data Buku
+                </button>
+                <button class="sidebar-btn" data-tab="pos">
+                    🛒 Kasir Penjualan (POS)
+                </button>
+                <button class="sidebar-btn" data-tab="reservasi">
+                    📅 Persetujuan Reservasi
+                </button>
+            </nav>
+        </aside>
+        <!-- pages -->
+        <main class="admin-content">
+            <!-- analytics -->
+             <section id="tab-analytics" class="tab-content active">
+                <h2>Dashboard Analitik</h2>
+                <p class="subtitle">Ringkasan performa penjualan dan reservasi Rumah Budaya Ratna.</p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Penjualan Buku</h4>
+                        <p class="stat-number">Rp 4.850.000</p>
+                        <span class="stat-trend positive">+12% bulan ini</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Buku Terjual</h4>
+                        <p class="stat-number">64</p>
+                        <span class="stat-trend neutral">Stok aman</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Pengajuan Reservasi</h4>
+                        <p class="stat-number">12</p>
+                        <span class="stat-trend warning">3 Perlu Review</span>
+                    </div>
+                </div>
+
+                <div class="admin-card margin-top-30">
+                    <h3>Aktivitas Transaksi Terbaru</h3>
+                    <table class="data-table margin-top-15">
+                        <thead>
+                            <tr>
+                                <th>ID Transaksi</th>
+                                <th>Tanggal</th>
+                                <th>Item</th>
+                                <th>Total</th>
+                                <th>Metode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#INV-202609-001</td>
+                                <td>10 Sep 2026</td>
+                                <td>Bumi Manusia (2), Sapiens (1)</td>
+                                <td>Rp 343.000</td>
+                                <td><span class="badge badge-success">Kasir</span></td>
+                            </tr>
+                            <tr>
+                                <td>#INV-202609-002</td>
+                                <td>10 Sep 2026</td>
+                                <td>Filosofi Teras (1)</td>
+                                <td>Rp 88.000</td>
+                                <td><span class="badge badge-info">Ambil di Tempat</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <!-- buku -->
+             <section id="tab-buku" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h2>Kelola Master Data Buku</h2>
+                        <p class="subtitle">Tambah, edit, atau hapus koleksi buku di toko.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-add-book">+ Tambah Buku Baru</button>
+                </div>
+
+                <div class="admin-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Judul Buku</th>
+                                <th>Penulis</th>
+                                <th>Kategori</th>
+                                <th>Harga</th>
+                                <th>Stok</th>
+                                <th>Kondisi</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-book-list">
+                            <tr>
+                                <td><strong>Bumi Manusia</strong></td>
+                                <td>Pramoedya Ananta Toer</td>
+                                <td>Sastra</td>
+                                <td>Rp 85.000</td>
+                                <td>12</td>
+                                <td><span class="badge">Baru</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Laskar Pelangi</strong></td>
+                                <td>Andrea Hirata</td>
+                                <td>Sastra</td>
+                                <td>Rp 50.000</td>
+                                <td>5</td>
+                                <td><span class="badge">Bekas</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <!-- kasir -->
+             <section id="tab-pos" class="tab-content">
+                <h2>POS Terminal Kasir</h2>
+                <p class="subtitle">Kelola pemesanan langsung dan cetak invoice transaksi.</p>
+
+                <div class="pos-layout margin-top-15">
+                    <!-- katalogr -->
+                    <div class="pos-catalog">
+                        <input type="text" class="search-input" placeholder="🔍 Scan barcode atau cari judul buku...">
+                        <div class="pos-items-grid">
+                            <div class="pos-item-card" onclick="addToCart('Bumi Manusia', 85000)">
+                                <h4>Bumi Manusia</h4>
+                                <p>Rp 85.000 | Stok: 12</p>
+                            </div>
+                            <div class="pos-item-card" onclick="addToCart('Laskar Pelangi', 50000)">
+                                <h4>Laskar Pelangi</h4>
+                                <p>Rp 50.000 | Stok: 5</p>
+                            </div>
+                            <div class="pos-item-card" onclick="addToCart('Sapiens', 95000)">
+                                <h4>Sapiens</h4>
+                                <p>Rp 95.000 | Stok: 8</p>
+                            </div>
+                            <div class="pos-item-card" onclick="addToCart('Filosofi Teras', 78000)">
+                                <h4>Filosofi Teras</h4>
+                                <p>Rp 78.000 | Stok: 15</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- keranjang -->
+                    <div class="pos-cart-panel">
+                        <h3>Keranjang Transaksi</h3>
+                        <span class="invoice-no">INV-202609-001</span>
+
+                        <div class="cart-table-wrapper margin-top-15">
+                            <table class="cart-table">
+                                <thead>
+                                    <tr>
+                                        <th>Buku</th>
+                                        <th>Qty</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cart-items">
+                                    <!-- dynamic itemss -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="cart-summary margin-top-15">
+                            <div class="summary-row">
+                                <span>Total Bayar:</span>
+                                <strong id="cart-total" class="total-price">Rp 0</strong>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary full-width margin-top-15 btn-large" onclick="processPayment()">
+                            🖨️ Proses Transaksi & Cetak Invoice
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <!-- reservation -->
+             <section id="tab-reservasi" class="tab-content">
+                <h2>Kelola Jadwal Reservasi Ruang</h2>
+                <p class="subtitle">Input data ruangan dan tanggal yang telah disetujui melalui WhatsApp agar muncul di kalender publik.</p>
+                <!-- input jadwal -->
+                <div class="admin-card margin-top-15">
+                    <h3>+ Input Jadwal Disetujui (via WA)</h3>
+                    <form id="form-admin-add-schedule" class="margin-top-15">
+                        <div class="form-group row-time">
+                            <div>
+                                <label>Pilih Ruangan</label>
+                                <select id="admin-ruangan" required>
+                                    <option value="Pendopo Utama">Pendopo Utama</option>
+                                    <option value="Ruang Diskusi & Lesehan">Ruang Diskusi & Lesehan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Tanggal Disetujui</label>
+                                <input type="date" id="admin-tanggal" required>
+                            </div>
+                        </div>
+                        <!-- time input stuff -->
+                        <div class="form-group row-time">
+                            <div>
+                                <label>Jam Mulai</label>
+                                <input type="time" id="admin-jam-mulai" required>
+                            </div>
+                            <div>
+                                <label>Jam Selesai</label>
+                                <input type="time" id="admin-jam-selesai" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nama Pemohon / Komunitas / Agenda</label>
+                            <input type="text" id="admin-pemohon" placeholder="Contoh: Komunitas Sastra Malang (Workshop Puisi)" required>
+                        </div>
+
+                        <button type="submit" class="btn-primary">+ Plot ke Kalender Web</button>
+                    </form>
+                </div>
+                <!-- dafra ruangan terisi -->
+                <div class="admin-card margin-top-30">
+                    <h3>Daftar Ruangan Terisi / Terjadwal</h3>
+                    <table class="data-table margin-top-15">
+                        <thead>
+                            <tr>
+                                <th>Ruangan</th>
+                                <th>Tanggal</th>
+                                <th>Waktu (Mulai - Selesai)</th>
+                                <th>Pemohon / Agenda</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-schedule-list">
+                            <tr>
+                                <td><strong>Pendopo Utama</strong></td>
+                                <td>2026-09-15</td>
+                                <td>10:00 - 14:00 WIB</td>
+                                <td>Komunitas Sastra Malang (Workshop Puisi)</td>
+                                <td>
+                                    <button class="btn-sm btn-danger" onclick="this.closest('tr').remove()">Hapus Jadwal</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="js/admin.js"></script>
+</body>
