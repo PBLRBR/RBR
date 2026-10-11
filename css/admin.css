@@ -5,6 +5,7 @@
     --color-secondary: #c88142;
     --color-secondary-hover: #a66e2f;
     --color-accent-green: #596b58;
+    --color-accent-green-hover: #485847;
 
     /* Neutral Backgrounds */
     --color-bg-main: #f5f3ee;
@@ -25,6 +26,8 @@
     --color-badge-warning-text: #925425;
     --color-badge-info-bg: #e2ecf5;
     --color-badge-info-text: #204d73;
+    --color-badge-danger-bg: #f6e1dc;
+    --color-badge-danger-text: #8a2f1b;
 
     /* Borders & Dividers */
     --color-border: #e2ddd3;
@@ -57,6 +60,8 @@ body.admin-body {
 .margin-top-15 { margin-top: 15px; }
 .margin-top-30 { margin-top: 30px; }
 .full-width { width: 100%; }
+
+[hidden] { display: none !important; }
 
 /* topbar */
 .admin-topbar {
@@ -102,6 +107,10 @@ body.admin-body {
 }
 
 .sidebar-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     text-align: left;
     padding: 14px 20px;
     border: none;
@@ -120,10 +129,23 @@ body.admin-body {
     border-left-color: var(--color-primary);
 }
 
+.nav-count {
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 22px;
+    text-align: center;
+}
+
 /* contents / tab layout */
 .admin-content {
     flex: 1;
     padding: 30px;
+    min-width: 0;
 }
 
 .tab-content {
@@ -203,6 +225,7 @@ body.admin-body {
     font-weight: bold;
     background: var(--color-bg-muted);
     color: var(--color-text-main);
+    white-space: nowrap;
 }
 
 .badge-success {
@@ -218,6 +241,11 @@ body.admin-body {
 .badge-info {
     background: var(--color-badge-info-bg);
     color: var(--color-badge-info-text);
+}
+
+.badge-danger {
+    background: var(--color-badge-danger-bg);
+    color: var(--color-badge-danger-text);
 }
 
 /* buttons / forms */
@@ -358,9 +386,227 @@ body.admin-body {
     color: var(--color-primary);
 }
 
+/* reservasi: ringkasan & filter */
+.rsv-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.rsv-summary-item {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.rsv-summary-num {
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.rsv-summary-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.rsv-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.rsv-filter {
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rsv-filter:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.rsv-filter.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text-light);
+}
+
+/* reservasi: kartu permintaan */
+.rsv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rsv-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-secondary);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.rsv-card.rsv-approved { border-left-color: var(--color-accent-green); }
+.rsv-card.rsv-rejected { border-left-color: var(--color-badge-danger-text); }
+
+.rsv-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.rsv-card-head h3 {
+    font-size: 1.1rem;
+}
+
+.rsv-by {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.rsv-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px 20px;
+    margin-top: 15px;
+    padding: 14px 16px;
+    background: var(--color-bg-main);
+    border-radius: 6px;
+}
+
+.rsv-details dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+}
+
+.rsv-details dd {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.rsv-notes {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.rsv-warning {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--color-badge-warning-bg);
+    color: var(--color-badge-warning-text);
+    font-size: 0.85rem;
+}
+
+.rsv-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.btn-approve {
+    background: var(--color-accent-green);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-approve:hover {
+    background: var(--color-accent-green-hover);
+}
+
+.btn-outline-primary {
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--color-bg-main);
+}
+
+/* popup edit */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(43, 38, 35, 0.55);
+}
+
+.popup-box {
+    width: 100%;
+    max-width: 560px;
+    max-height: 100%;
+    overflow-y: auto;
+    background: var(--color-bg-card);
+    border-radius: 10px;
+    padding: 24px;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.popup-close {
+    border: none;
+    background: none;
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.popup-close:hover {
+    color: var(--color-text-main);
+}
+
+.popup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 /* skibidi */
 @media (max-width: 850px) {
     .pos-layout {
         grid-template-columns: 1fr;
+    }
+
+    .rsv-card-head {
+        flex-direction: column;
+    }
+
+    .rsv-actions {
+        justify-content: flex-start;
     }
 }
