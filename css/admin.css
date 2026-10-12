@@ -414,14 +414,16 @@ body.admin-body {
     color: var(--color-text-muted);
 }
 
-.rsv-filters {
+.rsv-filters,
+.period-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 20px;
 }
 
-.rsv-filter {
+.rsv-filter,
+.period-filter {
     padding: 8px 16px;
     border: 1px solid var(--color-border);
     border-radius: 20px;
@@ -432,12 +434,14 @@ body.admin-body {
     transition: all 0.2s;
 }
 
-.rsv-filter:hover {
+.rsv-filter:hover,
+.period-filter:hover {
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
-.rsv-filter.active {
+.rsv-filter.active,
+.period-filter.active {
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: var(--color-text-light);
@@ -548,7 +552,17 @@ body.admin-body {
     background: var(--color-bg-main);
 }
 
-/* popup edit */
+.label-optional {
+    font-weight: 400;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+/* popup (edit reservasi & tambah buku) */
 .popup-overlay {
     position: fixed;
     inset: 0;

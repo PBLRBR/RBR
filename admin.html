@@ -42,8 +42,18 @@
         <main class="admin-content">
             <!-- analytics -->
              <section id="tab-analytics" class="tab-content active">
-                <h2>Dashboard Analitik</h2>
-                <p class="subtitle">Ringkasan performa penjualan dan reservasi Rumah Budaya Ratna.</p>
+                <div class="section-header">
+                    <div>
+                        <h2>Dashboard Analitik</h2>
+                        <p class="subtitle">Ringkasan performa penjualan, reservasi, dan kunjungan Rumah Budaya Ratna.</p>
+                    </div>
+                    <div class="period-filters" aria-label="Filter periode analitik">
+                        <button class="period-filter">Hari Ini</button>
+                        <button class="period-filter">7 Hari Terakhir</button>
+                        <button class="period-filter active">Bulan Ini</button>
+                        <button class="period-filter">Tahun Ini</button>
+                    </div>
+                </div>
 
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -60,6 +70,11 @@
                         <h4>Pengajuan Reservasi</h4>
                         <p class="stat-number">12</p>
                         <span class="stat-trend warning">3 Perlu Review</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Pengunjung</h4>
+                        <p class="stat-number">87</p>
+                        <span class="stat-trend neutral">62 via QR · 25 buku tamu manual</span>
                     </div>
                 </div>
 
@@ -144,6 +159,76 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- popup tambah buku -->
+                <div class="popup-overlay" id="book-popup" hidden>
+                    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="book-popup-title">
+                        <div class="popup-header">
+                            <h3 id="book-popup-title">Tambah Buku Baru</h3>
+                            <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+                        </div>
+
+                        <form id="form-add-book">
+                            <div class="form-group">
+                                <label for="book-judul">Judul Buku</label>
+                                <input type="text" id="book-judul" placeholder="Contoh: Bumi Manusia">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="book-penulis">Penulis</label>
+                                <input type="text" id="book-penulis" placeholder="Contoh: Pramoedya Ananta Toer">
+                            </div>
+
+                            <div class="form-group row-time">
+                                <div>
+                                    <label for="book-kategori">Kategori</label>
+                                    <select id="book-kategori">
+                                        <option value="">Pilih kategori</option>
+                                        <option>Sastra</option>
+                                        <option>Sejarah</option>
+                                        <option>Filsafat</option>
+                                        <option>Sains</option>
+                                        <option>Anak</option>
+                                        <option>Lainnya</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="book-kondisi">Kondisi</label>
+                                    <select id="book-kondisi">
+                                        <option>Baru</option>
+                                        <option>Bekas</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row-time">
+                                <div>
+                                    <label for="book-harga">Harga (Rp)</label>
+                                    <input type="number" id="book-harga" min="0" placeholder="85000">
+                                </div>
+                                <div>
+                                    <label for="book-stok">Stok</label>
+                                    <input type="number" id="book-stok" min="0" placeholder="10">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="book-deskripsi">Deskripsi Singkat <span class="label-optional">(opsional)</span></label>
+                                <textarea id="book-deskripsi" rows="3" placeholder="Sinopsis atau catatan kondisi buku"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="book-cover">Foto Sampul <span class="label-optional">(opsional)</span></label>
+                                <input type="file" id="book-cover" accept="image/*">
+                            </div>
+
+                            <div class="popup-actions">
+                                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
+                                <button type="button" class="btn-primary">Simpan Buku</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </section>
             <!-- kasir -->
@@ -388,7 +473,7 @@
                     <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="rsv-popup-title">
                         <div class="popup-header">
                             <h3 id="rsv-popup-title">Edit Permintaan Reservasi</h3>
-                            <button type="button" class="popup-close" id="rsv-popup-close" aria-label="Tutup">✕</button>
+                            <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
                         </div>
 
                         <form id="form-edit-reservation">
@@ -433,7 +518,7 @@
                             </div>
 
                             <div class="popup-actions">
-                                <button type="button" class="btn-secondary" id="rsv-popup-cancel">Batal</button>
+                                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
                                 <button type="button" class="btn-secondary btn-outline-primary">Simpan Perubahan</button>
                                 <button type="button" class="btn-primary">Simpan & Setujui</button>
                             </div>
