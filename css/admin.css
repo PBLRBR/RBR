@@ -91,6 +91,10 @@ body.admin-body {
     width: auto;
 }
 
+.logo span {
+    margin-left: 10px;
+}
+
 .logo-badge {
     background-color: var(--color-primary);
     color: var(--color-text-light);
