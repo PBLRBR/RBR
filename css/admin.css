@@ -75,11 +75,20 @@ body.admin-body {
     border-bottom: 1px solid var(--color-border-dark);
 }
 
+.admin-topbar span {
+    margin-right:30px;
+}
+
 .logo {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: bold;
+}
+
+.logo img {
+    height: 40px;
+    width: auto;
 }
 
 .logo-badge {
