@@ -61,6 +61,8 @@ body.admin-body {
 .margin-top-30 { margin-top: 30px; }
 .full-width { width: 100%; }
 
+[hidden] { display: none !important; }
+
 /* topbar */
 .admin-topbar {
     background: var(--color-bg-dark);
@@ -73,11 +75,24 @@ body.admin-body {
     border-bottom: 1px solid var(--color-border-dark);
 }
 
+.admin-topbar span {
+    margin-right:30px;
+}
+
 .logo {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: bold;
+}
+
+.logo img {
+    height: 40px;
+    width: auto;
+}
+
+.logo span {
+    margin-left: 10px;
 }
 
 .logo-badge {
@@ -105,6 +120,10 @@ body.admin-body {
 }
 
 .sidebar-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     text-align: left;
     padding: 14px 20px;
     border: none;
@@ -123,10 +142,23 @@ body.admin-body {
     border-left-color: var(--color-primary);
 }
 
+.nav-count {
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 22px;
+    text-align: center;
+}
+
 /* contents / tab layout */
 .admin-content {
     flex: 1;
     padding: 30px;
+    min-width: 0;
 }
 
 .tab-content {
@@ -206,6 +238,7 @@ body.admin-body {
     font-weight: bold;
     background: var(--color-bg-muted);
     color: var(--color-text-main);
+    white-space: nowrap;
 }
 
 .badge-success {
@@ -221,6 +254,11 @@ body.admin-body {
 .badge-info {
     background: var(--color-badge-info-bg);
     color: var(--color-badge-info-text);
+}
+
+.badge-danger {
+    background: var(--color-badge-danger-bg);
+    color: var(--color-badge-danger-text);
 }
 
 /* buttons / forms */
@@ -311,59 +349,496 @@ body.admin-body {
     gap: 10px;
 }
 
-/* pos */
+/* pos layout & catalog */
 .pos-layout {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 380px;
     gap: 20px;
+}
+
+.pos-categories {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.pos-cat-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.pos-cat-btn:hover, .pos-cat-btn.active {
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    border-color: var(--color-primary);
 }
 
 .pos-items-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 15px;
-    margin-top: 15px;
 }
 
 .pos-item-card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 15px;
+    border-radius: 8px;
+    padding: 14px;
     cursor: pointer;
-    transition: border-color 0.2s, transform 0.1s;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .pos-item-card:hover {
     border-color: var(--color-primary);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.pos-item-badge {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--color-bg-muted);
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.pos-item-card h4 {
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    color: var(--color-text-main);
+}
+
+.pos-item-author {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+}
+
+.pos-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px dashed var(--color-border);
+    padding-top: 8px;
+}
+
+.pos-item-price {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 0.95rem;
+}
+
+.pos-item-stock {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* keranjang panel */
 .pos-cart-panel {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.invoice-no {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-badge-warning-bg);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.form-group-sm label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+}
+
+.form-control-sm {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-bg-main);
+    color: var(--color-text-main);
+}
+
+.cart-table-wrapper {
+    max-height: 240px;
+    overflow-y: auto;
 }
 
 .cart-table {
     width: 100%;
-    font-size: 0.85rem;
+    border-collapse: collapse;
 }
 
-.cart-table th, .cart-table td {
-    padding: 8px 0;
+.cart-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-muted);
+    padding-bottom: 8px;
     border-bottom: 1px solid var(--color-border);
 }
 
+.cart-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+.cart-item-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--color-text-main);
+}
+
+.cart-item-price {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--color-bg-main);
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+}
+
+.qty-btn {
+    border: none;
+    background: none;
+    font-weight: bold;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: var(--color-text-main);
+}
+
+.qty-btn:hover {
+    background: var(--color-border);
+}
+
+.qty-val {
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 16px;
+    text-align: center;
+}
+
+.btn-del-item {
+    border: none;
+    background: none;
+    color: var(--color-badge-danger-text);
+    cursor: pointer;
+    font-size: 0.9rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-del-item:hover {
+    opacity: 1;
+}
+
+.cart-summary {
+    background: var(--color-bg-main);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+}
+
+.summary-row.total-row {
+    margin-bottom: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-main);
+}
+
 .total-price {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     color: var(--color-primary);
+}
+
+/* reservasi: ringkasan & filter */
+.rsv-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.rsv-summary-item {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.rsv-summary-num {
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.rsv-summary-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.rsv-filters,
+.period-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.rsv-filter,
+.period-filter {
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rsv-filter:hover,
+.period-filter:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.rsv-filter.active,
+.period-filter.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text-light);
+}
+
+/* reservasi: kartu permintaan */
+.rsv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rsv-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-secondary);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.rsv-card.rsv-approved { border-left-color: var(--color-accent-green); }
+.rsv-card.rsv-rejected { border-left-color: var(--color-badge-danger-text); }
+
+.rsv-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.rsv-card-head h3 {
+    font-size: 1.1rem;
+}
+
+.rsv-by {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.rsv-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px 20px;
+    margin-top: 15px;
+    padding: 14px 16px;
+    background: var(--color-bg-main);
+    border-radius: 6px;
+}
+
+.rsv-details dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+}
+
+.rsv-details dd {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.rsv-notes {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.rsv-warning {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--color-badge-warning-bg);
+    color: var(--color-badge-warning-text);
+    font-size: 0.85rem;
+}
+
+.rsv-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.btn-approve {
+    background: var(--color-accent-green);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-approve:hover {
+    background: var(--color-accent-green-hover);
+}
+
+.btn-outline-primary {
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--color-bg-main);
+}
+
+.label-optional {
+    font-weight: 400;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+/* popup (edit reservasi & tambah buku) */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(43, 38, 35, 0.55);
+}
+
+.popup-box {
+    width: 100%;
+    max-width: 560px;
+    max-height: 100%;
+    overflow-y: auto;
+    background: var(--color-bg-card);
+    border-radius: 10px;
+    padding: 24px;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.popup-close {
+    border: none;
+    background: none;
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.popup-close:hover {
+    color: var(--color-text-main);
+}
+
+.popup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 /* skibidi */
 @media (max-width: 850px) {
     .pos-layout {
         grid-template-columns: 1fr;
+    }
+
+    .rsv-card-head {
+        flex-direction: column;
+    }
+
+    .rsv-actions {
+        justify-content: flex-start;
     }
 }
