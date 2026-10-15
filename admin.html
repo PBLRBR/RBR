@@ -11,9 +11,8 @@
     <!-- Top Admin Bar -->
     <header class="admin-topbar">
         <div class="logo">
-            <img src="images/rbr.png" alt="logo">
-            <!-- <span class="logo-badge">RBR</span> -->
-            <span class="logo-text">ADMIN</span>
+            <span class="logo-badge">RBR</span>
+            <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
             <span>Halo, <strong>Skibidi Admin!</strong></span>
@@ -92,20 +91,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>#INV-202609-001</td>
-                                <td>10 Sep 2026</td>
-                                <td>Bumi Manusia (2), Sapiens (1)</td>
-                                <td>Rp 343.000</td>
-                                <td><span class="badge badge-success">Kasir</span></td>
-                            </tr>
-                            <tr>
-                                <td>#INV-202609-001</td>
-                                <td>10 Sep 2026</td>
-                                <td>Bumi Manusia (2), Sapiens (1)</td>
-                                <td>Rp 343.000</td>
-                                <td><span class="badge badge-success">Kasir</span></td>
-                            </tr>
                             <tr>
                                 <td>#INV-202609-001</td>
                                 <td>10 Sep 2026</td>
@@ -247,73 +232,149 @@
                 </div>
             </section>
             <!-- kasir -->
-            <section id="tab-pos" class="tab-content">
+             <section id="tab-pos" class="tab-content">
                 <div class="section-header">
                     <div>
                         <h2>POS Terminal Kasir</h2>
-                        <p class="subtitle">Kelola pemesanan langsung, atur keranjang, dan cetak invoice transaksi.</p>
+                        <p class="subtitle">Pilih buku dari katalog, atur jumlahnya di keranjang, lalu proses pembayaran dan cetak invoice.</p>
+                    </div>
+                    <div class="pos-session">
+                        <span>Kasir: <strong>Skibidi Admin</strong></span>
+                        <span>Kamis, 15 Okt 2026</span>
                     </div>
                 </div>
 
-                <div class="pos-layout margin-top-15">
+                <div class="pos-layout">
                     <!-- katalog -->
                     <div class="pos-catalog">
-                        <div class="pos-search-bar">
-                            <input type="text" class="search-input" placeholder="🔍 Scan barcode atau cari judul/penulis buku...">
-                        </div>
-                        
-                        <!-- Filter Kategori Cepat -->
-                        <div class="pos-categories margin-top-15">
-                            <button class="pos-cat-btn active">Semua</button>
-                            <button class="pos-cat-btn">Sastra</button>
-                            <button class="pos-cat-btn">Sejarah</button>
-                            <button class="pos-cat-btn">Filsafat</button>
-                            <button class="pos-cat-btn">Sains</button>
+                        <input type="text" class="search-input" placeholder="🔍 Cari judul...">
+
+                        <div class="pos-categories">
+                            <button class="pos-cat active">Semua</button>
+                            <button class="pos-cat">Sastra</button>
+                            <button class="pos-cat">Sejarah</button>
+                            <button class="pos-cat">Filsafat</button>
+                            <button class="pos-cat">Sains</button>
+                            <button class="pos-cat">Lainnya</button>
                         </div>
 
-                        <div class="pos-items-grid margin-top-15">
-                            <div class="pos-item-card" onclick="addToCart('Bumi Manusia', 85000)">
-                                <span class="pos-item-badge">Sastra</span>
-                                <div class="pos-item-info">
-                                    <h4>Bumi Manusia</h4>
-                                    <p class="pos-item-author">Pramoedya Ananta Toer</p>
-                                    <div class="pos-item-footer">
-                                        <span class="pos-item-price">Rp 85.000</span>
-                                        <span class="pos-item-stock">Stok: 12</span>
+                        <p class="pos-catalog-meta">Menampilkan 8 buku · klik buku untuk menambahkan ke keranjang</p>
+
+                        <div class="pos-items-grid">
+                            <div class="pos-item-card in-cart">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-red"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Bumi Manusia</h4>
+                                        <p class="pos-item-author">Pramoedya Ananta Toer</p>
+                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 12</span></div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="pos-item-card" onclick="addToCart('Laskar Pelangi', 50000)">
-                                <span class="pos-item-badge">Sastra</span>
-                                <div class="pos-item-info">
-                                    <h4>Laskar Pelangi</h4>
-                                    <p class="pos-item-author">Andrea Hirata</p>
-                                    <div class="pos-item-footer">
-                                        <span class="pos-item-price">Rp 50.000</span>
-                                        <span class="pos-item-stock">Stok: 5</span>
-                                    </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 85.000</span>
+                                    <span class="in-cart-tag">2 di keranjang</span>
                                 </div>
                             </div>
-                            <div class="pos-item-card" onclick="addToCart('Sapiens', 95000)">
-                                <span class="pos-item-badge">Sejarah</span>
-                                <div class="pos-item-info">
-                                    <h4>Sapiens</h4>
-                                    <p class="pos-item-author">Yuval Noah Harari</p>
-                                    <div class="pos-item-footer">
-                                        <span class="pos-item-price">Rp 95.000</span>
-                                        <span class="pos-item-stock">Stok: 8</span>
+
+                            <div class="pos-item-card in-cart">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-red"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Laskar Pelangi</h4>
+                                        <p class="pos-item-author">Andrea Hirata</p>
+                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock">Stok 5</span></div>
                                     </div>
                                 </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 50.000</span>
+                                    <span class="in-cart-tag">1 di keranjang</span>
+                                </div>
                             </div>
-                            <div class="pos-item-card" onclick="addToCart('Filosofi Teras', 78000)">
-                                <span class="pos-item-badge">Filsafat</span>
-                                <div class="pos-item-info">
-                                    <h4>Filosofi Teras</h4>
-                                    <p class="pos-item-author">Henry Manampiring</p>
-                                    <div class="pos-item-footer">
-                                        <span class="pos-item-price">Rp 78.000</span>
-                                        <span class="pos-item-stock">Stok: 15</span>
+
+                            <div class="pos-item-card in-cart">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-amber"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Sapiens</h4>
+                                        <p class="pos-item-author">Yuval Noah Harari</p>
+                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 8</span></div>
                                     </div>
+                                </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 95.000</span>
+                                    <span class="in-cart-tag">1 di keranjang</span>
+                                </div>
+                            </div>
+
+                            <div class="pos-item-card">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-green"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Filosofi Teras</h4>
+                                        <p class="pos-item-author">Henry Manampiring</p>
+                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 15</span></div>
+                                    </div>
+                                </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 78.000</span>
+                                </div>
+                            </div>
+
+                            <div class="pos-item-card">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-red"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Cantik Itu Luka</h4>
+                                        <p class="pos-item-author">Eka Kurniawan</p>
+                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock low">Stok 2</span></div>
+                                    </div>
+                                </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 65.000</span>
+                                    <span class="stock-pill low">Stok menipis</span>
+                                </div>
+                            </div>
+
+                            <div class="pos-item-card">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-brown"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Atomic Habits</h4>
+                                        <p class="pos-item-author">James Clear</p>
+                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 6</span></div>
+                                    </div>
+                                </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 110.000</span>
+                                </div>
+                            </div>
+
+                            <div class="pos-item-card">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-blue"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Cosmos</h4>
+                                        <p class="pos-item-author">Carl Sagan</p>
+                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock">Stok 3</span></div>
+                                    </div>
+                                </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 70.000</span>
+                                </div>
+                            </div>
+
+                            <div class="pos-item-card out-of-stock">
+                                <div class="pos-item-main">
+                                    <span class="book-icon bk-red"></span>
+                                    <div class="pos-item-info">
+                                        <h4>Negeri 5 Menara</h4>
+                                        <p class="pos-item-author">Ahmad Fuadi</p>
+                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock low">Stok 0</span></div>
+                                    </div>
+                                </div>
+                                <div class="pos-item-foot">
+                                    <span class="pos-item-price">Rp 45.000</span>
+                                    <span class="stock-pill empty">Habis</span>
                                 </div>
                             </div>
                         </div>
@@ -321,63 +382,102 @@
 
                     <!-- keranjang -->
                     <div class="pos-cart-panel">
-                        <div class="cart-header">
-                            <h3>Keranjang Transaksi</h3>
-                            <span class="invoice-no">#INV-202609-001</span>
-                        </div>
-
-                        <!-- Form Detail Pembeli -->
-                        <div class="cart-form margin-top-15">
-                            <div class="form-group-sm">
-                                <label for="pos-customer-name">Pelanggan</label>
-                                <input type="text" id="pos-customer-name" class="form-control-sm" value="Pelanggan Umum">
+                        <div class="cart-head">
+                            <div>
+                                <h3>Keranjang Transaksi</h3>
+                                <span class="invoice-no">INV-202610-014</span>
                             </div>
-                            <div class="form-group-sm margin-top-15">
-                                <label for="pos-payment-method">Metode Pembayaran</label>
-                                <select id="pos-payment-method" class="form-control-sm">
-                                    <option value="cash">Cash</option>
-                                    <option value="qris">QRIS</option>
-                                    <option value="transfer"></option>
-                                </select>
+                            <button class="btn-clear">Kosongkan</button>
+                        </div>
+
+                        <div class="cart-list" id="cart-items">
+                            <!-- dummy item checkout -->
+                            <div class="cart-item">
+                                <span class="book-icon book-icon-sm bk-red"></span>
+                                <div class="cart-item-info">
+                                    <div class="cart-item-name">Bumi Manusia</div>
+                                    <div class="cart-item-meta">Rp 85.000 · Baru</div>
+                                    <div class="cart-item-row">
+                                        <div class="qty-stepper">
+                                            <button type="button" aria-label="Kurangi">−</button>
+                                            <span>2</span>
+                                            <button type="button" aria-label="Tambah">+</button>
+                                        </div>
+                                        <span class="cart-item-sub">Rp 170.000</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="cart-item-remove" aria-label="Hapus item">✕</button>
+                            </div>
+
+                            <div class="cart-item">
+                                <span class="book-icon book-icon-sm bk-red"></span>
+                                <div class="cart-item-info">
+                                    <div class="cart-item-name">Laskar Pelangi</div>
+                                    <div class="cart-item-meta">Rp 50.000 · Bekas</div>
+                                    <div class="cart-item-row">
+                                        <div class="qty-stepper">
+                                            <button type="button" aria-label="Kurangi">−</button>
+                                            <span>1</span>
+                                            <button type="button" aria-label="Tambah">+</button>
+                                        </div>
+                                        <span class="cart-item-sub">Rp 50.000</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="cart-item-remove" aria-label="Hapus item">✕</button>
+                            </div>
+
+                            <div class="cart-item">
+                                <span class="book-icon book-icon-sm bk-amber"></span>
+                                <div class="cart-item-info">
+                                    <div class="cart-item-name">Sapiens</div>
+                                    <div class="cart-item-meta">Rp 95.000 · Baru</div>
+                                    <div class="cart-item-row">
+                                        <div class="qty-stepper">
+                                            <button type="button" aria-label="Kurangi">−</button>
+                                            <span>1</span>
+                                            <button type="button" aria-label="Tambah">+</button>
+                                        </div>
+                                        <span class="cart-item-sub">Rp 95.000</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="cart-item-remove" aria-label="Hapus item">✕</button>
                             </div>
                         </div>
 
-                        <!-- Tabel Item Keranjang Dummy -->
-                        <div class="cart-table-wrapper margin-top-15">
-                            <table class="cart-table">
-                                <thead>
-                                    <tr>
-                                        <th>Buku</th>
-                                        <th style="text-align: center;">Qty</th>
-                                        <th style="text-align: right;">Subtotal</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cart-items">
-                                    <!-- Rendered via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Ringkasan Pembayaran -->
-                        <div class="cart-summary margin-top-15">
+                        <div class="cart-summary">
                             <div class="summary-row">
-                                <span>Subtotal</span>
-                                <span id="cart-subtotal">Rp 265.000</span>
+                                <span>Subtotal (4 buku)</span>
+                                <span>Rp 315.000</span>
                             </div>
-                            <div class="summary-row">
-                                <span>Diskon</span>
-                                <span>Rp 0</span>
-                            </div>
-                            <div class="summary-row total-row margin-top-15">
+                            <div class="summary-row summary-total">
                                 <span>Total Bayar</span>
-                                <strong id="cart-total" class="total-price">Rp 265.000</strong>
+                                <strong id="cart-total" class="total-price">Rp 315.000</strong>
                             </div>
                         </div>
 
-                        <button class="btn-primary full-width margin-top-15 btn-large" onclick="processPayment()">
-                            Proses Transaksi &amp; Cetak Invoice
-                        </button>
+                        <div class="cart-payment">
+                            <span class="cart-label">Metode pembayaran</span>
+                            <div class="pay-methods">
+                                <button type="button" class="pay-method active">💵 Tunai</button>
+                                <button type="button" class="pay-method">📱 QRIS</button>
+                            </div>
+
+                            <div class="cash-box">
+                                <label for="cash-received">Uang diterima</label>
+                                <div class="cash-input">
+                                    <span class="cash-prefix">Rp</span>
+                                    <input type="text" id="cash-received" value="350.000">
+                                </div>
+                                <div class="cash-change">
+                                    <span>Kembalian</span>
+                                    <strong>Rp 35.000</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cart-actions">
+                            <button class="btn-primary full-width btn-large">🖨️ Proses Transaksi &amp; Cetak Invoice</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -619,3 +719,4 @@
     </div>
     <script src="js/admin.js"></script>
 </body>
+</html>
