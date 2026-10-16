@@ -11,7 +11,7 @@
     <!-- Top Admin Bar -->
     <header class="admin-topbar">
         <div class="logo">
-            <span class="logo-badge">RBR</span>
+            <img src="images/rbr.png" alt="Logo" class="logo-img">
             <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
@@ -120,6 +120,10 @@
                 </div>
 
                 <div class="admin-card">
+                    <div class="table-toolbar">
+                        <input type="text" class="search-input" placeholder="🔍 Cari judul atau penulis">
+                        <span class="table-count">Menampilkan 8 buku</span>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -151,6 +155,78 @@
                                 <td>Sastra</td>
                                 <td>Rp 50.000</td>
                                 <td>5</td>
+                                <td><span class="badge">Bekas</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sapiens</strong></td>
+                                <td>Yuval Noah Harari</td>
+                                <td>Sejarah</td>
+                                <td>Rp 95.000</td>
+                                <td>8</td>
+                                <td><span class="badge">Baru</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Filosofi Teras</strong></td>
+                                <td>Henry Manampiring</td>
+                                <td>Filsafat</td>
+                                <td>Rp 78.000</td>
+                                <td>15</td>
+                                <td><span class="badge">Baru</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cantik Itu Luka</strong></td>
+                                <td>Eka Kurniawan</td>
+                                <td>Sastra</td>
+                                <td>Rp 65.000</td>
+                                <td><span class="stock-low">2</span></td>
+                                <td><span class="badge">Bekas</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Atomic Habits</strong></td>
+                                <td>James Clear</td>
+                                <td>Lainnya</td>
+                                <td>Rp 110.000</td>
+                                <td>6</td>
+                                <td><span class="badge">Baru</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cosmos</strong></td>
+                                <td>Carl Sagan</td>
+                                <td>Sains</td>
+                                <td>Rp 70.000</td>
+                                <td>3</td>
+                                <td><span class="badge">Bekas</span></td>
+                                <td>
+                                    <button class="btn-sm btn-secondary">Edit</button>
+                                    <button class="btn-sm btn-danger">Hapus</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Negeri 5 Menara</strong></td>
+                                <td>Ahmad Fuadi</td>
+                                <td>Sastra</td>
+                                <td>Rp 45.000</td>
+                                <td><span class="stock-out">Habis</span></td>
                                 <td><span class="badge">Bekas</span></td>
                                 <td>
                                     <button class="btn-sm btn-secondary">Edit</button>
@@ -247,16 +323,7 @@
                 <div class="pos-layout">
                     <!-- katalog -->
                     <div class="pos-catalog">
-                        <input type="text" class="search-input" placeholder="🔍 Cari judul...">
-
-                        <div class="pos-categories">
-                            <button class="pos-cat active">Semua</button>
-                            <button class="pos-cat">Sastra</button>
-                            <button class="pos-cat">Sejarah</button>
-                            <button class="pos-cat">Filsafat</button>
-                            <button class="pos-cat">Sains</button>
-                            <button class="pos-cat">Lainnya</button>
-                        </div>
+                        <input type="text" class="search-input" placeholder="🔍 Cari judul atau penulis">
 
                         <p class="pos-catalog-meta">Menampilkan 8 buku · klik buku untuk menambahkan ke keranjang</p>
 
@@ -331,7 +398,6 @@
                                 </div>
                                 <div class="pos-item-foot">
                                     <span class="pos-item-price">Rp 65.000</span>
-                                    <span class="stock-pill low">Stok menipis</span>
                                 </div>
                             </div>
 
