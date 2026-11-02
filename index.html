@@ -11,7 +11,7 @@
     <!-- Top Admin Bar -->
     <header class="admin-topbar">
         <div class="logo">
-            <img src="images/rbr.png" alt="Logo" class="logo-img">
+            <img src="img/logo-dummy.svg" alt="Logo" class="logo-img">
             <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
@@ -27,7 +27,7 @@
                     📊 Analytics Dashboard
                 </button>
                 <button class="sidebar-btn" data-tab="buku">
-                    📚 Master Data Buku
+                    🗂️ Master Data
                 </button>
                 <button class="sidebar-btn" data-tab="pos">
                     🛒 Kasir Penjualan (POS)
@@ -113,16 +113,23 @@
              <section id="tab-buku" class="tab-content">
                 <div class="section-header">
                     <div>
-                        <h2>Kelola Master Data Buku</h2>
-                        <p class="subtitle">Tambah, edit, atau hapus koleksi buku di toko.</p>
+                        <h2>Kelola Master Data</h2>
+                        <p class="subtitle">Atur koleksi buku di toko dan ruangan yang dapat direservasi.</p>
                     </div>
-                    <button class="btn-primary" id="btn-add-book">+ Tambah Buku Baru</button>
                 </div>
 
+                <div class="master-tabs" role="tablist">
+                    <button type="button" class="master-tab active" data-master="buku" role="tab">📚 Buku <span class="master-tab-count">8</span></button>
+                    <button type="button" class="master-tab" data-master="ruangan" role="tab">🏛️ Ruangan Reservasi <span class="master-tab-count">3</span></button>
+                </div>
+
+                <!-- master buku -->
+                <div class="master-panel active" id="master-buku">
                 <div class="admin-card">
                     <div class="table-toolbar">
                         <input type="text" class="search-input" placeholder="🔍 Cari judul atau penulis">
                         <span class="table-count">Menampilkan 8 buku</span>
+                        <button class="btn-primary" id="btn-add-book">+ Tambah Buku Baru</button>
                     </div>
                     <table class="data-table">
                         <thead>
@@ -235,6 +242,133 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                </div>
+
+                <!-- master ruangan -->
+                <div class="master-panel" id="master-ruangan">
+                    <div class="admin-card">
+                        <div class="table-toolbar">
+                            <input type="text" class="search-input" placeholder="🔍 Cari nama ruangan">
+                            <span class="table-count">Menampilkan 3 ruangan</span>
+                            <button class="btn-primary" id="btn-add-room">+ Tambah Ruangan Baru</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Ruangan</th>
+                                    <th>Kapasitas</th>
+                                    <th>Fasilitas</th>
+                                    <th>Jam Operasional</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-room-list">
+                                <tr data-nama="Pendopo Utama" data-kapasitas="50" data-buka="08:00" data-tutup="21:00"
+                                    data-fasilitas="Sound system, Tikar, Listrik" data-status="Aktif"
+                                    data-deskripsi="Area terbuka beratap untuk acara besar dan pertunjukan.">
+                                    <td><strong>Pendopo Utama</strong></td>
+                                    <td>50 orang</td>
+                                    <td><div class="chip-list"><span class="badge">Sound system</span><span class="badge">Tikar</span><span class="badge">Listrik</span></div></td>
+                                    <td>08:00 - 21:00</td>
+                                    <td><span class="badge badge-success">Aktif</span></td>
+                                    <td>
+                                        <button class="btn-sm btn-secondary btn-edit-room">Edit</button>
+                                        <button class="btn-sm btn-danger">Hapus</button>
+                                    </td>
+                                </tr>
+                                <tr data-nama="Ruang Diskusi & Lesehan" data-kapasitas="25" data-buka="08:00" data-tutup="21:00"
+                                    data-fasilitas="Proyektor, Whiteboard, Tikar" data-status="Aktif"
+                                    data-deskripsi="Ruang tertutup untuk diskusi, bedah buku, dan kelas kecil.">
+                                    <td><strong>Ruang Diskusi &amp; Lesehan</strong></td>
+                                    <td>25 orang</td>
+                                    <td><div class="chip-list"><span class="badge">Proyektor</span><span class="badge">Whiteboard</span><span class="badge">Tikar</span></div></td>
+                                    <td>08:00 - 21:00</td>
+                                    <td><span class="badge badge-success">Aktif</span></td>
+                                    <td>
+                                        <button class="btn-sm btn-secondary btn-edit-room">Edit</button>
+                                        <button class="btn-sm btn-danger">Hapus</button>
+                                    </td>
+                                </tr>
+                                <tr data-nama="Galeri Mini" data-kapasitas="15" data-buka="09:00" data-tutup="17:00"
+                                    data-fasilitas="Panel pamer, Lampu sorot" data-status="Nonaktif"
+                                    data-deskripsi="Sedang dalam perawatan.">
+                                    <td><strong>Galeri Mini</strong></td>
+                                    <td>15 orang</td>
+                                    <td><div class="chip-list"><span class="badge">Panel pamer</span><span class="badge">Lampu sorot</span></div></td>
+                                    <td>09:00 - 17:00</td>
+                                    <td><span class="badge badge-danger">Nonaktif</span></td>
+                                    <td>
+                                        <button class="btn-sm btn-secondary btn-edit-room">Edit</button>
+                                        <button class="btn-sm btn-danger">Hapus</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- popup tambah / edit ruangan -->
+                <div class="popup-overlay" id="room-popup" hidden>
+                    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="room-popup-title">
+                        <div class="popup-header">
+                            <h3 id="room-popup-title">Tambah Ruangan Baru</h3>
+                            <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+                        </div>
+
+                        <form id="form-room">
+                            <div class="form-group">
+                                <label for="room-nama">Nama Ruangan</label>
+                                <input type="text" id="room-nama" placeholder="Contoh: Pendopo Utama">
+                            </div>
+
+                            <div class="form-group row-time">
+                                <div>
+                                    <label for="room-kapasitas">Kapasitas Maksimal</label>
+                                    <input type="number" id="room-kapasitas" min="1" placeholder="50">
+                                </div>
+                                <div>
+                                    <label for="room-status">Status</label>
+                                    <select id="room-status">
+                                        <option>Aktif</option>
+                                        <option>Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row-time">
+                                <div>
+                                    <label for="room-buka">Jam Buka</label>
+                                    <input type="time" id="room-buka" value="08:00">
+                                </div>
+                                <div>
+                                    <label for="room-tutup">Jam Tutup</label>
+                                    <input type="time" id="room-tutup" value="21:00">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="room-fasilitas">Fasilitas <span class="label-optional">(pisahkan dengan koma)</span></label>
+                                <input type="text" id="room-fasilitas" placeholder="Contoh: Sound system, Tikar, Proyektor">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="room-deskripsi">Deskripsi Singkat <span class="label-optional">(opsional)</span></label>
+                                <textarea id="room-deskripsi" rows="3" placeholder="Gambaran ruangan dan ketentuan pemakaian"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="room-foto">Foto Ruangan <span class="label-optional">(opsional)</span></label>
+                                <input type="file" id="room-foto" accept="image/*">
+                            </div>
+
+                            <div class="popup-actions">
+                                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
+                                <button type="button" class="btn-primary">Simpan Ruangan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- popup tambah buku -->

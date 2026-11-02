@@ -85,6 +85,9 @@ body.admin-body {
 .logo-img {
     width: 34px;
     height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+    display: block;
 }
 
 .admin-container {
@@ -345,6 +348,72 @@ body.admin-body {
     font-size: 0.85rem;
     color: var(--color-text-muted);
     white-space: nowrap;
+}
+
+.master-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-bg-muted);
+}
+
+.master-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.master-tab:hover {
+    color: var(--color-primary);
+}
+
+.master-tab.active {
+    background: var(--color-bg-card);
+    color: var(--color-primary);
+    box-shadow: 0 1px 3px rgba(43, 38, 35, 0.12);
+}
+
+.master-tab-count {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--color-bg-muted);
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+}
+
+.master-tab.active .master-tab-count {
+    background: var(--color-primary);
+    color: var(--color-text-light);
+}
+
+.master-panel {
+    display: none;
+}
+
+.master-panel.active {
+    display: block;
+}
+
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 
 .data-table tbody tr:hover {
