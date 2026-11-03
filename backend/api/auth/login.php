@@ -53,7 +53,7 @@ try {
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$user || $password !== $user['password']) {
+    if (!$user || !password_verify($password, $user['password'])) {
         http_response_code(401);
 
         echo json_encode([
