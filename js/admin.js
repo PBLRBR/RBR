@@ -72,8 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('room-nama').value = d.nama;
             document.getElementById('room-kapasitas').value = d.kapasitas;
             document.getElementById('room-status').value = d.status;
-            document.getElementById('room-buka').value = d.buka;
-            document.getElementById('room-tutup').value = d.tutup;
             document.getElementById('room-fasilitas').value = d.fasilitas;
             document.getElementById('room-deskripsi').value = d.deskripsi;
             openPopup(roomPopup);
