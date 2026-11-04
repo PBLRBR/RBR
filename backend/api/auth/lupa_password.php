@@ -77,9 +77,16 @@ try {
 
         $pdo->commit();
 
-        // Sesuaikan URL ini dengan halaman reset password frontend
-        $linkReset = 'http://localhost/simart/frontend/reset_password.php?token='
-                   . urlencode($token);
+        $requestPath = (string) ($_SERVER['SCRIPT_NAME'] ?? '/backend/api/auth/lupa_password.php');
+        $basePath = dirname(dirname(dirname(dirname(str_replace('\\', '/', $requestPath)))));
+        $basePath = $basePath === '/' || $basePath === '.' ? '' : rtrim($basePath, '/');
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        if (preg_match('/^[A-Za-z0-9.-]+(?::[0-9]{1,5})?$/', $host) !== 1) {
+            $host = 'localhost';
+        }
+        $linkReset = $scheme . '://' . ($host ?: 'localhost') . $basePath
+            . '/frontend/pages/auth/reset_password.php?token=' . urlencode($token);
 
         $isiHtml = '
             <h2>Reset Password SIMART</h2>
