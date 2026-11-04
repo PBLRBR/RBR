@@ -1,22 +1,30 @@
+<?php
+// Halaman admin (PHP + HTML dalam 1 file).
+require_once __DIR__ . '/../../src/auth.php'; // fungsi autentikasi
+require_admin();                           // blokir non-admin (aktif jika AUTH_ENABLED = true)
+
+$pageTitle = 'Admin Dashboard | SIMART RBR';
+$adminName = current_user_name();
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | SIMART RBR</title>
-    <link rel="stylesheet" href="css/admin.css">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <link rel="stylesheet" href="/css/admin.css">
 </head>
 
 <body class="admin-body">
     <!-- Top Admin Bar -->
     <header class="admin-topbar">
         <div class="logo">
-            <img src="img/logo-dummy.svg" alt="Logo" class="logo-img">
+            <img src="/images/rbr.png" alt="Logo" class="logo-img">
             <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
-            <span>Halo, <strong>Skibidi Admin!</strong></span>
-            <a href="index.html" class="btn-sm btn-secondary">Keluar Panel</a>
+            <span>Halo, <strong><?= htmlspecialchars($adminName) ?>!</strong></span>
+            <a href="/" class="btn-sm btn-secondary">Keluar Panel</a>
         </div>
     </header>
     <div class="admin-container">
@@ -434,7 +442,7 @@
                         <p class="subtitle">Pilih buku dari katalog, atur jumlahnya di keranjang, lalu proses pembayaran dan cetak invoice.</p>
                     </div>
                     <div class="pos-session">
-                        <span>Kasir: <strong>Skibidi Admin</strong></span>
+                        <span>Kasir: <strong><?= htmlspecialchars($adminName) ?></strong></span>
                         <span>Kamis, 15 Okt 2026</span>
                     </div>
                 </div>
@@ -902,6 +910,6 @@
 
         </main>
     </div>
-    <script src="js/admin.js"></script>
+    <script src="/js/admin.js"></script>
 </body>
 </html>
