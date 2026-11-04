@@ -1,0 +1,7 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^pages/(.*\.(controller|view)\.php|database\.php|functions\.php|auth/auth\.php|buku/Book\.php|auth/Member\.php|reservasi/Reservation\.php|dashboard/AdminDashboard\.php)$ - [F,L,NC]
+</IfModule>
