@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__, 2) . '/components/runtime/controllers/admin/reservation-update.php';
+require_once __DIR__ . '/reservation-update.controller.php';

@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__, 2) . '/components/runtime/support/auth.php';
+require_once dirname(__DIR__, 2) . '/pages/auth/auth.php';
+require_once __DIR__ . '/index.controller.php';
 simart_start_session();
-require_once dirname(__DIR__, 2) . '/components/runtime/controllers/public/CatalogController.php';
+CatalogController::index();
 
 CatalogController::index();

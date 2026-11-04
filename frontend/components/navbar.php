@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/runtime/support/functions.php';
+require_once dirname(__DIR__) . '/pages/functions.php';
 $currentUser = simart_current_user();
 $active = $memberHeaderOptions['active_nav'] ?? $componentOptions['active'] ?? '';
 $navItems = [

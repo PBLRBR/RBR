@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__, 2) . '/components/runtime/controllers/member/profile.php';
+require_once __DIR__ . '/profile.controller.php';

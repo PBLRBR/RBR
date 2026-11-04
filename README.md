@@ -64,7 +64,7 @@ RBR/
 └── README.md
 ```
 
-`frontend/components/runtime/` menyimpan controller, model, view, dan helper internal PHP yang dipakai halaman di `frontend/pages/`. Folder runtime dibatasi dari akses URL langsung oleh `.htaccess`; komponen bersama yang dipakai halaman berada langsung di `frontend/components/`.
+Controller, model, view, dan helper PHP diletakkan sebagai file langsung di dalam kelompok halaman yang memakainya, misalnya `Book.php` dan `catalog.view.php` di `frontend/pages/buku/`. Tidak ada lagi folder `models/`, `views/`, `support/`, atau `runtime/`. `frontend/components/` hanya berisi header, navbar, sidebar, dan footer. `.htaccess` membatasi akses langsung ke file controller, view, dan helper.
 
 ## Menjalankan lokal
 
