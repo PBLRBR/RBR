@@ -2,16 +2,16 @@
 // Halaman Detail Buku (PHP + HTML dalam 1 file).
 // data dummy buku: judul, penulis, kategori, jenis (dijual/koleksi), harga, deskripsi
 $books = [
-    1 => ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 'dijual', 85000, 'Novel sejarah tentang Minke di masa kolonial.'],
-    2 => ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 'dijual', 70000, 'Kisah sepuluh anak Belitung dan semangat belajar mereka.'],
-    3 => ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 'dijual', 120000, 'Ringkasan sejarah singkat umat manusia.'],
-    4 => ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 'dijual', 88000, 'Pengantar filsafat Stoa untuk kehidupan sehari-hari.'],
-    5 => ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.'],
-    6 => ['Cosmos', 'Carl Sagan', 'Sains', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.'],
+    1 => ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 'dijual', 85000, 'Novel sejarah tentang Minke di masa kolonial.', null],
+    2 => ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 'dijual', 70000, 'Kisah sepuluh anak Belitung dan semangat belajar mereka.', null],
+    3 => ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 'dijual', 120000, 'Ringkasan sejarah singkat umat manusia.', null],
+    4 => ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 'dijual', 88000, 'Pengantar filsafat Stoa untuk kehidupan sehari-hari.', null],
+    5 => ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
+    6 => ['Cosmos', 'Carl Sagan', 'Sains', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
 ];
 $id = (int) ($_GET['id'] ?? 1);
 if (!isset($books[$id])) $id = 1; // fallback ke buku pertama
-[$judul, $penulis, $kategori, $jenis, $harga, $deskripsi] = $books[$id];
+[$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul] = $books[$id];
 $pageTitle = $judul . ' | SIMART';
 ?>
 <!DOCTYPE html>
@@ -32,7 +32,7 @@ $pageTitle = $judul . ' | SIMART';
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
                 <a href="/tentang.php">Tentang</a>
-                <a href="/infoevent.php">Info Event</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
                 <a class="active" href="/katalog.php">Katalog Buku</a>
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
@@ -45,21 +45,27 @@ $pageTitle = $judul . ' | SIMART';
     </header>
 
     <main class="container page-content">
-        <a href="/katalog.php" class="btn-outline">← Kembali ke katalog</a>
+        <a href="/katalog.php" class="book-back-link">← <span>Kembali ke katalog</span></a>
 
         <!-- detail buku -->
-        <section class="tentang-container" style="margin-top:32px;align-items:start">
-            <div class="book-cover" style="height:420px;border-radius:16px"><span>Area sampul buku</span></div>
-            <div class="tentang-content">
+        <section class="book-detail-layout">
+            <div class="book-detail-cover<?= $fotoSampul ? ' has-image' : '' ?>" aria-label="Sampul <?= htmlspecialchars($judul) ?>">
+                <?php if ($fotoSampul): ?>
+                    <img src="<?= htmlspecialchars($fotoSampul, ENT_QUOTES, 'UTF-8') ?>" alt="Sampul buku <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>">
+                <?php else: ?>
+                    <span class="cover-kicker">Koleksi SIMART</span><strong><?= htmlspecialchars($judul) ?></strong><span class="cover-author"><?= htmlspecialchars($penulis) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="book-detail-content">
                 <span class="category-badge"><?= htmlspecialchars($kategori) ?></span>
-                <h1 style="font-family:Georgia,serif;font-size:clamp(2rem,4vw,3rem)"><?= htmlspecialchars($judul) ?></h1>
-                <p class="subtitle"><?= htmlspecialchars($penulis) ?></p>
-                <h2><?= $jenis === 'dijual' ? 'Rp ' . number_format($harga, 0, ',', '.') : 'Koleksi baca' ?></h2>
-                <p><?= htmlspecialchars($deskripsi) ?></p>
-                <p><strong>Jenis:</strong> <?= $jenis === 'dijual' ? 'Buku untuk dijual' : 'Buku koleksi' ?></p>
+                <p class="book-detail-eyebrow">Detail buku</p>
+                <h1><?= htmlspecialchars($judul) ?></h1>
+                <p class="book-author">oleh <?= htmlspecialchars($penulis) ?></p>
+                <p class="book-price"><?= $jenis === 'dijual' ? 'Rp ' . number_format($harga, 0, ',', '.') : 'Baca di tempat' ?></p>
+                <p class="book-description"><?= htmlspecialchars($deskripsi) ?></p>
+                <div class="book-facts"><div><span>Status</span><strong><?= $jenis === 'dijual' ? 'Tersedia untuk dibeli' : 'Koleksi Rumah Budaya Ratna' ?></strong></div><div><span>Kategori</span><strong><?= htmlspecialchars($kategori) ?></strong></div></div>
                 <?php if ($jenis === 'dijual'): ?>
-                <p><strong>Ketersediaan:</strong> Tersedia</p>
-                <p class="subtitle">Pembelian buku dilayani langsung oleh kasir di Rumah Budaya Ratna.</p>
+                <p class="book-note">Pembelian buku dilayani langsung oleh kasir di Rumah Budaya Ratna.</p>
                 <?php endif; ?>
             </div>
         </section>

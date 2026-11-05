@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Navigasi ringkas untuk layar kecil, dipasang otomatis di semua header.
+    document.querySelectorAll('.navbar .nav-container').forEach(container => {
+        const nav = container.querySelector('.nav-menu');
+        if (!nav || container.querySelector('.nav-toggle')) return;
+        const toggle = document.createElement('button');
+        toggle.className = 'nav-toggle';
+        toggle.type = 'button';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Buka menu navigasi');
+        toggle.innerHTML = '<span></span><span></span><span></span>';
+        toggle.addEventListener('click', () => {
+            const open = toggle.getAttribute('aria-expanded') !== 'true';
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.setAttribute('aria-label', open ? 'Tutup menu navigasi' : 'Buka menu navigasi');
+            container.classList.toggle('nav-open', open);
+        });
+        container.insertBefore(toggle, nav);
+    });
+
+    document.querySelectorAll('.story-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const detail = document.getElementById(button.getAttribute('aria-controls'));
+            const open = button.getAttribute('aria-expanded') !== 'true';
+            button.setAttribute('aria-expanded', String(open));
+            detail.hidden = !open;
+            button.innerHTML = `${open ? 'Tutup ringkasan' : 'Baca ringkasan'} <span aria-hidden="true">${open ? '↑' : '↓'}</span>`;
+        });
+    });
+
     // form dummy: tampilan saja, belum terhubung ke backend
     document.querySelectorAll('form[data-dummy]').forEach(form => {
         form.addEventListener('submit', e => {

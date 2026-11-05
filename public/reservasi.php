@@ -28,7 +28,7 @@ $rooms = [['Pendopo Utama', 50], ['Ruang Diskusi & Lesehan', 25]];
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
                 <a href="/tentang.php">Tentang</a>
-                <a href="/infoevent.php">Info Event</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
                 <a href="/katalog.php">Katalog Buku</a>
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a class="active" href="/reservasi.php">Reservasi Ruang</a>

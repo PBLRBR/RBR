@@ -27,7 +27,7 @@ $values = [
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
                 <a class="active" href="/tentang.php">Tentang</a>
-                <a href="/infoevent.php">Info Event</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
                 <a href="/katalog.php">Katalog Buku</a>
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
@@ -57,7 +57,7 @@ $values = [
                 <h2>Sutrisni Ratna Artsanti</h2>
                 <p>Rumah Budaya Ratna berdiri atas dedikasi Ibu Sutrisni Ratna Artsanti, seorang pendidik dan pecinta seni di Malang. Beliau merawat warisan sastra, mendukung seniman lokal, dan menciptakan ruang bertumbuh untuk generasi muda.</p>
                 <p>SIMART hadir untuk memudahkan masyarakat mengenal koleksi, mengikuti kegiatan, dan mengajukan penggunaan ruang budaya.</p>
-                <a href="/infoevent.php" class="btn-primary">Jelajahi kegiatan</a>
+                <!-- <a href="/infoevent.php" class="btn-primary">Jelajahi kegiatan</a> -->
             </div>
         </section>
 

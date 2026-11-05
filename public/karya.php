@@ -4,9 +4,9 @@ $pageTitle = 'Karya Bu Ratna | SIMART';
 
 // data dummy karya: kategori, judul, deskripsi, teks tombol
 $karya = [
-    ['ESAI', 'Catatan tentang ruang budaya', 'Gagasan tentang rumah sebagai tempat bertukar pikiran, merawat ingatan, dan menumbuhkan kreativitas.', 'Baca ringkasan →'],
-    ['SASTRA', 'Fragmen perjalanan', 'Catatan pilihan dari perjalanan panjang mendampingi pendidikan, sastra, dan komunitas seni.', 'Baca ringkasan →'],
-    ['ARSIP', 'Merawat ingatan bersama', 'Dokumentasi kegiatan dan kolaborasi yang membentuk Rumah Budaya Ratna.', 'Lihat arsip →'],
+    ['ESAI', 'Catatan tentang ruang budaya', 'Gagasan tentang rumah sebagai tempat bertukar pikiran, merawat ingatan, dan menumbuhkan kreativitas.', 'Rumah budaya hidup dari perjumpaan. Ia memberi ruang bagi gagasan untuk dibagikan, bagi ingatan untuk dirawat, dan bagi kreativitas untuk tumbuh bersama. Catatan ini mengajak kita melihat budaya sebagai praktik sehari-hari yang dibangun lewat percakapan dan kepedulian.', 'Baca ringkasan'],
+    ['SASTRA', 'Fragmen perjalanan', 'Catatan pilihan dari perjalanan panjang mendampingi pendidikan, sastra, dan komunitas seni.', 'Fragmen ini merangkum perjalanan Bu Ratna dalam mendampingi kegiatan pendidikan dan sastra. Di setiap pertemuan, buku dan cerita menjadi jembatan untuk belajar, mengenali lingkungan, dan membuka kemungkinan baru bagi komunitas.', 'Baca ringkasan'],
+    ['ARSIP', 'Merawat ingatan bersama', 'Dokumentasi kegiatan dan kolaborasi yang membentuk Rumah Budaya Ratna.', 'Arsip ini merekam kegiatan, kolaborasi, dan orang-orang yang ikut membentuk Rumah Budaya Ratna. Dokumentasi menjadi cara untuk menjaga jejak bersama sekaligus sumber inspirasi bagi kegiatan yang akan datang.', 'Lihat ringkasan'],
 ];
 ?>
 <!DOCTYPE html>
@@ -27,7 +27,7 @@ $karya = [
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
                 <a href="/tentang.php">Tentang</a>
-                <a href="/infoevent.php">Info Event</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
                 <a href="/katalog.php">Katalog Buku</a>
                 <a class="active" href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
@@ -49,13 +49,14 @@ $karya = [
 
         <!-- daftar karya -->
         <div class="story-grid">
-            <?php foreach ($karya as [$kategori, $judul, $isi, $tombol]): ?>
+            <?php foreach ($karya as $index => [$kategori, $judul, $isi, $ringkasan, $tombol]): ?>
             <article class="story-card">
                 <span class="story-mark">✦</span>
                 <span class="category-badge"><?= htmlspecialchars($kategori) ?></span>
                 <h2><?= htmlspecialchars($judul) ?></h2>
                 <p><?= htmlspecialchars($isi) ?></p>
-                <a href="#" class="btn-outline"><?= htmlspecialchars($tombol) ?></a>
+                <button class="btn-outline story-toggle" type="button" aria-expanded="false" aria-controls="story-detail-<?= $index ?>"><?= htmlspecialchars($tombol) ?> <span aria-hidden="true">↓</span></button>
+                <div class="story-detail" id="story-detail-<?= $index ?>" hidden><h3>Ringkasan</h3><p><?= htmlspecialchars($ringkasan) ?></p></div>
             </article>
             <?php endforeach; ?>
         </div>

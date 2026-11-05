@@ -23,7 +23,7 @@ $profile = ['nama' => 'Budi Santoso', 'email' => 'budi@ratna.org', 'no_hp' => '0
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
                 <a href="/tentang.php">Tentang</a>
-                <a href="/infoevent.php">Info Event</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
                 <a href="/katalog.php">Katalog Buku</a>
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>

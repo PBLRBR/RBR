@@ -4,12 +4,12 @@ $pageTitle = 'Katalog Buku | SIMART';
 
 // data dummy buku: judul, penulis, kategori, jenis (dijual/koleksi), harga, deskripsi
 $books = [
-    1 => ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 'dijual', 85000, 'Novel sejarah tentang Minke di masa kolonial.'],
-    2 => ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 'dijual', 70000, 'Kisah sepuluh anak Belitung dan semangat belajar mereka.'],
-    3 => ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 'dijual', 120000, 'Ringkasan sejarah singkat umat manusia.'],
-    4 => ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 'dijual', 88000, 'Pengantar filsafat Stoa untuk kehidupan sehari-hari.'],
-    5 => ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.'],
-    6 => ['Cosmos', 'Carl Sagan', 'Sains', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.'],
+    1 => ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 'dijual', 85000, 'Novel sejarah tentang Minke di masa kolonial.', null],
+    2 => ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 'dijual', 70000, 'Kisah sepuluh anak Belitung dan semangat belajar mereka.', null],
+    3 => ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 'dijual', 120000, 'Ringkasan sejarah singkat umat manusia.', null],
+    4 => ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 'dijual', 88000, 'Pengantar filsafat Stoa untuk kehidupan sehari-hari.', null],
+    5 => ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
+    6 => ['Cosmos', 'Carl Sagan', 'Sains', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
 ];
 $categories = array_unique(array_column($books, 2)); // daftar kategori untuk tombol filter
 ?>
@@ -31,7 +31,7 @@ $categories = array_unique(array_column($books, 2)); // daftar kategori untuk to
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
                 <a href="/tentang.php">Tentang</a>
-                <a href="/infoevent.php">Info Event</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
                 <a class="active" href="/katalog.php">Katalog Buku</a>
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
@@ -60,9 +60,13 @@ $categories = array_unique(array_column($books, 2)); // daftar kategori untuk to
 
         <!-- daftar buku -->
         <div class="book-grid">
-            <?php foreach ($books as $id => [$judul, $penulis, $kategori, $jenis, $harga, $deskripsi]): ?>
+            <?php foreach ($books as $id => [$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul]): ?>
             <article class="book-card" data-category="<?= htmlspecialchars($kategori) ?>">
-                <div class="book-cover"><span>Cover Buku</span></div>
+                <div class="book-cover<?= $fotoSampul ? ' has-image' : '' ?>">
+                    <?php if ($fotoSampul): ?>
+                        <img src="<?= htmlspecialchars($fotoSampul, ENT_QUOTES, 'UTF-8') ?>" alt="Sampul buku <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" loading="lazy">
+                    <?php else: ?><span>Cover Buku</span><?php endif; ?>
+                </div>
                 <div class="book-info">
                     <span class="category-badge"><?= htmlspecialchars($kategori) ?></span>
                     <h3 class="book-title"><?= htmlspecialchars($judul) ?></h3>

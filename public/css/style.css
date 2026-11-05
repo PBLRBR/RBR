@@ -140,11 +140,13 @@ body {
     display: flex;
     align-items: center;
     gap: 40px;
-    width: 100%;
+    width: min(92%, 1200px);
+    margin: 0 auto;
 }
 
 .hero-content {
     flex: 1;
+    min-width: 0;
 }
 
 .hero-content h1 {
@@ -167,6 +169,7 @@ body {
 
 .hero-image {
     flex: 1;
+    min-width: 0;
 }
 
 .image-placeholder {
