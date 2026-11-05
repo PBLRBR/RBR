@@ -100,7 +100,7 @@ function simart_safe_return_path(mixed $value, string $role): string
 {
     if (!is_string($value) || $value === '' || str_starts_with($value, '//')
         || str_contains($value, "\r") || str_contains($value, "\n")) {
-        return simart_url($role === 'admin' ? '/pages/dashboard/index.php' : '/pages/auth/profile.php');
+        return simart_url('/pages/auth/profile.php');
     }
 
     $allowed = [
@@ -108,7 +108,6 @@ function simart_safe_return_path(mixed $value, string $role): string
         '/pages/reservasi/index.php' => ['member', 'admin'],
         '/pages/reservasi/riwayat.php' => ['member', 'admin'],
         '/pages/transaksi/riwayat.php' => ['member', 'admin'],
-        '/pages/dashboard/index.php' => ['admin'],
     ];
 
     $path = parse_url($value, PHP_URL_PATH);
@@ -122,5 +121,5 @@ function simart_safe_return_path(mixed $value, string $role): string
         }
     }
 
-    return simart_url($allowedPath ?? ($role === 'admin' ? '/pages/dashboard/index.php' : '/pages/auth/profile.php'));
+    return simart_url($allowedPath ?? '/pages/auth/profile.php');
 }

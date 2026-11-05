@@ -22,21 +22,16 @@ RBR/
 │   ├── assets/
 │   │   ├── css/
 │   │   │   ├── style.css
-│   │   │   ├── dashboard.css
 │   │   │   └── responsive.css
 │   │   ├── js/
 │   │   │   ├── api.js
 │   │   │   ├── auth.js
 │   │   │   ├── buku.js
-│   │   │   ├── kategori.js
 │   │   │   ├── karya.js
 │   │   │   ├── reservasi.js
-│   │   │   ├── transaksi.js
-│   │   │   └── laporan.js
 │   │   └── images/
 │   ├── components/
 │   │   ├── header.php
-│   │   ├── sidebar.php
 │   │   ├── navbar.php
 │   │   └── footer.php
 │   ├── pages/
@@ -44,27 +39,19 @@ RBR/
 │   │   │   ├── login.php
 │   │   │   ├── lupa_password.php
 │   │   │   └── reset_password.php
-│   │   ├── dashboard/
-│   │   │   └── index.php
 │   │   ├── buku/
 │   │   │   ├── index.php
-│   │   │   ├── tambah.php
-│   │   │   ├── edit.php
 │   │   │   └── detail.php
-│   │   ├── kategori/
 │   │   ├── karya/
 │   │   ├── reservasi/
-│   │   ├── transaksi/
-│   │   ├── pengunjung/
-│   │   ├── kunjungan/
-│   │   └── laporan/
+│   │   └── transaksi/
 │   ├── index.php
 │   └── .htaccess
 ├── .gitignore
 └── README.md
 ```
 
-Controller, model, view, dan helper PHP diletakkan sebagai file langsung di dalam kelompok halaman yang memakainya, misalnya `Book.php` dan `catalog.view.php` di `frontend/pages/buku/`. Tidak ada lagi folder `models/`, `views/`, `support/`, atau `runtime/`. `frontend/components/` hanya berisi header, navbar, sidebar, dan footer. `.htaccess` membatasi akses langsung ke file controller, view, dan helper.
+Controller, model, view, dan helper PHP diletakkan sebagai file langsung di dalam kelompok halaman yang memakainya, misalnya `Book.php` dan `catalog.view.php` di `frontend/pages/buku/`. Tidak ada lagi folder `models/`, `views/`, `support/`, atau `runtime/`. `frontend/components/` hanya berisi header, navbar, dan footer. Frontend saat ini tidak menyediakan dashboard atau halaman administrasi. `.htaccess` membatasi akses langsung ke file controller, view, dan helper.
 
 ## Menjalankan lokal
 
@@ -76,4 +63,4 @@ Buka frontend melalui `/frontend/` agar endpoint API di `/backend/api/` tetap be
 
 ## Catatan API
 
-`backend/api/transaksi/` disiapkan untuk modul transaksi. Versi API PBLReal belum memiliki endpoint transaksi; kasir saat ini memakai handler PHP yang diarahkan melalui `frontend/pages/dashboard/`.
+`backend/api/transaksi/` disiapkan untuk modul transaksi. Versi API PBLReal dan frontend saat ini belum menyediakan fitur kasir atau dashboard admin.

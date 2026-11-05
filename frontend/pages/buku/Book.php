@@ -65,15 +65,6 @@ final class Book
         return is_array($book) ? $book : null;
     }
 
-    public static function adminCatalog(): array
-    {
-        return simart_db()->query(
-            'SELECT b.*, ' . self::typeExpression() . ' AS jenis_buku, k.nama_kategori FROM buku b '
-            . 'JOIN kategori k ON k.id_kategori = b.id_kategori '
-            . 'WHERE ' . self::activeFilter() . ' ORDER BY b.judul'
-        )->fetchAll();
-    }
-
     public static function saleable(): array
     {
         return simart_db()->query(
