@@ -1547,3 +1547,5 @@ h4 {
 .form-group textarea {
     border-radius: 6px;
 }
+
+.badge-danger { background: #f6e1dc; color: #8a2f1b; }
