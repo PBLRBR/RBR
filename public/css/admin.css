@@ -85,7 +85,7 @@ body.admin-body {
 .logo-img {
     width: 34px;
     height: 34px;
-    border-radius: 8px;
+    border-radius: 0px;
     object-fit: cover;
     display: block;
 }
@@ -1102,6 +1102,23 @@ body.admin-body {
     gap: 8px;
 }
 
+/* popup konfirmasi */
+.popup-sm { max-width: 420px; }
+.confirm-message { color: var(--color-text-muted); margin-bottom: 20px; }
+.btn-primary.is-danger { background: var(--color-badge-danger-text); }
+.btn-primary.is-danger:hover { background: #6e2414; }
+
+/* tombol & peringatan reservasi tampil sesuai status kartu */
+.only-pending, .only-approved, .only-rejected { display: none; }
+.rsv-pending .only-pending, .rsv-approved .only-approved, .rsv-rejected .only-rejected { display: inline-block; }
+.rsv-rejected .hide-rejected { display: none; }
+.rsv-card:not(.rsv-pending) .rsv-warning { display: none; }
+
+/* keranjang kasir */
+.cart-empty { padding: 20px 0; text-align: center; color: var(--color-text-muted); font-size: 0.9rem; }
+.qty-stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+.cash-change strong.is-short { color: var(--color-badge-danger-text); }
+
 /* responsive */
 @media (max-width: 700px) {
     .pos-layout {
@@ -1121,4 +1138,69 @@ body.admin-body {
     .rsv-actions {
         justify-content: flex-start;
     }
+}
+
+/* responsiving gaming */
+@media (max-width: 900px) {
+    /* sidebar jadi tab horizontal di atas konten */
+    .admin-container { flex-direction: column; }
+    .admin-sidebar { width: 100%; padding: 0; border-right: none; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
+    .sidebar-menu { flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+    .sidebar-menu::-webkit-scrollbar { display: none; }
+    .sidebar-btn { flex: 0 0 auto; white-space: nowrap; padding: 14px 16px; border-left: 0; border-bottom: 3px solid transparent; }
+    .sidebar-btn:hover, .sidebar-btn.active { border-bottom-color: var(--color-primary); }
+    .admin-content { padding: 20px 16px; }
+}
+
+@media (max-width: 700px) {
+    /* topbar & header section */
+    .admin-topbar { padding: 0 14px; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .period-filters, .rsv-filters { flex-wrap: nowrap; overflow-x: auto; width: 100%; margin-bottom: 16px; }
+    .period-filter, .rsv-filter { white-space: nowrap; flex: 0 0 auto; }
+
+    /* kartu statistik */
+    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .stat-number { font-size: 1.3rem; }
+
+    /* tabel: scroll ke samping */
+    .admin-card { padding: 14px; overflow-x: auto; }
+    .data-table { min-width: 600px; }
+    .data-table td:last-child { white-space: nowrap; }
+    .btn-sm { padding: 8px 12px; }
+
+    /* toolbar pencarian */
+    .table-toolbar { flex-wrap: wrap; gap: 10px; }
+    .table-toolbar .search-input { flex: 1 1 100%; max-width: none; }
+    .table-count { margin-left: 0; }
+    .table-toolbar .btn-primary { width: 100%; }
+
+    /* sub-tab master data */
+    .master-tabs { display: flex; width: 100%; }
+    .master-tab { flex: 1; justify-content: center; padding: 8px 10px; font-size: 0.85rem; }
+
+    /* kasir */
+    .pos-session { align-items: flex-start; margin-bottom: 0; }
+    .pos-items-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+    /* reservasi */
+    .rsv-summary { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .rsv-summary-item { padding: 10px; }
+    .rsv-card { padding: 16px; }
+    .rsv-details { grid-template-columns: 1fr 1fr; }
+    .rsv-actions > * { flex: 1 1 calc(50% - 8px); }
+
+    /* popup */
+    .popup-overlay { padding: 12px; }
+    .popup-box { padding: 18px; }
+    .popup-actions > button { flex: 1 1 auto; }
+
+    /* cegah zoom otomatis iOS saat fokus input */
+    .form-group input, .form-group select, .form-group textarea, .search-input { font-size: 16px; }
+}
+
+@media (max-width: 460px) {
+    .admin-user-info span { display: none; }   /* sembunyikan sapaan, sisakan tombol */
+    .stats-grid, .rsv-details, .row-time { grid-template-columns: 1fr; }
+    .rsv-actions > *, .popup-actions > button { flex: 1 1 100%; }
 }

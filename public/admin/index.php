@@ -1,55 +1,78 @@
 <?php
-// Halaman admin (PHP + HTML dalam 1 file).
-require_once __DIR__ . '/../../src/auth.php'; // fungsi autentikasi
-require_admin();                           // blokir non-admin (aktif jika AUTH_ENABLED = true)
+require_once __DIR__ . '/../../src/auth.php'; // autentikasi
+require_admin();                           // blokir hacker!
 
 $pageTitle = 'Admin Dashboard | SIMART RBR';
-$adminName = current_user_name();
+
+// helper tampilan
+$h  = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+$rp = fn($n) => 'Rp ' . number_format($n, 0, ',', '.');
+$hari  = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+$bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+$tglLabel = fn($d) => $hari[date('w', strtotime($d))] . ', ' . date('j', strtotime($d)) . ' ' . $bulan[date('n', strtotime($d)) - 1] . ' ' . date('Y', strtotime($d));
+
+// data dummy buku: judul, penulis, kategori, harga, stok, kondisi, warna ikon, jumlah di keranjang
+$books = [
+    ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 85000, 12, 'Baru', 'bk-red'],
+    ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 50000, 5, 'Bekas', 'bk-red'],
+    ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 95000, 8, 'Baru', 'bk-amber'],
+    ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 78000, 15, 'Baru', 'bk-green'],
+    ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 65000, 2, 'Bekas', 'bk-red'],
+    ['Atomic Habits', 'James Clear', 'Lainnya', 110000, 6, 'Baru', 'bk-brown'],
+    ['Cosmos', 'Carl Sagan', 'Sains', 70000, 3, 'Bekas', 'bk-blue'],
+    ['Negeri 5 Menara', 'Ahmad Fuadi', 'Sastra', 45000, 0, 'Bekas', 'bk-red'],
+];
+
+// data dummy reservasi: pemohon, agenda, ruangan, tanggal, mulai, selesai, peserta, WA, waktu diajukan, status, bentrok
+$reservations = [
+    ['Karang Taruna Desa Sukorejo', 'Rapat Persiapan Festival Desa', 'Pendopo Utama', '2026-10-15', '13:00', '16:00', 25, '+62 812-3456-7802', '8 Okt 2026, 14.20', 'pending', true],
+    ['Rina Wulandari', 'Bedah Buku "Bumi Manusia"', 'Ruang Diskusi & Lesehan', '2026-10-18', '15:00', '17:30', 15, '+62 812-3456-7803', '9 Okt 2026, 08.40', 'pending', false],
+    ['Komunitas Fotografi Blitar', 'Pameran Foto Mini', 'Pendopo Utama', '2026-10-24', '08:00', '12:00', 40, '+62 812-3456-7804', '9 Okt 2026, 19.05', 'pending', false],
+    ['Komunitas Sastra Malang', 'Workshop Puisi', 'Pendopo Utama', '2026-10-15', '10:00', '14:00', 30, '+62 812-3456-7801', '5 Okt 2026, 09.15', 'approved', false],
+    ['Dimas Pratama', 'Ulang tahun pribadi', 'Ruang Diskusi & Lesehan', '2026-10-12', '19:00', '22:00', 20, '+62 812-3456-7805', '7 Okt 2026, 21.10', 'rejected', false],
+];
+$statusMeta = ['pending' => ['Menunggu Review', 'badge-warning'], 'approved' => ['Disetujui', 'badge-success'], 'rejected' => ['Ditolak', 'badge-danger']];
+$rsvCount = array_count_values(array_column($reservations, 9));
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <title><?= $h($pageTitle) ?></title>
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 
 <body class="admin-body">
-    <!-- Top Admin Bar -->
+    <!-- top admin bar -->
     <header class="admin-topbar">
         <div class="logo">
             <img src="/images/rbr.png" alt="Logo" class="logo-img">
             <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
-            <span>Halo, <strong><?= htmlspecialchars($adminName) ?>!</strong></span>
             <a href="/" class="btn-sm btn-secondary">Keluar Panel</a>
         </div>
     </header>
     <div class="admin-container">
-         <!--sidebar  -->
+        <!-- sidebar -->
         <aside class="admin-sidebar">
             <nav class="sidebar-menu">
-                <button class="sidebar-btn active" data-tab="analytics">
-                    📊 Analytics Dashboard
-                </button>
-                <button class="sidebar-btn" data-tab="buku">
-                    🗂️ Master Data
-                </button>
-                <button class="sidebar-btn" data-tab="pos">
-                    🛒 Kasir Penjualan (POS)
-                </button>
+                <button class="sidebar-btn active" data-tab="analytics">📊 Analytics Dashboard</button>
+                <button class="sidebar-btn" data-tab="buku">🗂️ Master Buku</button>
+                <button class="sidebar-btn" data-tab="pos">🛒 Kasir Penjualan (POS)</button>
                 <button class="sidebar-btn" data-tab="reservasi">
                     <span>📅 Persetujuan Reservasi</span>
-                    <span class="nav-count">3</span>
+                    <span class="nav-count"><?= $rsvCount['pending'] ?? 0 ?></span>
                 </button>
             </nav>
         </aside>
+
         <!-- pages -->
         <main class="admin-content">
             <!-- analytics -->
-             <section id="tab-analytics" class="tab-content active">
+            <section id="tab-analytics" class="tab-content active">
                 <div class="section-header">
                     <div>
                         <h2>Dashboard Analitik</h2>
@@ -90,13 +113,7 @@ $adminName = current_user_name();
                     <h3>Aktivitas Transaksi Terbaru</h3>
                     <table class="data-table margin-top-15">
                         <thead>
-                            <tr>
-                                <th>ID Transaksi</th>
-                                <th>Tanggal</th>
-                                <th>Item</th>
-                                <th>Total</th>
-                                <th>Metode</th>
-                            </tr>
+                            <tr><th>ID Transaksi</th><th>Tanggal</th><th>Item</th><th>Total</th><th>Metode</th></tr>
                         </thead>
                         <tbody>
                             <tr>
@@ -117,554 +134,119 @@ $adminName = current_user_name();
                     </table>
                 </div>
             </section>
-            <!-- buku -->
-             <section id="tab-buku" class="tab-content">
+
+            <!-- master buku -->
+            <section id="tab-buku" class="tab-content">
                 <div class="section-header">
                     <div>
-                        <h2>Kelola Master Data</h2>
-                        <p class="subtitle">Atur koleksi buku di toko dan ruangan yang dapat direservasi.</p>
+                        <h2>Kelola Master Buku</h2>
+                        <p class="subtitle">Atur koleksi buku yang dijual dan dipinjamkan di Rumah Budaya Ratna.</p>
                     </div>
                 </div>
 
-                <div class="master-tabs" role="tablist">
-                    <button type="button" class="master-tab active" data-master="buku" role="tab">📚 Buku <span class="master-tab-count">8</span></button>
-                    <button type="button" class="master-tab" data-master="ruangan" role="tab">🏛️ Ruangan Reservasi <span class="master-tab-count">3</span></button>
-                </div>
-
-                <!-- master buku -->
+                <!-- tabel buku -->
                 <div class="master-panel active" id="master-buku">
-                <div class="admin-card">
-                    <div class="table-toolbar">
-                        <input type="text" class="search-input" placeholder="🔍 Cari judul atau penulis">
-                        <span class="table-count">Menampilkan 8 buku</span>
-                        <button class="btn-primary" id="btn-add-book">+ Tambah Buku Baru</button>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Judul Buku</th>
-                                <th>Penulis</th>
-                                <th>Kategori</th>
-                                <th>Harga</th>
-                                <th>Stok</th>
-                                <th>Kondisi</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-book-list">
-                            <tr>
-                                <td><strong>Bumi Manusia</strong></td>
-                                <td>Pramoedya Ananta Toer</td>
-                                <td>Sastra</td>
-                                <td>Rp 85.000</td>
-                                <td>12</td>
-                                <td><span class="badge">Baru</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Laskar Pelangi</strong></td>
-                                <td>Andrea Hirata</td>
-                                <td>Sastra</td>
-                                <td>Rp 50.000</td>
-                                <td>5</td>
-                                <td><span class="badge">Bekas</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Sapiens</strong></td>
-                                <td>Yuval Noah Harari</td>
-                                <td>Sejarah</td>
-                                <td>Rp 95.000</td>
-                                <td>8</td>
-                                <td><span class="badge">Baru</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Filosofi Teras</strong></td>
-                                <td>Henry Manampiring</td>
-                                <td>Filsafat</td>
-                                <td>Rp 78.000</td>
-                                <td>15</td>
-                                <td><span class="badge">Baru</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Cantik Itu Luka</strong></td>
-                                <td>Eka Kurniawan</td>
-                                <td>Sastra</td>
-                                <td>Rp 65.000</td>
-                                <td><span class="stock-low">2</span></td>
-                                <td><span class="badge">Bekas</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Atomic Habits</strong></td>
-                                <td>James Clear</td>
-                                <td>Lainnya</td>
-                                <td>Rp 110.000</td>
-                                <td>6</td>
-                                <td><span class="badge">Baru</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Cosmos</strong></td>
-                                <td>Carl Sagan</td>
-                                <td>Sains</td>
-                                <td>Rp 70.000</td>
-                                <td>3</td>
-                                <td><span class="badge">Bekas</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Negeri 5 Menara</strong></td>
-                                <td>Ahmad Fuadi</td>
-                                <td>Sastra</td>
-                                <td>Rp 45.000</td>
-                                <td><span class="stock-out">Habis</span></td>
-                                <td><span class="badge">Bekas</span></td>
-                                <td>
-                                    <button class="btn-sm btn-secondary">Edit</button>
-                                    <button class="btn-sm btn-danger">Hapus</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                </div>
-
-                <!-- master ruangan -->
-                <div class="master-panel" id="master-ruangan">
                     <div class="admin-card">
                         <div class="table-toolbar">
-                            <input type="text" class="search-input" placeholder="🔍 Cari nama ruangan">
-                            <span class="table-count">Menampilkan 3 ruangan</span>
-                            <button class="btn-primary" id="btn-add-room">+ Tambah Ruangan Baru</button>
+                            <input type="text" id="book-search" class="search-input" placeholder="🔍 Cari judul atau penulis">
+                            <span class="table-count" id="book-count">Menampilkan <?= count($books) ?> buku</span>
+                            <button class="btn-primary" id="btn-add-book">+ Tambah Buku Baru</button>
                         </div>
                         <table class="data-table">
                             <thead>
-                                <tr>
-                                    <th>Nama Ruangan</th>
-                                    <th>Kapasitas</th>
-                                    <th>Fasilitas</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
+                                <tr><th>Judul Buku</th><th>Penulis</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Kondisi</th><th>Aksi</th></tr>
                             </thead>
-                            <tbody id="admin-room-list">
-                                <tr data-nama="Pendopo Utama" data-kapasitas="50"
-                                    data-fasilitas="Sound system, Tikar, Listrik" data-status="Aktif"
-                                    data-deskripsi="Area terbuka beratap untuk acara besar dan pertunjukan.">
-                                    <td><strong>Pendopo Utama</strong></td>
-                                    <td>50 orang</td>
-                                    <td><div class="chip-list"><span class="badge">Sound system</span><span class="badge">Tikar</span><span class="badge">Listrik</span></div></td>
-                                    <td><span class="badge badge-success">Aktif</span></td>
+                            <tbody id="admin-book-list">
+                                <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $kondisi]): ?>
+                                <tr data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $h($kategori) ?>"
+                                    data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-deskripsi="">
+                                    <td><strong><?= $h($judul) ?></strong></td>
+                                    <td><?= $h($penulis) ?></td>
+                                    <td><?= $h($kategori) ?></td>
+                                    <td><?= $rp($harga) ?></td>
+                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 2): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
+                                    <td><span class="badge"><?= $h($kondisi) ?></span></td>
                                     <td>
-                                        <button class="btn-sm btn-secondary btn-edit-room">Edit</button>
-                                        <button class="btn-sm btn-danger">Hapus</button>
+                                        <button class="btn-sm btn-secondary btn-edit-book">Edit</button>
+                                        <button class="btn-sm btn-danger btn-delete-book">Hapus</button>
                                     </td>
                                 </tr>
-                                <tr data-nama="Ruang Diskusi & Lesehan" data-kapasitas="25"
-                                    data-fasilitas="Proyektor, Whiteboard, Tikar" data-status="Aktif"
-                                    data-deskripsi="Ruang tertutup untuk diskusi, bedah buku, dan kelas kecil.">
-                                    <td><strong>Ruang Diskusi &amp; Lesehan</strong></td>
-                                    <td>25 orang</td>
-                                    <td><div class="chip-list"><span class="badge">Proyektor</span><span class="badge">Whiteboard</span><span class="badge">Tikar</span></div></td>
-                                    <td><span class="badge badge-success">Aktif</span></td>
-                                    <td>
-                                        <button class="btn-sm btn-secondary btn-edit-room">Edit</button>
-                                        <button class="btn-sm btn-danger">Hapus</button>
-                                    </td>
-                                </tr>
-                                <tr data-nama="Galeri Mini" data-kapasitas="15"
-                                    data-fasilitas="Panel pamer, Lampu sorot" data-status="Nonaktif"
-                                    data-deskripsi="Sedang dalam perawatan.">
-                                    <td><strong>Galeri Mini</strong></td>
-                                    <td>15 orang</td>
-                                    <td><div class="chip-list"><span class="badge">Panel pamer</span><span class="badge">Lampu sorot</span></div></td>
-                                    <td><span class="badge badge-danger">Nonaktif</span></td>
-                                    <td>
-                                        <button class="btn-sm btn-secondary btn-edit-room">Edit</button>
-                                        <button class="btn-sm btn-danger">Hapus</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
-
-                <!-- popup tambah / edit ruangan -->
-                <div class="popup-overlay" id="room-popup" hidden>
-                    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="room-popup-title">
-                        <div class="popup-header">
-                            <h3 id="room-popup-title">Tambah Ruangan Baru</h3>
-                            <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
-                        </div>
-
-                        <form id="form-room">
-                            <div class="form-group">
-                                <label for="room-nama">Nama Ruangan</label>
-                                <input type="text" id="room-nama" placeholder="Contoh: Pendopo Utama">
-                            </div>
-
-                            <div class="form-group row-time">
-                                <div>
-                                    <label for="room-kapasitas">Kapasitas Maksimal</label>
-                                    <input type="number" id="room-kapasitas" min="1" placeholder="50">
-                                </div>
-                                <div>
-                                    <label for="room-status">Status</label>
-                                    <select id="room-status">
-                                        <option>Aktif</option>
-                                        <option>Nonaktif</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="room-fasilitas">Fasilitas <span class="label-optional">(pisahkan dengan koma)</span></label>
-                                <input type="text" id="room-fasilitas" placeholder="Contoh: Sound system, Tikar, Proyektor">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="room-deskripsi">Deskripsi Singkat <span class="label-optional">(opsional)</span></label>
-                                <textarea id="room-deskripsi" rows="3" placeholder="Gambaran ruangan dan ketentuan pemakaian"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="room-foto">Foto Ruangan <span class="label-optional">(opsional)</span></label>
-                                <input type="file" id="room-foto" accept="image/*">
-                            </div>
-
-                            <div class="popup-actions">
-                                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
-                                <button type="button" class="btn-primary">Simpan Ruangan</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- popup tambah buku -->
-                <div class="popup-overlay" id="book-popup" hidden>
-                    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="book-popup-title">
-                        <div class="popup-header">
-                            <h3 id="book-popup-title">Tambah Buku Baru</h3>
-                            <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
-                        </div>
-
-                        <form id="form-add-book">
-                            <div class="form-group">
-                                <label for="book-judul">Judul Buku</label>
-                                <input type="text" id="book-judul" placeholder="Contoh: Bumi Manusia">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="book-penulis">Penulis</label>
-                                <input type="text" id="book-penulis" placeholder="Contoh: Pramoedya Ananta Toer">
-                            </div>
-
-                            <div class="form-group row-time">
-                                <div>
-                                    <label for="book-kategori">Kategori</label>
-                                    <select id="book-kategori">
-                                        <option value="">Pilih kategori</option>
-                                        <option>Sastra</option>
-                                        <option>Sejarah</option>
-                                        <option>Filsafat</option>
-                                        <option>Sains</option>
-                                        <option>Anak</option>
-                                        <option>Lainnya</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="book-kondisi">Kondisi</label>
-                                    <select id="book-kondisi">
-                                        <option>Baru</option>
-                                        <option>Bekas</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group row-time">
-                                <div>
-                                    <label for="book-harga">Harga (Rp)</label>
-                                    <input type="number" id="book-harga" min="0" placeholder="85000">
-                                </div>
-                                <div>
-                                    <label for="book-stok">Stok</label>
-                                    <input type="number" id="book-stok" min="0" placeholder="10">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="book-deskripsi">Deskripsi Singkat <span class="label-optional">(opsional)</span></label>
-                                <textarea id="book-deskripsi" rows="3" placeholder="Sinopsis atau catatan kondisi buku"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="book-cover">Foto Sampul <span class="label-optional">(opsional)</span></label>
-                                <input type="file" id="book-cover" accept="image/*">
-                            </div>
-
-                            <div class="popup-actions">
-                                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
-                                <button type="button" class="btn-primary">Simpan Buku</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
             </section>
+
             <!-- kasir -->
-             <section id="tab-pos" class="tab-content">
+            <section id="tab-pos" class="tab-content">
                 <div class="section-header">
                     <div>
                         <h2>POS Terminal Kasir</h2>
                         <p class="subtitle">Pilih buku dari katalog, atur jumlahnya di keranjang, lalu proses pembayaran dan cetak invoice.</p>
-                    </div>
-                    <div class="pos-session">
-                        <span>Kasir: <strong><?= htmlspecialchars($adminName) ?></strong></span>
-                        <span>Kamis, 15 Okt 2026</span>
                     </div>
                 </div>
 
                 <div class="pos-layout">
                     <!-- katalog -->
                     <div class="pos-catalog">
-                        <input type="text" class="search-input" placeholder="🔍 Cari judul atau penulis">
-
-                        <p class="pos-catalog-meta">Menampilkan 8 buku · klik buku untuk menambahkan ke keranjang</p>
+                        <input type="text" id="pos-search" class="search-input" placeholder="🔍 Cari judul atau penulis">
+                        <p class="pos-catalog-meta"><span id="pos-count">Menampilkan <?= count($books) ?> buku</span> · klik buku untuk menambahkan ke keranjang</p>
 
                         <div class="pos-items-grid">
-                            <div class="pos-item-card in-cart">
+                            <?php foreach ($books as $i => [$judul, $penulis, $kategori, $harga, $stok, $kondisi, $warna]): ?>
+                            <div class="pos-item-card<?= $stok === 0 ? ' out-of-stock' : '' ?>" data-id="<?= $i ?>" data-judul="<?= $h($judul) ?>"
+                                data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-warna="<?= $warna ?>">
                                 <div class="pos-item-main">
-                                    <span class="book-icon bk-red"></span>
+                                    <span class="book-icon <?= $warna ?>"></span>
                                     <div class="pos-item-info">
-                                        <h4>Bumi Manusia</h4>
-                                        <p class="pos-item-author">Pramoedya Ananta Toer</p>
-                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 12</span></div>
+                                        <h4><?= $h($judul) ?></h4>
+                                        <p class="pos-item-author"><?= $h($penulis) ?></p>
+                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 2 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
                                     </div>
                                 </div>
                                 <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 85.000</span>
-                                    <span class="in-cart-tag">2 di keranjang</span>
+                                    <span class="pos-item-price"><?= $rp($harga) ?></span>
+                                    <?php if ($stok === 0): ?><span class="stock-pill empty">Habis</span><?php else: ?><span class="in-cart-tag" hidden></span><?php endif; ?>
                                 </div>
                             </div>
-
-                            <div class="pos-item-card in-cart">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-red"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Laskar Pelangi</h4>
-                                        <p class="pos-item-author">Andrea Hirata</p>
-                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock">Stok 5</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 50.000</span>
-                                    <span class="in-cart-tag">1 di keranjang</span>
-                                </div>
-                            </div>
-
-                            <div class="pos-item-card in-cart">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-amber"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Sapiens</h4>
-                                        <p class="pos-item-author">Yuval Noah Harari</p>
-                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 8</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 95.000</span>
-                                    <span class="in-cart-tag">1 di keranjang</span>
-                                </div>
-                            </div>
-
-                            <div class="pos-item-card">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-green"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Filosofi Teras</h4>
-                                        <p class="pos-item-author">Henry Manampiring</p>
-                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 15</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 78.000</span>
-                                </div>
-                            </div>
-
-                            <div class="pos-item-card">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-red"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Cantik Itu Luka</h4>
-                                        <p class="pos-item-author">Eka Kurniawan</p>
-                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock low">Stok 2</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 65.000</span>
-                                </div>
-                            </div>
-
-                            <div class="pos-item-card">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-brown"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Atomic Habits</h4>
-                                        <p class="pos-item-author">James Clear</p>
-                                        <div class="pos-item-tags"><span class="badge">Baru</span><span class="pos-stock">Stok 6</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 110.000</span>
-                                </div>
-                            </div>
-
-                            <div class="pos-item-card">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-blue"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Cosmos</h4>
-                                        <p class="pos-item-author">Carl Sagan</p>
-                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock">Stok 3</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 70.000</span>
-                                </div>
-                            </div>
-
-                            <div class="pos-item-card out-of-stock">
-                                <div class="pos-item-main">
-                                    <span class="book-icon bk-red"></span>
-                                    <div class="pos-item-info">
-                                        <h4>Negeri 5 Menara</h4>
-                                        <p class="pos-item-author">Ahmad Fuadi</p>
-                                        <div class="pos-item-tags"><span class="badge">Bekas</span><span class="pos-stock low">Stok 0</span></div>
-                                    </div>
-                                </div>
-                                <div class="pos-item-foot">
-                                    <span class="pos-item-price">Rp 45.000</span>
-                                    <span class="stock-pill empty">Habis</span>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
-                    <!-- keranjang -->
+                    <!-- keranjang (diisi JS) -->
                     <div class="pos-cart-panel">
                         <div class="cart-head">
                             <div>
                                 <h3>Keranjang Transaksi</h3>
                                 <span class="invoice-no">INV-202610-014</span>
                             </div>
-                            <button class="btn-clear">Kosongkan</button>
+                            <button type="button" class="btn-clear" id="cart-clear">Kosongkan</button>
                         </div>
 
-                        <div class="cart-list" id="cart-items">
-                            <!-- dummy item checkout -->
-                            <div class="cart-item">
-                                <span class="book-icon book-icon-sm bk-red"></span>
-                                <div class="cart-item-info">
-                                    <div class="cart-item-name">Bumi Manusia</div>
-                                    <div class="cart-item-meta">Rp 85.000 · Baru</div>
-                                    <div class="cart-item-row">
-                                        <div class="qty-stepper">
-                                            <button type="button" aria-label="Kurangi">−</button>
-                                            <span>2</span>
-                                            <button type="button" aria-label="Tambah">+</button>
-                                        </div>
-                                        <span class="cart-item-sub">Rp 170.000</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="cart-item-remove" aria-label="Hapus item">✕</button>
-                            </div>
-
-                            <div class="cart-item">
-                                <span class="book-icon book-icon-sm bk-red"></span>
-                                <div class="cart-item-info">
-                                    <div class="cart-item-name">Laskar Pelangi</div>
-                                    <div class="cart-item-meta">Rp 50.000 · Bekas</div>
-                                    <div class="cart-item-row">
-                                        <div class="qty-stepper">
-                                            <button type="button" aria-label="Kurangi">−</button>
-                                            <span>1</span>
-                                            <button type="button" aria-label="Tambah">+</button>
-                                        </div>
-                                        <span class="cart-item-sub">Rp 50.000</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="cart-item-remove" aria-label="Hapus item">✕</button>
-                            </div>
-
-                            <div class="cart-item">
-                                <span class="book-icon book-icon-sm bk-amber"></span>
-                                <div class="cart-item-info">
-                                    <div class="cart-item-name">Sapiens</div>
-                                    <div class="cart-item-meta">Rp 95.000 · Baru</div>
-                                    <div class="cart-item-row">
-                                        <div class="qty-stepper">
-                                            <button type="button" aria-label="Kurangi">−</button>
-                                            <span>1</span>
-                                            <button type="button" aria-label="Tambah">+</button>
-                                        </div>
-                                        <span class="cart-item-sub">Rp 95.000</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="cart-item-remove" aria-label="Hapus item">✕</button>
-                            </div>
-                        </div>
+                        <div class="cart-list" id="cart-items"></div>
 
                         <div class="cart-summary">
-                            <div class="summary-row">
-                                <span>Subtotal (4 buku)</span>
-                                <span>Rp 315.000</span>
-                            </div>
+                            <div class="summary-row"><span>Subtotal (<span id="cart-qty">0</span> buku)</span><span id="cart-subtotal">Rp 0</span></div>
                             <div class="summary-row summary-total">
                                 <span>Total Bayar</span>
-                                <strong id="cart-total" class="total-price">Rp 315.000</strong>
+                                <strong id="cart-total" class="total-price">Rp 0</strong>
                             </div>
                         </div>
 
                         <div class="cart-payment">
                             <span class="cart-label">Metode pembayaran</span>
                             <div class="pay-methods">
-                                <button type="button" class="pay-method active">💵 Tunai</button>
-                                <button type="button" class="pay-method">📱 QRIS</button>
+                                <button type="button" class="pay-method active" data-method="tunai">💵 Tunai</button>
+                                <button type="button" class="pay-method" data-method="qris">📱 QRIS</button>
                             </div>
-
                             <div class="cash-box">
                                 <label for="cash-received">Uang diterima</label>
                                 <div class="cash-input">
                                     <span class="cash-prefix">Rp</span>
-                                    <input type="text" id="cash-received" value="350.000">
+                                    <input type="text" id="cash-received" inputmode="numeric" placeholder="0">
                                 </div>
-                                <div class="cash-change">
-                                    <span>Kembalian</span>
-                                    <strong>Rp 35.000</strong>
-                                </div>
+                                <div class="cash-change"><span id="cash-change-label">Kembalian</span><strong id="cash-change">Rp 0</strong></div>
                             </div>
                         </div>
 
@@ -674,8 +256,9 @@ $adminName = current_user_name();
                     </div>
                 </div>
             </section>
-            <!-- reservation -->
-             <section id="tab-reservasi" class="tab-content">
+
+            <!-- reservasi -->
+            <section id="tab-reservasi" class="tab-content">
                 <h2>Persetujuan Reservasi Ruang</h2>
                 <p class="subtitle">
                     Permintaan reservasi yang masuk dari formulir web. Diskusikan detailnya lewat WhatsApp,
@@ -685,231 +268,158 @@ $adminName = current_user_name();
 
                 <!-- ringkasan status -->
                 <div class="rsv-summary">
-                    <div class="rsv-summary-item">
-                        <span class="rsv-summary-num">3</span>
-                        <span class="rsv-summary-label">Menunggu review</span>
-                    </div>
-                    <div class="rsv-summary-item">
-                        <span class="rsv-summary-num">1</span>
-                        <span class="rsv-summary-label">Disetujui</span>
-                    </div>
-                    <div class="rsv-summary-item">
-                        <span class="rsv-summary-num">1</span>
-                        <span class="rsv-summary-label">Ditolak</span>
-                    </div>
+                    <div class="rsv-summary-item"><span class="rsv-summary-num" data-count="pending"><?= $rsvCount['pending'] ?? 0 ?></span><span class="rsv-summary-label">Menunggu review</span></div>
+                    <div class="rsv-summary-item"><span class="rsv-summary-num" data-count="approved"><?= $rsvCount['approved'] ?? 0 ?></span><span class="rsv-summary-label">Disetujui</span></div>
+                    <div class="rsv-summary-item"><span class="rsv-summary-num" data-count="rejected"><?= $rsvCount['rejected'] ?? 0 ?></span><span class="rsv-summary-label">Ditolak</span></div>
                 </div>
 
                 <!-- filter -->
                 <div class="rsv-filters">
-                    <button class="rsv-filter active">Menunggu Review</button>
-                    <button class="rsv-filter">Disetujui</button>
-                    <button class="rsv-filter">Ditolak</button>
-                    <button class="rsv-filter">Semua</button>
+                    <button class="rsv-filter active" data-filter="pending">Menunggu Review</button>
+                    <button class="rsv-filter" data-filter="approved">Disetujui</button>
+                    <button class="rsv-filter" data-filter="rejected">Ditolak</button>
+                    <button class="rsv-filter" data-filter="all">Semua</button>
                 </div>
 
                 <!-- daftar permintaan -->
                 <div class="rsv-list">
-
-                    <!-- menunggu: bentrok dengan jadwal yang sudah disetujui -->
-                    <article class="rsv-card rsv-pending"
-                        data-pemohon="Karang Taruna Desa Sukorejo" data-agenda="Rapat Persiapan Festival Desa"
-                        data-ruangan="Pendopo Utama" data-tanggal="2026-10-15"
-                        data-mulai="13:00" data-selesai="16:00" data-peserta="25">
+                    <?php foreach ($reservations as [$pemohon, $agenda, $ruangan, $tanggal, $mulai, $selesai, $peserta, $wa, $diajukan, $status, $bentrok]): ?>
+                    <article class="rsv-card rsv-<?= $status ?>" data-status="<?= $status ?>"
+                        data-pemohon="<?= $h($pemohon) ?>" data-agenda="<?= $h($agenda) ?>" data-ruangan="<?= $h($ruangan) ?>"
+                        data-tanggal="<?= $tanggal ?>" data-mulai="<?= $mulai ?>" data-selesai="<?= $selesai ?>" data-peserta="<?= $peserta ?>">
                         <div class="rsv-card-head">
                             <div>
-                                <h3>Rapat Persiapan Festival Desa</h3>
-                                <p class="rsv-by">Oleh <strong>Karang Taruna Desa Sukorejo</strong> · diajukan 8 Okt 2026, 14.20</p>
+                                <h3 data-f="agenda"><?= $h($agenda) ?></h3>
+                                <p class="rsv-by">Oleh <strong data-f="pemohon"><?= $h($pemohon) ?></strong> · diajukan <?= $diajukan ?></p>
                             </div>
-                            <span class="badge badge-warning">Menunggu Review</span>
+                            <span class="badge rsv-badge <?= $statusMeta[$status][1] ?>"><?= $statusMeta[$status][0] ?></span>
                         </div>
                         <dl class="rsv-details">
-                            <div><dt>Ruangan</dt><dd>Pendopo Utama</dd></div>
-                            <div><dt>Tanggal</dt><dd>Kamis, 15 Oktober 2026</dd></div>
-                            <div><dt>Waktu</dt><dd>13:00 - 16:00 WIB</dd></div>
-                            <div><dt>Peserta</dt><dd>25 orang</dd></div>
-                            <div><dt>Kontak WA</dt><dd>+62 812-3456-7802</dd></div>
+                            <div><dt>Ruangan</dt><dd data-f="ruangan"><?= $h($ruangan) ?></dd></div>
+                            <div><dt>Tanggal</dt><dd data-f="tanggal"><?= $tglLabel($tanggal) ?></dd></div>
+                            <div><dt>Waktu</dt><dd data-f="waktu"><?= $mulai ?> - <?= $selesai ?> WIB</dd></div>
+                            <div><dt>Peserta</dt><dd data-f="peserta"><?= $peserta ?> orang</dd></div>
+                            <div><dt>Kontak WA</dt><dd><?= $wa ?></dd></div>
                         </dl>
-                        <div class="rsv-warning">
-                            ⚠️ <strong>Bentrok jadwal:</strong> Workshop Puisi (10:00 - 14:00) sudah disetujui di ruangan &amp; tanggal yang sama. Edit jadwalnya sebelum menyetujui.
-                        </div>
+                        <?php if ($bentrok): ?>
+                        <div class="rsv-warning">⚠️ <strong>Bentrok jadwal:</strong> Workshop Puisi (10:00 - 14:00) sudah disetujui di ruangan &amp; tanggal yang sama. Edit jadwalnya sebelum menyetujui.</div>
+                        <?php endif; ?>
+                        <!-- tombol tampil sesuai status kartu (diatur CSS) -->
                         <div class="rsv-actions">
-                            <button class="btn-sm btn-secondary">💬 Chat WA</button>
-                            <button class="btn-sm btn-secondary btn-edit-rsv">✏️ Edit</button>
-                            <button class="btn-sm btn-danger">Tolak</button>
-                            <button class="btn-sm btn-approve">✔ Setujui</button>
+                            <a class="btn-sm btn-secondary" href="https://wa.me/<?= preg_replace('/\D/', '', $wa) ?>" target="_blank" rel="noopener">💬 Chat WA</a>
+                            <button class="btn-sm btn-secondary hide-rejected" data-action="edit">✏️ Edit</button>
+                            <button class="btn-sm btn-danger only-pending" data-action="reject">Tolak</button>
+                            <button class="btn-sm btn-approve only-pending" data-action="approve">✔ Setujui</button>
+                            <button class="btn-sm btn-secondary only-approved" data-action="reset">Batalkan Persetujuan</button>
+                            <button class="btn-sm btn-secondary only-rejected" data-action="reset">Kembalikan ke Review</button>
                         </div>
                     </article>
-
-                    <!-- menunggu -->
-                    <article class="rsv-card rsv-pending"
-                        data-pemohon="Rina Wulandari" data-agenda="Bedah Buku &quot;Bumi Manusia&quot;"
-                        data-ruangan="Ruang Diskusi & Lesehan" data-tanggal="2026-10-18"
-                        data-mulai="15:00" data-selesai="17:30" data-peserta="15">
-                        <div class="rsv-card-head">
-                            <div>
-                                <h3>Bedah Buku "Bumi Manusia"</h3>
-                                <p class="rsv-by">Oleh <strong>Rina Wulandari</strong> · diajukan 9 Okt 2026, 08.40</p>
-                            </div>
-                            <span class="badge badge-warning">Menunggu Review</span>
-                        </div>
-                        <dl class="rsv-details">
-                            <div><dt>Ruangan</dt><dd>Ruang Diskusi &amp; Lesehan</dd></div>
-                            <div><dt>Tanggal</dt><dd>Minggu, 18 Oktober 2026</dd></div>
-                            <div><dt>Waktu</dt><dd>15:00 - 17:30 WIB</dd></div>
-                            <div><dt>Peserta</dt><dd>15 orang</dd></div>
-                            <div><dt>Kontak WA</dt><dd>+62 812-3456-7803</dd></div>
-                        </dl>
-                        <p class="rsv-notes"><strong>Catatan:</strong> Mohon disediakan proyektor jika ada.</p>
-                        <div class="rsv-actions">
-                            <button class="btn-sm btn-secondary">💬 Chat WA</button>
-                            <button class="btn-sm btn-secondary btn-edit-rsv">✏️ Edit</button>
-                            <button class="btn-sm btn-danger">Tolak</button>
-                            <button class="btn-sm btn-approve">✔ Setujui</button>
-                        </div>
-                    </article>
-
-                    <!-- menunggu -->
-                    <article class="rsv-card rsv-pending"
-                        data-pemohon="Komunitas Fotografi Blitar" data-agenda="Pameran Foto Mini"
-                        data-ruangan="Pendopo Utama" data-tanggal="2026-10-24"
-                        data-mulai="08:00" data-selesai="12:00" data-peserta="40">
-                        <div class="rsv-card-head">
-                            <div>
-                                <h3>Pameran Foto Mini</h3>
-                                <p class="rsv-by">Oleh <strong>Komunitas Fotografi Blitar</strong> · diajukan 9 Okt 2026, 19.05</p>
-                            </div>
-                            <span class="badge badge-warning">Menunggu Review</span>
-                        </div>
-                        <dl class="rsv-details">
-                            <div><dt>Ruangan</dt><dd>Pendopo Utama</dd></div>
-                            <div><dt>Tanggal</dt><dd>Sabtu, 24 Oktober 2026</dd></div>
-                            <div><dt>Waktu</dt><dd>08:00 - 12:00 WIB</dd></div>
-                            <div><dt>Peserta</dt><dd>40 orang</dd></div>
-                            <div><dt>Kontak WA</dt><dd>+62 812-3456-7804</dd></div>
-                        </dl>
-                        <p class="rsv-notes"><strong>Catatan:</strong> Setup pameran dari jam 7 pagi.</p>
-                        <div class="rsv-actions">
-                            <button class="btn-sm btn-secondary">💬 Chat WA</button>
-                            <button class="btn-sm btn-secondary btn-edit-rsv">✏️ Edit</button>
-                            <button class="btn-sm btn-danger">Tolak</button>
-                            <button class="btn-sm btn-approve">✔ Setujui</button>
-                        </div>
-                    </article>
-
-                    <!-- disetujui -->
-                    <article class="rsv-card rsv-approved"
-                        data-pemohon="Komunitas Sastra Malang" data-agenda="Workshop Puisi"
-                        data-ruangan="Pendopo Utama" data-tanggal="2026-10-15"
-                        data-mulai="10:00" data-selesai="14:00" data-peserta="30">
-                        <div class="rsv-card-head">
-                            <div>
-                                <h3>Workshop Puisi</h3>
-                                <p class="rsv-by">Oleh <strong>Komunitas Sastra Malang</strong> · diajukan 5 Okt 2026, 09.15</p>
-                            </div>
-                            <span class="badge badge-success">Disetujui</span>
-                        </div>
-                        <dl class="rsv-details">
-                            <div><dt>Ruangan</dt><dd>Pendopo Utama</dd></div>
-                            <div><dt>Tanggal</dt><dd>Kamis, 15 Oktober 2026</dd></div>
-                            <div><dt>Waktu</dt><dd>10:00 - 14:00 WIB</dd></div>
-                            <div><dt>Peserta</dt><dd>30 orang</dd></div>
-                            <div><dt>Kontak WA</dt><dd>+62 812-3456-7801</dd></div>
-                        </dl>
-                        <p class="rsv-notes"><strong>Catatan:</strong> Butuh tikar dan sound system sederhana.</p>
-                        <div class="rsv-actions">
-                            <button class="btn-sm btn-secondary">💬 Chat WA</button>
-                            <button class="btn-sm btn-secondary btn-edit-rsv">✏️ Edit</button>
-                            <button class="btn-sm btn-secondary">Batalkan Persetujuan</button>
-                        </div>
-                    </article>
-
-                    <!-- ditolak -->
-                    <article class="rsv-card rsv-rejected"
-                        data-pemohon="Dimas Pratama" data-agenda="Ulang tahun pribadi"
-                        data-ruangan="Ruang Diskusi & Lesehan" data-tanggal="2026-10-12"
-                        data-mulai="19:00" data-selesai="22:00" data-peserta="20">
-                        <div class="rsv-card-head">
-                            <div>
-                                <h3>Ulang tahun pribadi</h3>
-                                <p class="rsv-by">Oleh <strong>Dimas Pratama</strong> · diajukan 7 Okt 2026, 21.10</p>
-                            </div>
-                            <span class="badge badge-danger">Ditolak</span>
-                        </div>
-                        <dl class="rsv-details">
-                            <div><dt>Ruangan</dt><dd>Ruang Diskusi &amp; Lesehan</dd></div>
-                            <div><dt>Tanggal</dt><dd>Senin, 12 Oktober 2026</dd></div>
-                            <div><dt>Waktu</dt><dd>19:00 - 22:00 WIB</dd></div>
-                            <div><dt>Peserta</dt><dd>20 orang</dd></div>
-                            <div><dt>Kontak WA</dt><dd>+62 812-3456-7805</dd></div>
-                        </dl>
-                        <div class="rsv-actions">
-                            <button class="btn-sm btn-secondary">💬 Chat WA</button>
-                            <button class="btn-sm btn-secondary">Kembalikan ke Review</button>
-                        </div>
-                    </article>
-                </div>
-
-                <!-- popup edit -->
-                <div class="popup-overlay" id="rsv-popup" hidden>
-                    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="rsv-popup-title">
-                        <div class="popup-header">
-                            <h3 id="rsv-popup-title">Edit Permintaan Reservasi</h3>
-                            <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
-                        </div>
-
-                        <form id="form-edit-reservation">
-                            <div class="form-group row-time">
-                                <div>
-                                    <label for="edit-ruangan">Ruangan</label>
-                                    <select id="edit-ruangan">
-                                        <option value="Pendopo Utama">Pendopo Utama</option>
-                                        <option value="Ruang Diskusi & Lesehan">Ruang Diskusi & Lesehan</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="edit-tanggal">Tanggal</label>
-                                    <input type="date" id="edit-tanggal">
-                                </div>
-                            </div>
-
-                            <div class="form-group row-time">
-                                <div>
-                                    <label for="edit-jam-mulai">Jam Mulai</label>
-                                    <input type="time" id="edit-jam-mulai">
-                                </div>
-                                <div>
-                                    <label for="edit-jam-selesai">Jam Selesai</label>
-                                    <input type="time" id="edit-jam-selesai">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="edit-pemohon">Nama Pemohon / Komunitas</label>
-                                <input type="text" id="edit-pemohon">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="edit-agenda">Agenda / Keperluan</label>
-                                <input type="text" id="edit-agenda">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="edit-peserta">Perkiraan Jumlah Peserta</label>
-                                <input type="number" id="edit-peserta" min="1">
-                            </div>
-
-                            <div class="popup-actions">
-                                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
-                                <button type="button" class="btn-secondary btn-outline-primary">Simpan Perubahan</button>
-                                <button type="button" class="btn-primary">Simpan & Setujui</button>
-                            </div>
-                        </form>
-                    </div>
+                    <?php endforeach; ?>
+                    <p class="subtitle" id="rsv-empty" hidden>Tidak ada permintaan reservasi pada filter ini.</p>
                 </div>
             </section>
-
         </main>
     </div>
+
+    <!-- popup tambah / edit buku -->
+    <div class="popup-overlay" id="book-popup" hidden>
+        <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="book-popup-title">
+            <div class="popup-header">
+                <h3 id="book-popup-title">Tambah Buku Baru</h3>
+                <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+            </div>
+            <form id="form-add-book">
+                <div class="form-group">
+                    <label for="book-judul">Judul Buku</label>
+                    <input type="text" id="book-judul" placeholder="Contoh: Bumi Manusia" required>
+                </div>
+                <div class="form-group">
+                    <label for="book-penulis">Penulis</label>
+                    <input type="text" id="book-penulis" placeholder="Contoh: Pramoedya Ananta Toer" required>
+                </div>
+                <div class="form-group row-time">
+                    <div>
+                        <label for="book-kategori">Kategori</label>
+                        <select id="book-kategori" required>
+                            <option value="">Pilih kategori</option>
+                            <option>Sastra</option><option>Sejarah</option><option>Filsafat</option>
+                            <option>Sains</option><option>Anak</option><option>Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="book-kondisi">Kondisi</label>
+                        <select id="book-kondisi" required><option>Baru</option><option>Bekas</option></select>
+                    </div>
+                </div>
+                <div class="form-group row-time">
+                    <div><label for="book-harga">Harga (Rp)</label><input type="number" id="book-harga" min="0" placeholder="85000" required></div>
+                    <div><label for="book-stok">Stok</label><input type="number" id="book-stok" min="0" placeholder="10" required></div>
+                </div>
+                <div class="form-group">
+                    <label for="book-deskripsi">Deskripsi Singkat <span class="label-optional">(opsional)</span></label>
+                    <textarea id="book-deskripsi" rows="3" placeholder="Sinopsis atau catatan kondisi buku"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="book-cover">Foto Sampul <span class="label-optional">(opsional)</span></label>
+                    <input type="file" id="book-cover" accept="image/*">
+                </div>
+                <div class="popup-actions">
+                    <button type="button" class="btn-secondary" data-popup-close>Batal</button>
+                    <button type="submit" class="btn-primary">Simpan Buku</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- popup edit reservasi -->
+    <div class="popup-overlay" id="rsv-popup" hidden>
+        <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="rsv-popup-title">
+            <div class="popup-header">
+                <h3 id="rsv-popup-title">Edit Permintaan Reservasi</h3>
+                <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+            </div>
+            <form id="form-edit-reservation">
+                <div class="form-group row-time">
+                    <div>
+                        <label for="edit-ruangan">Ruangan</label>
+                        <select id="edit-ruangan" required>
+                            <option value="Pendopo Utama">Pendopo Utama</option>
+                            <option value="Ruang Diskusi &amp; Lesehan">Ruang Diskusi &amp; Lesehan</option>
+                        </select>
+                    </div>
+                    <div><label for="edit-tanggal">Tanggal</label><input type="date" id="edit-tanggal" required></div>
+                </div>
+                <div class="form-group row-time">
+                    <div><label for="edit-jam-mulai">Jam Mulai</label><input type="time" id="edit-jam-mulai" required></div>
+                    <div><label for="edit-jam-selesai">Jam Selesai</label><input type="time" id="edit-jam-selesai" required></div>
+                </div>
+                <div class="form-group"><label for="edit-pemohon">Nama Pemohon / Komunitas</label><input type="text" id="edit-pemohon" required></div>
+                <div class="form-group"><label for="edit-agenda">Agenda / Keperluan</label><input type="text" id="edit-agenda" required></div>
+                <div class="form-group"><label for="edit-peserta">Perkiraan Jumlah Peserta</label><input type="number" id="edit-peserta" min="1" required></div>
+                <div class="popup-actions">
+                    <button type="button" class="btn-secondary" data-popup-close>Batal</button>
+                    <button type="submit" class="btn-secondary btn-outline-primary">Simpan Perubahan</button>
+                    <button type="button" class="btn-primary" id="btn-save-approve">Simpan &amp; Setujui</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- popup konfirmasi (hapus buku, setujui & tolak reservasi) -->
+    <div class="popup-overlay" id="confirm-popup" hidden>
+        <div class="popup-box popup-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+            <div class="popup-header">
+                <h3 id="confirm-title">Konfirmasi</h3>
+                <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+            </div>
+            <p class="confirm-message" id="confirm-message"></p>
+            <div class="popup-actions">
+                <button type="button" class="btn-secondary" data-popup-close>Batal</button>
+                <button type="button" class="btn-primary" id="confirm-ok">Ya</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/admin.js"></script>
 </body>
 </html>
