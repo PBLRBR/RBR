@@ -10,10 +10,8 @@ function simart_render_account_menu(?array $user = null, array $options = []): v
     }
 
     $role = (string) ($user['role'] ?? 'member');
-    $profileHref = $options['href'] ?? simart_url(
-        $role === 'admin' ? '/pages/dashboard/index.php' : '/pages/auth/profile.php'
-    );
-    $profileTitle = $options['title'] ?? ($role === 'admin' ? 'Panel Admin' : 'Ke Pengaturan Profil');
+    $profileHref = $options['href'] ?? simart_url('/pages/auth/profile.php');
+    $profileTitle = $options['title'] ?? 'Ke Pengaturan Profil';
     $profileClass = 'user-profile' . (!empty($options['active']) ? ' active' : '');
     $avatarId = $options['avatar_id'] ?? null;
     $userNameId = $options['user_name_id'] ?? null;
