@@ -1,9 +1,11 @@
 <?php
-// Halaman Pengaturan Profil (PHP + HTML dalam 1 file).
+require_once __DIR__ . '/_data.php';
+requireAppUser();
 $pageTitle = 'Profil Saya | SIMART';
-
-// data dummy profil
-$profile = ['nama' => 'Budi Santoso', 'email' => 'budi@ratna.org', 'no_hp' => '081234567890'];
+$stmt = db()->prepare('SELECT nama, email, no_hp FROM users WHERE id_user=:id');
+$stmt->execute(['id'=>$_SESSION['user']['id_user']]);
+$profile = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$profile) { http_response_code(404); exit('Akun tidak ditemukan.'); }
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -16,7 +18,7 @@ $profile = ['nama' => 'Budi Santoso', 'email' => 'budi@ratna.org', 'no_hp' => '0
 </head>
 
 <body>
-    <!-- navbar (tampilan anggota, dummy) -->
+    <!-- navbar akun login -->
     <header class="navbar">
         <div class="container nav-container">
             <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">SIMART</span></a>
@@ -30,14 +32,14 @@ $profile = ['nama' => 'Budi Santoso', 'email' => 'budi@ratna.org', 'no_hp' => '0
             </nav>
             <div class="nav-auth">
                 <a href="/profil.php" class="user-profile active"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name"><?= htmlspecialchars($profile['nama']) ?></span></a>
-                <a class="btn-secondary" href="/">Keluar</a>
+                <button class="btn-secondary" type="button" data-logout>Keluar</button>
             </div>
         </div>
     </header>
 
     <main class="container page-content">
         <h2>Pengaturan Profil</h2>
-        <p class="subtitle">Kelola informasi pribadi yang tersimpan pada akun Anda.</p>
+        <p class="subtitle">Informasi akun dari database. Perubahan profil belum diaktifkan pada versi integrasi awal.</p>
 
         <div class="profile-layout">
             <!-- kartu ringkasan profil -->
@@ -80,6 +82,7 @@ $profile = ['nama' => 'Budi Santoso', 'email' => 'budi@ratna.org', 'no_hp' => '0
 
     <!-- footer -->
     <footer class="footer"><div class="container"><h3>SIMART</h3><p>Rumah Budaya Ratna · Malang</p></div></footer>
+    <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

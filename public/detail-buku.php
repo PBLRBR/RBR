@@ -1,17 +1,15 @@
 <?php
-// Halaman Detail Buku (PHP + HTML dalam 1 file).
-// data dummy buku: judul, penulis, kategori, jenis (dijual/koleksi), harga, deskripsi
-$books = [
-    1 => ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 'dijual', 85000, 'Novel sejarah tentang Minke di masa kolonial.', null],
-    2 => ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 'dijual', 70000, 'Kisah sepuluh anak Belitung dan semangat belajar mereka.', null],
-    3 => ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 'dijual', 120000, 'Ringkasan sejarah singkat umat manusia.', null],
-    4 => ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 'dijual', 88000, 'Pengantar filsafat Stoa untuk kehidupan sehari-hari.', null],
-    5 => ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
-    6 => ['Cosmos', 'Carl Sagan', 'Sains', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
-];
-$id = (int) ($_GET['id'] ?? 1);
-if (!isset($books[$id])) $id = 1; // fallback ke buku pertama
-[$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul] = $books[$id];
+require_once __DIR__ . '/_data.php';
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$id || $id < 1) { http_response_code(404); exit('Buku tidak ditemukan.'); }
+$stmt = db()->prepare('SELECT b.*, COALESCE(k.nama_kategori, \'Tanpa Kategori\') AS nama_kategori FROM buku b LEFT JOIN kategori k ON b.id_kategori = k.id_kategori WHERE b.id_buku = :id');
+$stmt->execute(['id' => $id]);
+$b = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$b) { http_response_code(404); exit('Buku tidak ditemukan.'); }
+$judul = $b['judul']; $penulis = $b['penulis']; $kategori = $b['nama_kategori'];
+$jenis = boolPg($b['bisa_dijual']) ? 'dijual' : 'koleksi';
+$harga = (float)($b['harga'] ?? 0); $stok = $b['stok'];
+$deskripsi = $b['deskripsi'] ?? ''; $fotoSampul = $b['foto_sampul'];
 $pageTitle = $judul . ' | SIMART';
 ?>
 <!DOCTYPE html>
@@ -61,9 +59,9 @@ $pageTitle = $judul . ' | SIMART';
                 <p class="book-detail-eyebrow">Detail buku</p>
                 <h1><?= htmlspecialchars($judul) ?></h1>
                 <p class="book-author">oleh <?= htmlspecialchars($penulis) ?></p>
-                <p class="book-price"><?= $jenis === 'dijual' ? 'Rp ' . number_format($harga, 0, ',', '.') : 'Baca di tempat' ?></p>
+                <p class="book-price"><?= $jenis === 'dijual' ? 'Rp ' . number_format($harga, 0, ',', '.') . ' · Stok ' . (int)$stok : 'Baca di tempat' ?></p>
                 <p class="book-description"><?= htmlspecialchars($deskripsi) ?></p>
-                <div class="book-facts"><div><span>Status</span><strong><?= $jenis === 'dijual' ? 'Tersedia untuk dibeli' : 'Koleksi Rumah Budaya Ratna' ?></strong></div><div><span>Kategori</span><strong><?= htmlspecialchars($kategori) ?></strong></div></div>
+                <div class="book-facts"><div><span>Status</span><strong><?= $jenis === 'dijual' ? 'Dijual di kasir' : 'Koleksi Rumah Budaya Ratna' ?></strong></div><div><span>Kategori</span><strong><?= htmlspecialchars($kategori) ?></strong></div></div>
                 <?php if ($jenis === 'dijual'): ?>
                 <p class="book-note">Pembelian buku dilayani langsung oleh kasir di Rumah Budaya Ratna.</p>
                 <?php endif; ?>

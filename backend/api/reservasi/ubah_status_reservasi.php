@@ -56,11 +56,11 @@ try {
     // Validasi status
     $status = $input['status_reservasi'] ?? '';
 
-    if (!in_array($status, ['disetujui', 'ditolak'], true)) {
+    if (!in_array($status, ['menunggu', 'disetujui', 'ditolak'], true)) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'Status hanya boleh disetujui atau ditolak.'
+            'message' => 'Status harus menunggu, disetujui, atau ditolak.'
         ]);
         exit;
     }
@@ -78,7 +78,7 @@ try {
     }
 
     // Jika disetujui, alasan penolakan dikosongkan
-    if ($status === 'disetujui') {
+    if ($status !== 'ditolak') {
         $alasan = null;
     }
 

@@ -1,17 +1,12 @@
 <?php
-// Halaman Katalog Buku (PHP + HTML dalam 1 file).
+require_once __DIR__ . '/_data.php';
 $pageTitle = 'Katalog Buku | SIMART';
-
-// data dummy buku: judul, penulis, kategori, jenis (dijual/koleksi), harga, deskripsi
-$books = [
-    1 => ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 'dijual', 85000, 'Novel sejarah tentang Minke di masa kolonial.', null],
-    2 => ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 'dijual', 70000, 'Kisah sepuluh anak Belitung dan semangat belajar mereka.', null],
-    3 => ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 'dijual', 120000, 'Ringkasan sejarah singkat umat manusia.', null],
-    4 => ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 'dijual', 88000, 'Pengantar filsafat Stoa untuk kehidupan sehari-hari.', null],
-    5 => ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
-    6 => ['Cosmos', 'Carl Sagan', 'Sains', 'koleksi', 0, 'Koleksi baca di tempat, Rumah Budaya Ratna.', null],
-];
-$categories = array_unique(array_column($books, 2)); // daftar kategori untuk tombol filter
+$rows = db()->query('SELECT b.id_buku, b.judul, b.penulis, b.bisa_dijual, b.harga, b.stok, b.deskripsi, b.foto_sampul, COALESCE(k.nama_kategori, \'Tanpa Kategori\') AS nama_kategori FROM buku b LEFT JOIN kategori k ON k.id_kategori = b.id_kategori ORDER BY b.id_buku DESC')->fetchAll(PDO::FETCH_ASSOC);
+$books = [];
+foreach ($rows as $r) {
+    $books[(int)$r['id_buku']] = [$r['judul'], $r['penulis'], $r['nama_kategori'], boolPg($r['bisa_dijual']) ? 'dijual' : 'koleksi', (float)($r['harga'] ?? 0), $r['deskripsi'] ?? '', $r['foto_sampul'], $r['stok']];
+}
+$categories = array_unique(array_column($books, 2));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -60,7 +55,7 @@ $categories = array_unique(array_column($books, 2)); // daftar kategori untuk to
 
         <!-- daftar buku -->
         <div class="book-grid">
-            <?php foreach ($books as $id => [$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul]): ?>
+            <?php foreach ($books as $id => [$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul, $stok]): ?>
             <article class="book-card" data-category="<?= htmlspecialchars($kategori) ?>">
                 <div class="book-cover<?= $fotoSampul ? ' has-image' : '' ?>">
                     <?php if ($fotoSampul): ?>
@@ -72,7 +67,7 @@ $categories = array_unique(array_column($books, 2)); // daftar kategori untuk to
                     <h3 class="book-title"><?= htmlspecialchars($judul) ?></h3>
                     <p class="author"><?= htmlspecialchars($penulis) ?></p>
                     <div class="book-footer">
-                        <span class="price"><?= $jenis === 'dijual' ? 'Rp ' . number_format($harga, 0, ',', '.') : 'Koleksi baca' ?></span>
+                        <span class="price"><?= $jenis === 'dijual' ? ($stok > 0 ? 'Rp ' . number_format($harga, 0, ',', '.') . ' · Stok ' . (int)$stok : 'Habis') : 'Koleksi baca' ?></span>
                         <a class="btn-primary btn-sm" href="/detail-buku.php?id=<?= $id ?>">Lihat detail</a>
                     </div>
                 </div>

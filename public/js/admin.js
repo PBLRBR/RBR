@@ -17,6 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    const initialTab = location.hash.slice(1);
+    if (['analytics','buku','pos','reservasi'].includes(initialTab)) {
+        const button = $(`.sidebar-btn[data-tab="${initialTab}"]`);
+        if (button) button.click();
+    }
+    sidebarBtns.forEach(btn => btn.addEventListener('click', () => { history.replaceState(null, '', '#' + btn.dataset.tab); }));
+    const reloadTab = tab => location.assign('/admin/#' + tab);
+
     // popup: buka/tutup
     const openPopup = (popup) => { popup.hidden = false; };
     const closePopup = (popup) => { popup.hidden = true; };
@@ -93,10 +101,23 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#btn-add-book').addEventListener('click', () => {
         editingBook = null;
         bookForm.reset();
+        saleCheck.checked = true;
+        updateBookSale();
         $('#book-popup-title').textContent = 'Tambah Buku Baru';
         openPopup(bookPopup);
         bookInput('judul').focus();
     });
+
+    const saleCheck = $('#book-sale');
+    const updateBookSale = () => {
+        const sale = saleCheck.checked;
+        ['kondisi','harga','stok'].forEach(key => {
+            const input = bookInput(key);
+            input.disabled = !sale;
+            input.required = sale;
+        });
+    };
+    saleCheck.addEventListener('change', updateBookSale);
 
     bookList.addEventListener('click', (e) => {
         const tr = e.target.closest('tr');
@@ -106,32 +127,52 @@ document.addEventListener('DOMContentLoaded', () => {
             bookForm.reset();
             $('#book-popup-title').textContent = 'Edit Buku';
             bookFields.forEach(f => { bookInput(f).value = tr.dataset[f] || ''; });
+            $('#book-penerbit').value = tr.dataset.penerbit || '';
+            $('#book-tahun').value = tr.dataset.tahun || '';
+            $('#book-cover').value = tr.dataset.foto || '';
+            saleCheck.checked = tr.dataset.sale === '1';
+            updateBookSale();
             openPopup(bookPopup);
         } else if (e.target.closest('.btn-delete-book')) {
             askConfirm({
-                title: 'Hapus Buku?',
-                message: `Buku "${tr.dataset.judul}" akan dihapus dari daftar. Tindakan ini tidak dapat dibatalkan.`,
-                okText: 'Ya, Hapus',
-                danger: true
-            }, () => { tr.remove(); afterBookChange(); });
+                title:'Hapus Buku?',
+                message:`Hapus buku "${tr.dataset.judul}" dari database?`,
+                okText:'Ya, Hapus', danger:true
+            }, async () => {
+                try {
+                    await apiRequest('buku/hapus_buku.php',{method:'DELETE',body:{id_buku:Number(tr.dataset.id)}});
+                    reloadTab('buku');
+                } catch(error) {alert(error.message);}
+            });
         }
     });
 
-    // simpan buku (validasi required dilakukan browser; deskripsi & foto opsional)
-    bookForm.addEventListener('submit', (e) => {
+    bookForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const b = {};
-        bookFields.forEach(f => { b[f] = bookInput(f).value.trim(); });
-        if (!b.judul || !b.penulis) return;
-        if (editingBook) {
-            fillBookRow(editingBook, b);
-        } else {
-            const tr = document.createElement('tr');
-            fillBookRow(tr, b);
-            bookList.prepend(tr);
-        }
-        closePopup(bookPopup);
-        afterBookChange();
+        const button = bookForm.querySelector('[type="submit"]');
+        button.disabled = true;
+        try {
+            const sale = saleCheck.checked;
+            const body = {
+                id_kategori: Number(bookInput('kategori').value),
+                judul: bookInput('judul').value.trim(),
+                penulis: bookInput('penulis').value.trim(),
+                penerbit: $('#book-penerbit').value.trim(),
+                tahun_terbit: $('#book-tahun').value || null,
+                bisa_dijual: sale,
+                kondisi: sale ? bookInput('kondisi').value : null,
+                harga: sale ? Number(bookInput('harga').value) : null,
+                stok: sale ? Number(bookInput('stok').value) : null,
+                deskripsi: bookInput('deskripsi').value.trim(),
+                foto_sampul: $('#book-cover').value.trim()
+            };
+            if (editingBook) body.id_buku = Number(editingBook.dataset.id);
+            await apiRequest(editingBook ? 'buku/edit_buku.php':'buku/tambah_buku.php', {
+                method: editingBook ? 'PUT':'POST', body
+            });
+            reloadTab('buku');
+        } catch(error) { alert(error.message); }
+        finally {button.disabled = false;}
     });
 
     // kasir: cari buku di katalog
@@ -222,6 +263,25 @@ document.addEventListener('DOMContentLoaded', () => {
         updateChange();
     });
     renderCart();
+    $('#btn-checkout').addEventListener('click', async (e) => {
+        if (!cart.size) return alert('Keranjang masih kosong.');
+        const method = $('.pay-method.active').dataset.method === 'tunai' ? 'cash' : 'qris';
+        if (method === 'cash' && (Number(cashInput.value.replace(/\D/g, '')) || 0) < cartTotal()) {
+            return alert('Uang diterima masih kurang.');
+        }
+        if (!confirm(`Simpan transaksi sebesar ${rupiah(cartTotal())}?`)) return;
+        const button = e.currentTarget;
+        button.disabled = true;
+        try {
+            const result = await apiRequest('transaksi/tambah_transaksi.php', {
+                method:'POST',
+                body:{metode_transaksi:method,items:[...cart].map(([id,qty])=>({id_buku:Number(id),jumlah_beli:qty}))}
+            });
+            alert(`Transaksi tersimpan. Invoice: ${result.transaksi.kode_invoice}`);
+            reloadTab('pos');
+        } catch(error) {alert(error.message);}
+        finally {button.disabled = false;}
+    });
 
     // reservasi: filter status, setujui, tolak, edit
     const rsvList = $('.rsv-list');
@@ -254,17 +314,31 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshRsv();
     };
 
+    const updateStatus = async (card, status, alasan = null) => {
+        await apiRequest('reservasi/ubah_status_reservasi.php', {
+            method:'PATCH',
+            body: {id_reservasi:Number(card.dataset.id),status_reservasi:
+                ({pending:'menunggu',approved:'disetujui',rejected:'ditolak'})[status],
+                ...(alasan !== null ? {alasan_penolakan:alasan} : {})}
+        });
+        setStatus(card,status);
+    };
     const confirmStatus = (card, status) => {
-        const d = card.dataset;
+        let reason = null;
+        if (status === 'rejected') {
+            reason = prompt('Alasan penolakan (wajib):');
+            if (reason === null || !reason.trim()) return;
+            reason = reason.trim();
+        }
         const approve = status === 'approved';
         askConfirm({
-            title: approve ? 'Setujui Reservasi?' : 'Tolak Reservasi?',
-            message: approve
-                ? `Reservasi "${d.agenda}" oleh ${d.pemohon} akan disetujui dan jadwalnya tampil di kalender publik.`
-                : `Reservasi "${d.agenda}" oleh ${d.pemohon} akan ditolak.`,
-            okText: approve ? 'Ya, Setujui' : 'Ya, Tolak',
-            danger: !approve
-        }, () => setStatus(card, status));
+            title: approve?'Setujui Reservasi?':'Tolak Reservasi?',
+            message: `Ubah status reservasi "${card.dataset.agenda}" di database?`,
+            okText: approve?'Ya, Setujui':'Ya, Tolak', danger:!approve
+        }, async () => {
+            try {await updateStatus(card,status,reason);}
+            catch(error) {alert(error.message);}
+        });
     };
 
     $$('.rsv-filter').forEach(btn => {
@@ -282,59 +356,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const fields = {
         ruangan: $('#edit-ruangan'), tanggal: $('#edit-tanggal'),
         mulai: $('#edit-jam-mulai'), selesai: $('#edit-jam-selesai'),
-        pemohon: $('#edit-pemohon'), agenda: $('#edit-agenda'), peserta: $('#edit-peserta')
+        pemohon: $('#edit-pemohon'), agenda: $('#edit-agenda')
     };
     let editingCard = null;
-
-    const saveRsv = () => {
+    const submitEdit = async (andApprove = false) => {
+        if (!rsvForm.reportValidity() || !editingCard) return;
         const d = editingCard.dataset;
-        Object.keys(fields).forEach(k => { d[k] = fields[k].value.trim(); });
-        const set = (f, v) => { $(`[data-f="${f}"]`, editingCard).textContent = v; };
-        set('agenda', d.agenda);
-        set('pemohon', d.pemohon);
-        set('ruangan', d.ruangan);
-        set('tanggal', new Date(`${d.tanggal}T00:00`).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
-        set('waktu', `${d.mulai} - ${d.selesai} WIB`);
-        set('peserta', `${d.peserta} orang`);
+        const payload = {
+            id_reservasi:Number(d.id), id_tempat:Number(fields.ruangan.value),
+            tanggal_acara:fields.tanggal.value,
+            jam_mulai:fields.mulai.value, jam_selesai:fields.selesai.value,
+            nama_acara:fields.agenda.value.trim(),
+            penanggung_jawab:fields.pemohon.value.trim(),
+            kontak_wa:d.wa, deskripsi_acara:d.deskripsi || ''
+        };
+        try {
+            await apiRequest('reservasi/edit_reservasi.php',{method:'PUT',body:payload});
+            if (andApprove) await updateStatus(editingCard,'approved');
+            reloadTab('reservasi');
+        } catch(error) { alert(error.message); }
     };
-
-    rsvList.addEventListener('click', (e) => {
+    rsvList.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
         const card = btn.closest('.rsv-card');
         const act = btn.dataset.action;
-        if (act === 'approve') confirmStatus(card, 'approved');
-        else if (act === 'reject') confirmStatus(card, 'rejected');
+        if (act === 'approve') confirmStatus(card,'approved');
+        else if (act === 'reject') confirmStatus(card,'rejected');
         else if (act === 'reset') {
-            if (card.dataset.status !== 'approved') return setStatus(card, 'pending');
             askConfirm({
-                title: 'Batalkan Persetujuan?',
-                message: `Persetujuan reservasi "${card.dataset.agenda}" akan dibatalkan dan statusnya kembali menjadi Menunggu Review.`,
-                okText: 'Ya, Batalkan',
-                danger: true
-            }, () => setStatus(card, 'pending'));
-        }
-        else if (act === 'edit') {
+                title:'Kembalikan ke Menunggu?',
+                message:`Status "${card.dataset.agenda}" akan kembali menjadi menunggu.`,
+                okText:'Ya',danger:false
+            }, async () => {
+                try {await updateStatus(card,'pending');}
+                catch(error) {alert(error.message);}
+            });
+        } else if (act === 'edit') {
             editingCard = card;
-            Object.keys(fields).forEach(k => { fields[k].value = card.dataset[k]; });
+            fields.ruangan.value = card.dataset.idtempat;
+            fields.tanggal.value = card.dataset.tanggal;
+            fields.mulai.value = card.dataset.mulai;
+            fields.selesai.value = card.dataset.selesai;
+            fields.pemohon.value = card.dataset.pemohon;
+            fields.agenda.value = card.dataset.agenda;
             $('#btn-save-approve').hidden = card.dataset.status === 'approved';
             openPopup(rsvPopup);
         }
     });
-
-    rsvForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveRsv();
-        closePopup(rsvPopup);
-    });
-
-    $('#btn-save-approve').addEventListener('click', () => {
-        if (!rsvForm.reportValidity()) return;
-        const card = editingCard;
-        saveRsv();
-        closePopup(rsvPopup);
-        confirmStatus(card, 'approved');
-    });
+    rsvForm.addEventListener('submit', async e => {e.preventDefault();await submitEdit(false);});
+    $('#btn-save-approve').addEventListener('click', async () => {await submitEdit(true);});
 
     refreshRsv(); // terapkan filter awal (Menunggu Review)
 });

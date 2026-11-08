@@ -17,13 +17,15 @@ $pageTitle = 'Reset Password | SIMART';
         <h1>Atur Password Baru</h1>
 
         <!-- form password baru -->
-        <form class="reservation-form" data-dummy>
+        <form class="reservation-form" id="reset-password-form">
             <div class="form-group"><label>Password baru</label><input type="password" minlength="8" required></div>
             <div class="form-group"><label>Ulangi password</label><input type="password" minlength="8" required></div>
             <button class="btn-primary" type="submit">Simpan password</button>
         </form>
         <p class="margin-top-30"><a href="/?auth=login">Kembali ke halaman masuk</a></p>
     </main>
+    <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/password.js"></script>
 </body>
 </html>

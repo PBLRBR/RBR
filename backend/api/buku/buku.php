@@ -6,10 +6,13 @@ try {
     $pdo = require __DIR__ . '/../../config/database.php';
 
     $stmt = $pdo->query(
-        'SELECT id_buku, judul, penulis, penerbit, tahun_terbit,
-                bisa_dijual, kondisi, harga, stok, deskripsi, foto_sampul
-         FROM buku
-         ORDER BY id_buku DESC'
+        'SELECT b.id_buku, b.id_kategori, k.nama_kategori,
+                b.judul, b.penulis, b.penerbit, b.tahun_terbit,
+                b.bisa_dijual, b.kondisi, b.harga, b.stok,
+                b.deskripsi, b.foto_sampul
+         FROM buku AS b
+         LEFT JOIN kategori AS k ON k.id_kategori = b.id_kategori
+         ORDER BY b.id_buku DESC'
     );
 
     echo json_encode([

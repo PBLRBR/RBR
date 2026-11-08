@@ -1,6 +1,7 @@
 
 <?php
-
+require_once __DIR__ . '/../auth/auth.php';
+wajibAdmin();
 header('Content-Type: application/json; charset=utf-8');
 
 try {

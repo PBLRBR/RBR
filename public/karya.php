@@ -1,13 +1,9 @@
 <?php
-// Halaman Karya Bu Ratna (PHP + HTML dalam 1 file).
+require_once __DIR__ . '/_data.php';
 $pageTitle = 'Karya Bu Ratna | SIMART';
-
-// data dummy karya: kategori, judul, deskripsi, teks tombol
-$karya = [
-    ['ESAI', 'Catatan tentang ruang budaya', 'Gagasan tentang rumah sebagai tempat bertukar pikiran, merawat ingatan, dan menumbuhkan kreativitas.', 'Rumah budaya hidup dari perjumpaan. Ia memberi ruang bagi gagasan untuk dibagikan, bagi ingatan untuk dirawat, dan bagi kreativitas untuk tumbuh bersama. Catatan ini mengajak kita melihat budaya sebagai praktik sehari-hari yang dibangun lewat percakapan dan kepedulian.', 'Baca ringkasan'],
-    ['SASTRA', 'Fragmen perjalanan', 'Catatan pilihan dari perjalanan panjang mendampingi pendidikan, sastra, dan komunitas seni.', 'Fragmen ini merangkum perjalanan Bu Ratna dalam mendampingi kegiatan pendidikan dan sastra. Di setiap pertemuan, buku dan cerita menjadi jembatan untuk belajar, mengenali lingkungan, dan membuka kemungkinan baru bagi komunitas.', 'Baca ringkasan'],
-    ['ARSIP', 'Merawat ingatan bersama', 'Dokumentasi kegiatan dan kolaborasi yang membentuk Rumah Budaya Ratna.', 'Arsip ini merekam kegiatan, kolaborasi, dan orang-orang yang ikut membentuk Rumah Budaya Ratna. Dokumentasi menjadi cara untuk menjaga jejak bersama sekaligus sumber inspirasi bagi kegiatan yang akan datang.', 'Lihat ringkasan'],
-];
+$rows = db()->query('SELECT k.judul_karya, k.deskripsi, k.isi_karya, COALESCE(c.nama_kategori, \'KARYA\') AS kategori FROM karya k LEFT JOIN kategori c ON c.id_kategori = k.id_kategori ORDER BY k.id_karya DESC')->fetchAll(PDO::FETCH_ASSOC);
+$karya = [];
+foreach ($rows as $r) $karya[] = [$r['kategori'], $r['judul_karya'], $r['deskripsi'] ?? '', $r['isi_karya'] ?? '', 'Baca ringkasan'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -44,7 +40,7 @@ $karya = [
         <section class="editorial-hero">
             <span class="eyebrow">Arsip dan warisan</span>
             <h1>Karya yang menyimpan jejak zaman.</h1>
-            <p>Ruang untuk mengenal karya, pemikiran, dan perjalanan Sutrisni Ratna Artsanti. Konten berikut merupakan contoh tampilan.</p>
+            <p>Ruang untuk mengenal karya, pemikiran, dan perjalanan Sutrisni Ratna Artsanti. Daftar karya dan arsip yang tercatat di SIMART.</p>
         </section>
 
         <!-- daftar karya -->

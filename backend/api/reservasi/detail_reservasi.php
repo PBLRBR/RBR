@@ -1,6 +1,7 @@
 
 <?php
-
+require_once __DIR__ . '/../auth/auth.php';
+wajibLogin();
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -60,6 +61,12 @@ try {
             'success' => false,
             'message' => 'Reservasi tidak ditemukan.'
         ]);
+        exit;
+    }
+
+    if (($_SESSION['user']['role'] ?? '') !== 'admin' && (int) $data['id_user'] !== (int) $_SESSION['user']['id_user']) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Tidak berhak melihat reservasi ini.']);
         exit;
     }
 

@@ -115,7 +115,7 @@ try {
          WHERE id_tempat = :id_tempat
            AND tanggal_acara = :tanggal
            AND id_reservasi <> :id_reservasi
-           AND status_reservasi IN ('menunggu', 'disetujui')
+           AND status_reservasi = 'disetujui'
            AND jam_mulai < :jam_selesai
            AND jam_selesai > :jam_mulai"
     );
