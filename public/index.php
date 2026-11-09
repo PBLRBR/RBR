@@ -1,14 +1,12 @@
 <?php
-// Halaman Beranda (PHP + HTML dalam 1 file).
+require_once __DIR__ . '/_data.php';
+startAppSession();
 $pageTitle = 'Rumah Budaya Ratna | SIMART';
-
-// data dummy preview katalog: judul, penulis, kategori, harga, stok
-$books = [
-    ['Bumi Manusia', 'Pramoedya Ananta Toer', 'SASTRA', 85000, 12],
-    ['Laskar Pelangi', 'Andrea Hirata', 'SASTRA', 70000, 8],
-    ['Sapiens', 'Yuval Noah Harari', 'SEJARAH', 120000, 5],
-    ['Filosofi Teras', 'Henry Manampiring', 'UMUM', 88000, 15],
-];
+$preview = db()->query('SELECT b.judul, b.penulis, b.bisa_dijual, b.harga, b.stok, COALESCE(k.nama_kategori, \'Koleksi\') AS kategori FROM buku b LEFT JOIN kategori k ON k.id_kategori = b.id_kategori ORDER BY b.id_buku DESC LIMIT 4')->fetchAll(PDO::FETCH_ASSOC);
+$books = [];
+foreach ($preview as $b) {
+    $books[] = [$b['judul'], $b['penulis'], $b['kategori'], boolPg($b['bisa_dijual']) ? (float)$b['harga'] : 0, (int)($b['stok'] ?? 0)];
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -34,8 +32,13 @@ $books = [
                 <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
             <div class="nav-auth">
+                <?php if (!empty($_SESSION['user'])): ?>
+                <a class="btn-secondary" href="<?= ($_SESSION['user']['role'] ?? '') === 'admin' ? '/admin/' : '/riwayat.php' ?>"><?= esc($_SESSION['user']['nama']) ?></a>
+                <button type="button" class="btn-secondary" data-logout>Keluar</button>
+                <?php else: ?>
                 <a class="btn-secondary" href="/?auth=login">Masuk</a>
                 <a class="btn-primary" href="/?auth=register">Daftar</a>
+                <?php endif; ?>
             </div>
         </div>
     </header>
@@ -87,11 +90,11 @@ $books = [
                 <div class="book-card">
                     <div class="book-cover"><span>Cover Buku</span></div>
                     <div class="book-info">
-                        <span class="category-badge"><?= $kategori ?></span>
+                        <span class="category-badge"><?= esc($kategori) ?></span>
                         <h3><?= htmlspecialchars($judul) ?></h3>
                         <p class="author"><?= htmlspecialchars($penulis) ?></p>
                         <div class="book-footer">
-                            <span class="price">Rp <?= number_format($harga, 0, ',', '.') ?></span>
+                            <span class="price"><?= $harga > 0 ? 'Rp ' . number_format($harga, 0, ',', '.') : 'Koleksi baca' ?></span>
                             <span class="stock">Stok: <?= $stok ?></span>
                         </div>
                     </div>
@@ -174,7 +177,7 @@ $books = [
             </div>
 
             <!-- form masuk -->
-            <form id="form-login" class="auth-form active" data-dummy>
+            <form id="form-login" class="auth-form active">
                 <div class="form-group">
                     <label>Email atau Nomor Telepon</label>
                     <input type="text" placeholder="contoh: budi@ratna.org">
@@ -188,7 +191,7 @@ $books = [
             </form>
 
             <!-- form daftar -->
-            <form id="form-register" class="auth-form" data-dummy>
+            <form id="form-register" class="auth-form">
                 <div class="form-group"><label>Nama Lengkap</label><input type="text" placeholder="Nama lengkap"></div>
                 <div class="form-group"><label>Email</label><input type="email" placeholder="budi@ratna.org"></div>
                 <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" placeholder="0812XXXXXXXX"></div>
@@ -198,6 +201,8 @@ $books = [
         </div>
     </div>
 
+    <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/login.js"></script>
 </body>
 </html>

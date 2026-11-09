@@ -1,14 +1,13 @@
 <?php
-// Halaman Reservasi Ruang (PHP + HTML dalam 1 file).
+require_once __DIR__ . '/_data.php';
+startAppSession();
 $pageTitle = 'Reservasi Ruang | SIMART';
-
-// data dummy: tanggal terisi, jadwal disetujui, daftar ruangan
-$bookedDates = ['2026-11-14', '2026-11-20', '2026-11-28'];
-$schedule = [
-    ['Pendopo Utama', 'Workshop Puisi', '10:00–14:00'],
-    ['Ruang Diskusi & Lesehan', 'Bedah Buku "Bumi Manusia"', '15:00–17:30'],
-];
-$rooms = [['Pendopo Utama', 50], ['Ruang Diskusi & Lesehan', 25]];
+$pdo = db();
+$approved = $pdo->query("SELECT r.tanggal_acara, r.jam_mulai, r.jam_selesai, r.nama_acara, t.nama_tempat FROM reservasi r JOIN tempat t ON t.id_tempat = r.id_tempat WHERE r.status_reservasi = 'disetujui' AND r.tanggal_acara >= CURRENT_DATE ORDER BY r.tanggal_acara, r.jam_mulai")->fetchAll(PDO::FETCH_ASSOC);
+$bookedDates = array_values(array_unique(array_column($approved, 'tanggal_acara')));
+$schedule = [];
+foreach (array_slice($approved, 0, 12) as $r) $schedule[] = [$r['nama_tempat'], $r['nama_acara'], substr($r['jam_mulai'],0,5) . '–' . substr($r['jam_selesai'],0,5) . ' (' . $r['tanggal_acara'] . ')'];
+$rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE status = 'aktif' ORDER BY nama_tempat")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -34,8 +33,8 @@ $rooms = [['Pendopo Utama', 50], ['Ruang Diskusi & Lesehan', 25]];
                 <a class="active" href="/reservasi.php">Reservasi Ruang</a>
             </nav>
             <div class="nav-auth">
-                <a href="/profil.php" class="user-profile"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name">Budi Santoso</span></a>
-                <a class="btn-secondary" href="/">Keluar</a>
+                <a href="/profil.php" class="user-profile"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name"><?= esc($_SESSION['user']['nama'] ?? 'Masuk') ?></span></a>
+                <?php if (!empty($_SESSION['user'])): ?><button type="button" class="btn-secondary" data-logout>Keluar</button><?php else: ?><a class="btn-secondary" href="/?auth=login">Masuk</a><?php endif; ?>
             </div>
         </div>
     </header>
@@ -59,7 +58,7 @@ $rooms = [['Pendopo Utama', 50], ['Ruang Diskusi & Lesehan', 25]];
                     <div class="calendar-days" id="calendar-days" data-booked-dates='<?= json_encode($bookedDates) ?>'></div>
                     <div class="calendar-legend">
                         <span class="legend-item"><span class="dot available"></span>Tersedia</span>
-                        <span class="legend-item"><span class="dot booked"></span>Terisi (Full)</span>
+                        <span class="legend-item"><span class="dot booked"></span>Ada jadwal disetujui</span>
                     </div>
                 </div>
                 <div class="schedule-info-box">
@@ -77,28 +76,28 @@ $rooms = [['Pendopo Utama', 50], ['Ruang Diskusi & Lesehan', 25]];
                 <div class="reservation-form">
                     <h3>Ajukan Reservasi Ruangan</h3>
                     <p class="subtitle">Permintaan berstatus menunggu sampai disetujui admin. <a href="/riwayat.php">Lihat riwayat</a></p>
-                    <form data-dummy>
+                    <form id="reservation-request-form">
                         <div class="form-group">
                             <label>Pilih Ruangan</label>
-                            <select required>
+                            <select id="reserve-place" required>
                                 <option value="">-- Pilih Ruangan --</option>
-                                <?php foreach ($rooms as [$nama, $kapasitas]): ?>
-                                <option><?= htmlspecialchars($nama) ?> (<?= $kapasitas ?> orang)</option>
+                                <?php foreach ($rooms as $room): ?>
+                                <option value="<?= (int)$room['id_tempat'] ?>"><?= esc($room['nama_tempat']) ?> (<?= (int)$room['kapasitas'] ?> orang)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Tanggal acara</label>
-                            <input type="date" min="<?= date('Y-m-d') ?>" required>
+                            <input id="reserve-date" type="date" min="<?= date('Y-m-d') ?>" required>
                         </div>
                         <div class="form-group row-time">
-                            <div><label>Jam mulai</label><input type="time" required></div>
-                            <div><label>Jam selesai</label><input type="time" required></div>
+                            <div><label>Jam mulai</label><input id="reserve-start" type="time" required></div>
+                            <div><label>Jam selesai</label><input id="reserve-end" type="time" required></div>
                         </div>
-                        <div class="form-group"><label>Nama acara</label><input type="text" maxlength="150" required></div>
-                        <div class="form-group"><label>Penanggung jawab</label><input type="text" maxlength="100" required></div>
-                        <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" maxlength="20" required></div>
-                        <div class="form-group"><label>Deskripsi acara (opsional)</label><textarea rows="4"></textarea></div>
+                        <div class="form-group"><label>Nama acara</label><input id="reserve-name" type="text" maxlength="150" required></div>
+                        <div class="form-group"><label>Penanggung jawab</label><input id="reserve-pic" type="text" maxlength="100" required></div>
+                        <div class="form-group"><label>Nomor WhatsApp</label><input id="reserve-phone" type="tel" maxlength="20" required></div>
+                        <div class="form-group"><label>Deskripsi acara (opsional)</label><textarea id="reserve-desc" rows="4"></textarea></div>
                         <button type="submit" class="btn-primary full-width btn-large">Simpan permintaan reservasi</button>
                     </form>
                 </div>
@@ -108,6 +107,8 @@ $rooms = [['Pendopo Utama', 50], ['Ruang Diskusi & Lesehan', 25]];
 
     <!-- footer -->
     <footer class="footer"><div class="container"><h3>SIMART</h3><p>Rumah Budaya Ratna · Malang</p></div></footer>
+    <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/reservasi.js"></script>
 </body>
 </html>

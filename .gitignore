@@ -1,0 +1,4 @@
+/backend/config/database.local.php
+/backend/config/mail.php
+/vendor/
+/.env

@@ -1,39 +1,32 @@
 <?php
-require_once __DIR__ . '/../../src/auth.php'; // autentikasi
-require_admin();                           // blokir hacker!
-
+require_once __DIR__ . '/../_data.php';
+requireAppUser(true);
+$pdo = db();
 $pageTitle = 'Admin Dashboard | SIMART RBR';
-
-// helper tampilan
-$h  = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
-$rp = fn($n) => 'Rp ' . number_format($n, 0, ',', '.');
-$hari  = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-$bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-$tglLabel = fn($d) => $hari[date('w', strtotime($d))] . ', ' . date('j', strtotime($d)) . ' ' . $bulan[date('n', strtotime($d)) - 1] . ' ' . date('Y', strtotime($d));
-
-// data dummy buku: judul, penulis, kategori, harga, stok, kondisi, warna ikon, jumlah di keranjang
-$books = [
-    ['Bumi Manusia', 'Pramoedya Ananta Toer', 'Sastra', 85000, 12, 'Baru', 'bk-red'],
-    ['Laskar Pelangi', 'Andrea Hirata', 'Sastra', 50000, 5, 'Bekas', 'bk-red'],
-    ['Sapiens', 'Yuval Noah Harari', 'Sejarah', 95000, 8, 'Baru', 'bk-amber'],
-    ['Filosofi Teras', 'Henry Manampiring', 'Filsafat', 78000, 15, 'Baru', 'bk-green'],
-    ['Cantik Itu Luka', 'Eka Kurniawan', 'Sastra', 65000, 2, 'Bekas', 'bk-red'],
-    ['Atomic Habits', 'James Clear', 'Lainnya', 110000, 6, 'Baru', 'bk-brown'],
-    ['Cosmos', 'Carl Sagan', 'Sains', 70000, 3, 'Bekas', 'bk-blue'],
-    ['Negeri 5 Menara', 'Ahmad Fuadi', 'Sastra', 45000, 0, 'Bekas', 'bk-red'],
-];
-
-// data dummy reservasi: pemohon, agenda, ruangan, tanggal, mulai, selesai, peserta, WA, waktu diajukan, status, bentrok
-$reservations = [
-    ['Karang Taruna Desa Sukorejo', 'Rapat Persiapan Festival Desa', 'Pendopo Utama', '2026-10-15', '13:00', '16:00', 25, '+62 812-3456-7802', '8 Okt 2026, 14.20', 'pending', true],
-    ['Rina Wulandari', 'Bedah Buku "Bumi Manusia"', 'Ruang Diskusi & Lesehan', '2026-10-18', '15:00', '17:30', 15, '+62 812-3456-7803', '9 Okt 2026, 08.40', 'pending', false],
-    ['Komunitas Fotografi Blitar', 'Pameran Foto Mini', 'Pendopo Utama', '2026-10-24', '08:00', '12:00', 40, '+62 812-3456-7804', '9 Okt 2026, 19.05', 'pending', false],
-    ['Komunitas Sastra Malang', 'Workshop Puisi', 'Pendopo Utama', '2026-10-15', '10:00', '14:00', 30, '+62 812-3456-7801', '5 Okt 2026, 09.15', 'approved', false],
-    ['Dimas Pratama', 'Ulang tahun pribadi', 'Ruang Diskusi & Lesehan', '2026-10-12', '19:00', '22:00', 20, '+62 812-3456-7805', '7 Okt 2026, 21.10', 'rejected', false],
-];
-$statusMeta = ['pending' => ['Menunggu Review', 'badge-warning'], 'approved' => ['Disetujui', 'badge-success'], 'rejected' => ['Ditolak', 'badge-danger']];
-$rsvCount = array_count_values(array_column($reservations, 9));
-
+$h = fn($v) => esc($v);
+$rp = fn($n) => 'Rp ' . number_format((float)$n, 0, ',', '.');
+$hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+$bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+$tglLabel = fn($d) => $hari[date('w', strtotime($d))] . ', ' . date('j', strtotime($d)) . ' ' . $bulan[date('n', strtotime($d))-1] . ' ' . date('Y', strtotime($d));
+$kategoriList = $pdo->query('SELECT id_kategori,nama_kategori FROM kategori ORDER BY nama_kategori')->fetchAll(PDO::FETCH_ASSOC);
+$dbBooks = $pdo->query("SELECT b.*, COALESCE(k.nama_kategori,'Tanpa Kategori') AS nama_kategori FROM buku b LEFT JOIN kategori k ON k.id_kategori=b.id_kategori ORDER BY b.id_buku DESC")->fetchAll(PDO::FETCH_ASSOC);
+$books = [];
+foreach ($dbBooks as $b) {
+    $sale = boolPg($b['bisa_dijual']);
+    $books[] = [$b['judul'],$b['penulis'],$b['nama_kategori'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
+}
+$resRows = $pdo->query("SELECT r.id_reservasi,r.id_tempat,r.nama_acara,r.penanggung_jawab,r.kontak_wa,r.deskripsi_acara,r.tanggal_acara,r.jam_mulai,r.jam_selesai,r.status_reservasi,t.nama_tempat FROM reservasi r JOIN tempat t ON r.id_tempat=t.id_tempat ORDER BY r.id_reservasi DESC")->fetchAll(PDO::FETCH_ASSOC);
+$metaStatus = ['menunggu'=>'pending','disetujui'=>'approved','ditolak'=>'rejected'];
+$reservations = [];
+foreach ($resRows as $r) {
+    $reservations[] = [$r['penanggung_jawab'],$r['nama_acara'],$r['nama_tempat'],$r['tanggal_acara'],substr($r['jam_mulai'],0,5),substr($r['jam_selesai'],0,5),0,$r['kontak_wa'],'—',$metaStatus[$r['status_reservasi']] ?? 'pending',false,(int)$r['id_reservasi'],(int)$r['id_tempat'],$r['deskripsi_acara'] ?? ''];
+}
+$statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Disetujui','badge-success'],'rejected'=>['Ditolak','badge-danger']];
+$rsvCount = array_count_values(array_column($reservations,9));
+$metrics = $pdo->query('SELECT COALESCE(SUM(total_bayar),0) AS total,COUNT(*) AS transaksi FROM transaksi_penjualan')->fetch(PDO::FETCH_ASSOC);
+$terjual = (int)$pdo->query('SELECT COALESCE(SUM(jumlah_beli),0) FROM detail_transaksi_penjualan')->fetchColumn();
+$totalPengunjung = (int)$pdo->query('SELECT COUNT(*) FROM buku_tamu')->fetchColumn();
+$latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_transaksi, t.total_bayar, COALESCE(SUM(d.jumlah_beli),0) AS jumlah_buku FROM transaksi_penjualan t LEFT JOIN detail_transaksi_penjualan d ON d.id_transaksi=t.id_transaksi GROUP BY t.id_transaksi ORDER BY t.tanggal_transaksi DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -52,7 +45,7 @@ $rsvCount = array_count_values(array_column($reservations, 9));
             <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
-            <a href="/" class="btn-sm btn-secondary">Keluar Panel</a>
+            <button class="btn-sm btn-secondary" type="button" data-logout>Logout</button>
         </div>
     </header>
     <div class="admin-container">
@@ -89,23 +82,23 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h4>Total Penjualan Buku</h4>
-                        <p class="stat-number">Rp 4.850.000</p>
-                        <span class="stat-trend positive">+12% bulan ini</span>
+                        <p class="stat-number"><?= $rp($metrics['total']) ?></p>
+                        <span class="stat-trend neutral">Total seluruh periode</span>
                     </div>
                     <div class="stat-card">
                         <h4>Buku Terjual</h4>
-                        <p class="stat-number">64</p>
-                        <span class="stat-trend neutral">Stok aman</span>
+                        <p class="stat-number"><?= $terjual ?></p>
+                        <span class="stat-trend neutral">Seluruh periode</span>
                     </div>
                     <div class="stat-card">
                         <h4>Pengajuan Reservasi</h4>
-                        <p class="stat-number">12</p>
-                        <span class="stat-trend warning">3 Perlu Review</span>
+                        <p class="stat-number"><?= count($reservations) ?></p>
+                        <span class="stat-trend warning"><?= $rsvCount['pending'] ?? 0 ?> perlu review</span>
                     </div>
                     <div class="stat-card">
                         <h4>Total Pengunjung</h4>
-                        <p class="stat-number">87</p>
-                        <span class="stat-trend neutral">62 via QR · 25 buku tamu manual</span>
+                        <p class="stat-number"><?= $totalPengunjung ?></p>
+                        <span class="stat-trend neutral">Total catatan buku tamu</span>
                     </div>
                 </div>
 
@@ -116,20 +109,10 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                             <tr><th>ID Transaksi</th><th>Tanggal</th><th>Item</th><th>Total</th><th>Metode</th></tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>#INV-202609-001</td>
-                                <td>10 Sep 2026</td>
-                                <td>Bumi Manusia (2), Sapiens (1)</td>
-                                <td>Rp 343.000</td>
-                                <td><span class="badge badge-success">Kasir</span></td>
-                            </tr>
-                            <tr>
-                                <td>#INV-202609-002</td>
-                                <td>10 Sep 2026</td>
-                                <td>Filosofi Teras (1)</td>
-                                <td>Rp 88.000</td>
-                                <td><span class="badge badge-info">Ambil di Tempat</span></td>
-                            </tr>
+                            <?php foreach ($latest as $t): ?>
+                            <tr><td><?= $h($t['kode_invoice']) ?></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
+                            <?php endforeach; ?>
+                            <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -157,9 +140,9 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                                 <tr><th>Judul Buku</th><th>Penulis</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Kondisi</th><th>Aksi</th></tr>
                             </thead>
                             <tbody id="admin-book-list">
-                                <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $kondisi]): ?>
-                                <tr data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $h($kategori) ?>"
-                                    data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-deskripsi="">
+                                <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $kondisi, $warna, $idBuku, $idKategori, $deskripsi, $penerbit, $tahun, $sale, $foto]): ?>
+                                <tr data-id="<?= $idBuku ?>" data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $idKategori ?>"
+                                    data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-deskripsi="<?= $h($deskripsi) ?>" data-penerbit="<?= $h($penerbit) ?>" data-tahun="<?= $h($tahun) ?>" data-sale="<?= $sale ? '1':'0' ?>" data-foto="<?= $h($foto) ?>">
                                     <td><strong><?= $h($judul) ?></strong></td>
                                     <td><?= $h($penulis) ?></td>
                                     <td><?= $h($kategori) ?></td>
@@ -194,8 +177,9 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                         <p class="pos-catalog-meta"><span id="pos-count">Menampilkan <?= count($books) ?> buku</span> · klik buku untuk menambahkan ke keranjang</p>
 
                         <div class="pos-items-grid">
-                            <?php foreach ($books as $i => [$judul, $penulis, $kategori, $harga, $stok, $kondisi, $warna]): ?>
-                            <div class="pos-item-card<?= $stok === 0 ? ' out-of-stock' : '' ?>" data-id="<?= $i ?>" data-judul="<?= $h($judul) ?>"
+                            <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $kondisi, $warna, $idBuku, $idKategori, $desc, $penerbit, $tahun, $sale]): ?>
+                            <?php if (!$sale) continue; ?>
+                            <div class="pos-item-card<?= $stok === 0 ? ' out-of-stock' : '' ?>" data-id="<?= $idBuku ?>" data-judul="<?= $h($judul) ?>"
                                 data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-warna="<?= $warna ?>">
                                 <div class="pos-item-main">
                                     <span class="book-icon <?= $warna ?>"></span>
@@ -219,7 +203,7 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                         <div class="cart-head">
                             <div>
                                 <h3>Keranjang Transaksi</h3>
-                                <span class="invoice-no">INV-202610-014</span>
+                                <span class="invoice-no">Invoice dibuat saat transaksi disimpan</span>
                             </div>
                             <button type="button" class="btn-clear" id="cart-clear">Kosongkan</button>
                         </div>
@@ -251,7 +235,7 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                         </div>
 
                         <div class="cart-actions">
-                            <button class="btn-primary full-width btn-large">🖨️ Proses Transaksi &amp; Cetak Invoice</button>
+                            <button id="btn-checkout" class="btn-primary full-width btn-large" type="button">Proses Transaksi</button>
                         </div>
                     </div>
                 </div>
@@ -283,14 +267,14 @@ $rsvCount = array_count_values(array_column($reservations, 9));
 
                 <!-- daftar permintaan -->
                 <div class="rsv-list">
-                    <?php foreach ($reservations as [$pemohon, $agenda, $ruangan, $tanggal, $mulai, $selesai, $peserta, $wa, $diajukan, $status, $bentrok]): ?>
-                    <article class="rsv-card rsv-<?= $status ?>" data-status="<?= $status ?>"
-                        data-pemohon="<?= $h($pemohon) ?>" data-agenda="<?= $h($agenda) ?>" data-ruangan="<?= $h($ruangan) ?>"
-                        data-tanggal="<?= $tanggal ?>" data-mulai="<?= $mulai ?>" data-selesai="<?= $selesai ?>" data-peserta="<?= $peserta ?>">
+                    <?php foreach ($reservations as [$pemohon, $agenda, $ruangan, $tanggal, $mulai, $selesai, $peserta, $wa, $diajukan, $status, $bentrok, $idReservasi, $idTempat, $deskripsi]): ?>
+                    <article class="rsv-card rsv-<?= $status ?>" data-id="<?= $idReservasi ?>" data-idtempat="<?= $idTempat ?>" data-status="<?= $status ?>"
+                        data-pemohon="<?= $h($pemohon) ?>" data-agenda="<?= $h($agenda) ?>" data-ruangan="<?= $h($ruangan) ?>" data-wa="<?= $h($wa) ?>" data-deskripsi="<?= $h($deskripsi) ?>"
+                        data-tanggal="<?= $h($tanggal) ?>" data-mulai="<?= $h($mulai) ?>" data-selesai="<?= $h($selesai) ?>">
                         <div class="rsv-card-head">
                             <div>
                                 <h3 data-f="agenda"><?= $h($agenda) ?></h3>
-                                <p class="rsv-by">Oleh <strong data-f="pemohon"><?= $h($pemohon) ?></strong> · diajukan <?= $diajukan ?></p>
+                                <p class="rsv-by">Oleh <strong data-f="pemohon"><?= $h($pemohon) ?></strong> </p>
                             </div>
                             <span class="badge rsv-badge <?= $statusMeta[$status][1] ?>"><?= $statusMeta[$status][0] ?></span>
                         </div>
@@ -298,8 +282,8 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                             <div><dt>Ruangan</dt><dd data-f="ruangan"><?= $h($ruangan) ?></dd></div>
                             <div><dt>Tanggal</dt><dd data-f="tanggal"><?= $tglLabel($tanggal) ?></dd></div>
                             <div><dt>Waktu</dt><dd data-f="waktu"><?= $mulai ?> - <?= $selesai ?> WIB</dd></div>
-                            <div><dt>Peserta</dt><dd data-f="peserta"><?= $peserta ?> orang</dd></div>
-                            <div><dt>Kontak WA</dt><dd><?= $wa ?></dd></div>
+                            
+                            <div><dt>Kontak WA</dt><dd><?= $h($wa) ?></dd></div>
                         </dl>
                         <?php if ($bentrok): ?>
                         <div class="rsv-warning">⚠️ <strong>Bentrok jadwal:</strong> Workshop Puisi (10:00 - 14:00) sudah disetujui di ruangan &amp; tanggal yang sama. Edit jadwalnya sebelum menyetujui.</div>
@@ -342,14 +326,20 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                         <label for="book-kategori">Kategori</label>
                         <select id="book-kategori" required>
                             <option value="">Pilih kategori</option>
-                            <option>Sastra</option><option>Sejarah</option><option>Filsafat</option>
-                            <option>Sains</option><option>Anak</option><option>Lainnya</option>
+                            <?php foreach ($kategoriList as $kategori): ?>
+                            <option value="<?= (int)$kategori['id_kategori'] ?>"><?= $h($kategori['nama_kategori']) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
                         <label for="book-kondisi">Kondisi</label>
-                        <select id="book-kondisi" required><option>Baru</option><option>Bekas</option></select>
+                        <select id="book-kondisi" required><option value="baru">Baru</option><option value="bekas">Bekas</option></select>
                     </div>
+                </div>
+                <div class="form-group"><label><input id="book-sale" type="checkbox" checked> Buku untuk dijual</label></div>
+                <div class="form-group row-time">
+                    <div><label for="book-penerbit">Penerbit (opsional)</label><input id="book-penerbit" type="text"></div>
+                    <div><label for="book-tahun">Tahun terbit (opsional)</label><input id="book-tahun" type="number" min="0" max="9999"></div>
                 </div>
                 <div class="form-group row-time">
                     <div><label for="book-harga">Harga (Rp)</label><input type="number" id="book-harga" min="0" placeholder="85000" required></div>
@@ -360,8 +350,8 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                     <textarea id="book-deskripsi" rows="3" placeholder="Sinopsis atau catatan kondisi buku"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="book-cover">Foto Sampul <span class="label-optional">(opsional)</span></label>
-                    <input type="file" id="book-cover" accept="image/*">
+                    <label for="book-cover">URL Foto Sampul (opsional)</label>
+                    <input type="url" id="book-cover" placeholder="https://...">
                 </div>
                 <div class="popup-actions">
                     <button type="button" class="btn-secondary" data-popup-close>Batal</button>
@@ -383,8 +373,9 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                     <div>
                         <label for="edit-ruangan">Ruangan</label>
                         <select id="edit-ruangan" required>
-                            <option value="Pendopo Utama">Pendopo Utama</option>
-                            <option value="Ruang Diskusi &amp; Lesehan">Ruang Diskusi &amp; Lesehan</option>
+                            <?php foreach ($pdo->query('SELECT id_tempat,nama_tempat FROM tempat ORDER BY nama_tempat') as $tempat): ?>
+                            <option value="<?= (int)$tempat['id_tempat'] ?>"><?= $h($tempat['nama_tempat']) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div><label for="edit-tanggal">Tanggal</label><input type="date" id="edit-tanggal" required></div>
@@ -395,7 +386,7 @@ $rsvCount = array_count_values(array_column($reservations, 9));
                 </div>
                 <div class="form-group"><label for="edit-pemohon">Nama Pemohon / Komunitas</label><input type="text" id="edit-pemohon" required></div>
                 <div class="form-group"><label for="edit-agenda">Agenda / Keperluan</label><input type="text" id="edit-agenda" required></div>
-                <div class="form-group"><label for="edit-peserta">Perkiraan Jumlah Peserta</label><input type="number" id="edit-peserta" min="1" required></div>
+                
                 <div class="popup-actions">
                     <button type="button" class="btn-secondary" data-popup-close>Batal</button>
                     <button type="submit" class="btn-secondary btn-outline-primary">Simpan Perubahan</button>
@@ -420,6 +411,7 @@ $rsvCount = array_count_values(array_column($reservations, 9));
         </div>
     </div>
 
+    <script src="/js/api.js"></script>
     <script src="/js/admin.js"></script>
 </body>
 </html>

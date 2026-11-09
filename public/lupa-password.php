@@ -18,7 +18,7 @@ $pageTitle = 'Lupa Password | SIMART';
         <p class="subtitle">Masukkan email akunmu. Jika terdaftar, tautan reset akan dikirim.</p>
 
         <!-- form email -->
-        <form class="reservation-form" data-dummy>
+        <form class="reservation-form" id="forgot-password-form">
             <div class="form-group">
                 <label for="email">Email</label>
                 <input id="email" type="email" required>
@@ -27,6 +27,8 @@ $pageTitle = 'Lupa Password | SIMART';
         </form>
         <p class="margin-top-30"><a href="/?auth=login">Kembali ke halaman masuk</a></p>
     </main>
+    <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/password.js"></script>
 </body>
 </html>
