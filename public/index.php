@@ -68,9 +68,9 @@ foreach ($preview as $b) {
             </div>
             <div class="tentang-content">
                 <span class="sub-title">Sosok Di Balik Layar</span>
-                <h2>Sutrisni Ratna Artsanti (Bu Ratna)</h2>
-                <p>Rumah Budaya Ratna berdiri atas dedikasi cinta literasi dan kebudayaan seorang tokoh pendidik serta pecinta seni Malang. Beliau merawat warisan sastra, mendukung seniman lokal, dan menciptakan ruang inkubasi bagi generasi muda.</p>
-                <p>Bagi Bu Ratna, rumah bukan sekadar bangunan fisik, melainkan ruang hangat untuk bertukar pikiran dan merayakan keanekaragaman budaya.</p>
+                <h2>Ratna Indraswari Ibrahim (Bu Ratna)</h2>
+                <p>Rumah Budaya Ratna (RBR) berada di rumah peninggalan Ratna Indraswari Ibrahim, sastrawati dan aktivis asal Malang (24 April 1949–28 Maret 2011), di Jalan Diponegoro No. 3, Klojen. Dibuka pada 24 Agustus 2024 oleh keluarga dan sahabatnya, RBR meneruskan semangat Ratna sebagai ruang literasi, seni, diskusi, dan berkumpul bagi komunitas serta generasi muda.</p>
+                <p>Semasa hidup, rumah ini menjadi tempat Ratna berkarya dan bertemu dengan kawan-kawan seniman serta pegiat sastra. Kini masyarakat dapat datang untuk membaca, berdiskusi, mengikuti kegiatan, dan berkarya.</p>
             </div>
         </div>
     </section>
@@ -153,9 +153,9 @@ foreach ($preview as $b) {
             </div>
             <div class="footer-col">
                 <h4>Hubungi Kami</h4>
-                <p>Jl. Cokroaminoto No.6, Klojen, Kota Malang, Jawa Timur 65111</p>
-                <p>info@rumahbudayaratna.org</p>
-                <p>+62 341 555123</p>
+                <p>Jl. Diponegoro No. 3, Klojen, Kota Malang</p>
+                <p>+62 898-9955-407</p>
+                
             </div>
             <div class="footer-col map-col">
                 <h4>Lokasi Kami</h4>

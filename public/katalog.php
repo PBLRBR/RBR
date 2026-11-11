@@ -16,6 +16,24 @@ $categories = array_unique(array_column($books, 2));
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/responsive.css">
+    <style>
+        .book-grid { grid-template-columns:repeat(auto-fill, minmax(185px, 1fr)); gap:16px; }
+        .book-card-link { cursor:pointer; }
+        .book-card-link:focus-visible { outline:3px solid var(--ochre); outline-offset:3px; }
+        .book-card-link .book-cover { height:150px; }
+        .book-card-link .book-info { padding:12px; }
+        .book-card-link .book-title { font-size:1rem; }
+        .book-card-link .book-footer { gap:8px; font-size:.84rem; }
+        @media(max-width:480px) { .book-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .book-card-link .book-cover { height:125px; } .book-card-link .book-info { padding:10px; } }
+    </style>
+    <style>
+        .book-footer .detail-link { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:9px 16px; border:1px solid var(--terracotta); border-radius:999px; background:var(--terracotta); color:#fff; font-size:.82rem; font-weight:700; letter-spacing:.02em; box-shadow:0 5px 14px rgba(145,74,51,.18); transition:transform .2s ease, background .2s ease, box-shadow .2s ease; }
+        .book-footer .detail-link::after { content:'→'; font-size:1rem; transition:transform .2s ease; }
+        .book-footer .detail-link:hover { background:var(--espresso); border-color:var(--espresso); box-shadow:0 8px 18px rgba(48,39,32,.2); transform:translateY(-2px); }
+        .book-footer .detail-link:hover::after { transform:translateX(3px); }
+        .book-footer .detail-link:focus-visible { outline:3px solid var(--ochre); outline-offset:3px; }
+        @media(max-width:480px) { .book-footer .detail-link { padding:8px 12px; font-size:.78rem; } }
+    </style>
 </head>
 
 <body>
@@ -56,7 +74,7 @@ $categories = array_unique(array_column($books, 2));
         <!-- daftar buku -->
         <div class="book-grid">
             <?php foreach ($books as $id => [$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul, $stok]): ?>
-            <article class="book-card" data-category="<?= htmlspecialchars($kategori) ?>">
+            <article class="book-card book-card-link" data-category="<?= htmlspecialchars($kategori) ?>" tabindex="0" role="link" aria-label="Lihat detail buku: <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" onclick="if (!event.target.closest('a')) window.location.href='/detail-buku.php?id=<?= $id ?>'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='/detail-buku.php?id=<?= $id ?>'; }">
                 <div class="book-cover<?= $fotoSampul ? ' has-image' : '' ?>">
                     <?php if ($fotoSampul): ?>
                         <img src="<?= htmlspecialchars($fotoSampul, ENT_QUOTES, 'UTF-8') ?>" alt="Sampul buku <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" loading="lazy">
@@ -68,7 +86,7 @@ $categories = array_unique(array_column($books, 2));
                     <p class="author"><?= htmlspecialchars($penulis) ?></p>
                     <div class="book-footer">
                         <span class="price"><?= $jenis === 'dijual' ? ($stok > 0 ? 'Rp ' . number_format($harga, 0, ',', '.') . ' · Stok ' . (int)$stok : 'Habis') : 'Koleksi baca' ?></span>
-                        <a class="btn-primary btn-sm" href="/detail-buku.php?id=<?= $id ?>">Lihat detail</a>
+
                     </div>
                 </div>
             </article>

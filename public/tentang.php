@@ -43,8 +43,8 @@ $values = [
         <!-- hero -->
         <section class="editorial-hero">
             <span class="eyebrow">Ruang temu literasi dan kebudayaan</span>
-            <h1>Rumah yang tumbuh dari cinta pada cerita.</h1>
-            <p>Rumah Budaya Ratna merawat literasi, seni, dan kebudayaan dengan membuka ruang bagi orang-orang untuk membaca, bertemu, berdiskusi, dan berkarya.</p>
+            <h1>Warisan Ratna Indraswari Ibrahim, ruang hidup bagi sastra dan budaya.</h1>
+            <p>Rumah Budaya Ratna adalah ruang budaya berbasis komunitas yang menghidupkan kembali rumah peninggalan Ratna sebagai tempat aman dan terbuka bagi generasi muda untuk membaca, bertukar gagasan, mengembangkan kreativitas, serta mengenal sastra dan kebudayaan.</p>
         </section>
 
         <!-- profil bu ratna -->
@@ -54,8 +54,8 @@ $values = [
             </div>
             <div class="tentang-content">
                 <span class="sub-title">Sosok di balik layar</span>
-                <h2>Sutrisni Ratna Artsanti</h2>
-                <p>Rumah Budaya Ratna berdiri atas dedikasi Ibu Sutrisni Ratna Artsanti, seorang pendidik dan pecinta seni di Malang. Beliau merawat warisan sastra, mendukung seniman lokal, dan menciptakan ruang bertumbuh untuk generasi muda.</p>
+                <h2>Ratna Indraswari Ibrahim</h2>
+                <p>Ratna Indraswari Ibrahim (24 April 1949–28 Maret 2011) adalah sastrawati dan aktivis asal Malang. Rumah yang dahulu menjadi tempat tinggal sekaligus ruang berkarya beliau kini dihidupkan kembali sebagai Rumah Budaya Ratna oleh keluarga dan sahabatnya, sebagai ruang bagi literasi, seni, dan komunitas.</p>
                 <p>SIMART hadir untuk memudahkan masyarakat mengenal koleksi, mengikuti kegiatan, dan mengajukan penggunaan ruang budaya.</p>
                 <!-- <a href="/infoevent.php" class="btn-primary">Jelajahi kegiatan</a> -->
             </div>
