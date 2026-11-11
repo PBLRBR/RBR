@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/_data.php';
 $pageTitle = 'Katalog Buku | SIMART';
-$rows = db()->query('SELECT b.id_buku, b.judul, b.penulis, b.bisa_dijual, b.harga, b.stok, b.deskripsi, b.foto_sampul, COALESCE(k.nama_kategori, \'Tanpa Kategori\') AS nama_kategori FROM buku b LEFT JOIN kategori k ON k.id_kategori = b.id_kategori ORDER BY b.id_buku DESC')->fetchAll(PDO::FETCH_ASSOC);
+$rows = db()->query('SELECT id_buku, judul, penulis, bisa_dijual, harga, stok, deskripsi, foto_sampul, COALESCE(nama_kategori, \'Tanpa Kategori\') AS nama_kategori FROM v_katalog_buku ORDER BY id_buku DESC')->fetchAll(PDO::FETCH_ASSOC);
 $books = [];
 foreach ($rows as $r) {
     $books[(int)$r['id_buku']] = [$r['judul'], $r['penulis'], $r['nama_kategori'], boolPg($r['bisa_dijual']) ? 'dijual' : 'koleksi', (float)($r['harga'] ?? 0), $r['deskripsi'] ?? '', $r['foto_sampul'], $r['stok']];

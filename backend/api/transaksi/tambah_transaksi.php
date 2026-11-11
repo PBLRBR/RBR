@@ -29,7 +29,7 @@ try {
     ksort($items, SORT_NUMERIC);
     $pdo = require __DIR__ . '/../../config/database.php';
     $pdo->beginTransaction();
-    $lock = $pdo->prepare('SELECT id_buku, judul, harga, stok, bisa_dijual FROM buku WHERE id_buku = :id FOR UPDATE');
+    $lock = $pdo->prepare('SELECT id_buku, judul, harga, stok, bisa_dijual FROM buku WHERE id_buku = :id AND active = TRUE FOR UPDATE');
     $lines = []; $total = 0;
     foreach ($items as $id => $qty) {
         $lock->execute(['id'=>$id]);

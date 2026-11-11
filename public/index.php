@@ -2,7 +2,7 @@
 require_once __DIR__ . '/_data.php';
 startAppSession();
 $pageTitle = 'Rumah Budaya Ratna | SIMART';
-$preview = db()->query('SELECT b.judul, b.penulis, b.bisa_dijual, b.harga, b.stok, COALESCE(k.nama_kategori, \'Koleksi\') AS kategori FROM buku b LEFT JOIN kategori k ON k.id_kategori = b.id_kategori ORDER BY b.id_buku DESC LIMIT 4')->fetchAll(PDO::FETCH_ASSOC);
+$preview = db()->query('SELECT judul, penulis, bisa_dijual, harga, stok, COALESCE(nama_kategori, \'Koleksi\') AS kategori FROM v_katalog_buku ORDER BY id_buku DESC LIMIT 4')->fetchAll(PDO::FETCH_ASSOC);
 $books = [];
 foreach ($preview as $b) {
     $books[] = [$b['judul'], $b['penulis'], $b['kategori'], boolPg($b['bisa_dijual']) ? (float)$b['harga'] : 0, (int)($b['stok'] ?? 0)];

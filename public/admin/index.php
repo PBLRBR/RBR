@@ -9,11 +9,11 @@ $hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 $bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 $tglLabel = fn($d) => $hari[date('w', strtotime($d))] . ', ' . date('j', strtotime($d)) . ' ' . $bulan[date('n', strtotime($d))-1] . ' ' . date('Y', strtotime($d));
 $kategoriList = $pdo->query('SELECT id_kategori,nama_kategori FROM kategori ORDER BY nama_kategori')->fetchAll(PDO::FETCH_ASSOC);
-$dbBooks = $pdo->query("SELECT b.*, COALESCE(k.nama_kategori,'Tanpa Kategori') AS nama_kategori FROM buku b LEFT JOIN kategori k ON k.id_kategori=b.id_kategori ORDER BY b.id_buku DESC")->fetchAll(PDO::FETCH_ASSOC);
+$dbBooks = $pdo->query("SELECT *, COALESCE(nama_kategori,'Tanpa Kategori') AS kategori_tampil FROM v_katalog_buku ORDER BY id_buku DESC")->fetchAll(PDO::FETCH_ASSOC);
 $books = [];
 foreach ($dbBooks as $b) {
     $sale = boolPg($b['bisa_dijual']);
-    $books[] = [$b['judul'],$b['penulis'],$b['nama_kategori'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
+    $books[] = [$b['judul'],$b['penulis'],$b['kategori_tampil'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
 }
 $resRows = $pdo->query("SELECT r.id_reservasi,r.id_tempat,r.nama_acara,r.penanggung_jawab,r.kontak_wa,r.deskripsi_acara,r.tanggal_acara,r.jam_mulai,r.jam_selesai,r.status_reservasi,t.nama_tempat FROM reservasi r JOIN tempat t ON r.id_tempat=t.id_tempat ORDER BY r.id_reservasi DESC")->fetchAll(PDO::FETCH_ASSOC);
 $metaStatus = ['menunggu'=>'pending','disetujui'=>'approved','ditolak'=>'rejected'];
@@ -23,8 +23,18 @@ foreach ($resRows as $r) {
 }
 $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Disetujui','badge-success'],'rejected'=>['Ditolak','badge-danger']];
 $rsvCount = array_count_values(array_column($reservations,9));
-$metrics = $pdo->query('SELECT COALESCE(SUM(total_bayar),0) AS total,COUNT(*) AS transaksi FROM transaksi_penjualan')->fetch(PDO::FETCH_ASSOC);
-$terjual = (int)$pdo->query('SELECT COALESCE(SUM(jumlah_beli),0) FROM detail_transaksi_penjualan')->fetchColumn();
+$metrics = $pdo->query('SELECT total_pendapatan AS total, jumlah_transaksi AS transaksi, jumlah_buku_terjual FROM v_dashboard_penjualan')->fetch(PDO::FETCH_ASSOC);
+$terjual = (int)$metrics['jumlah_buku_terjual'];
+$bulanIni = $pdo->query("SELECT * FROM fn_ringkasan_penjualan(date_trunc('month', CURRENT_DATE)::DATE, CURRENT_DATE)")->fetch(PDO::FETCH_ASSOC);
+// Contoh nyata CTE, JOIN, GROUP BY, dan HAVING untuk dashboard.
+$bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
+    SELECT b.id_buku, b.judul, SUM(d.jumlah_beli) AS total_terjual, SUM(d.subtotal) AS pendapatan
+    FROM detail_transaksi_penjualan d
+    JOIN buku b ON b.id_buku = d.id_buku
+    GROUP BY b.id_buku, b.judul
+    HAVING SUM(d.jumlah_beli) > 0
+) SELECT judul, total_terjual, pendapatan FROM penjualan_buku
+  ORDER BY total_terjual DESC, pendapatan DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 $totalPengunjung = (int)$pdo->query('SELECT COUNT(*) FROM buku_tamu')->fetchColumn();
 $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_transaksi, t.total_bayar, COALESCE(SUM(d.jumlah_beli),0) AS jumlah_buku FROM transaksi_penjualan t LEFT JOIN detail_transaksi_penjualan d ON d.id_transaksi=t.id_transaksi GROUP BY t.id_transaksi ORDER BY t.tanggal_transaksi DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -83,7 +93,7 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
                     <div class="stat-card">
                         <h4>Total Penjualan Buku</h4>
                         <p class="stat-number"><?= $rp($metrics['total']) ?></p>
-                        <span class="stat-trend neutral">Total seluruh periode</span>
+                        <span class="stat-trend neutral">Bulan ini: <?= $rp($bulanIni['total_pendapatan']) ?> · Total seluruh periode di atas</span>
                     </div>
                     <div class="stat-card">
                         <h4>Buku Terjual</h4>
@@ -113,6 +123,18 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
                             <tr><td><?= $h($t['kode_invoice']) ?></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
                             <?php endforeach; ?>
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="admin-card margin-top-30">
+                    <h3>5 Buku Terlaris (Semua Periode)</h3>
+                    <table class="data-table margin-top-15">
+                        <thead><tr><th>Judul Buku</th><th>Total Terjual</th><th>Nilai Penjualan</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($bukuTerlaris as $b): ?>
+                            <tr><td><?= $h($b['judul']) ?></td><td><?= (int)$b['total_terjual'] ?></td><td><?= $rp($b['pendapatan']) ?></td></tr>
+                            <?php endforeach; ?>
+                            <?php if (!$bukuTerlaris): ?><tr><td colspan="3">Belum ada penjualan.</td></tr><?php endif; ?>
                         </tbody>
                     </table>
                 </div>

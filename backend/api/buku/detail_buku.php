@@ -44,7 +44,7 @@ try {
             deskripsi,
             foto_sampul
          FROM buku
-         WHERE id_buku = :id_buku'
+         WHERE id_buku = :id_buku AND active = TRUE'
     );
 
     $stmt->execute([
