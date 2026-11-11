@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/_data.php';
 $pageTitle = 'Karya Bu Ratna | SIMART';
-$rows = db()->query('SELECT k.judul_karya, k.deskripsi, k.isi_karya, COALESCE(c.nama_kategori, \'KARYA\') AS kategori FROM karya k LEFT JOIN kategori c ON c.id_kategori = k.id_kategori ORDER BY k.id_karya DESC')->fetchAll(PDO::FETCH_ASSOC);
+$rows = db()->query('SELECT judul_karya, deskripsi, isi_karya, COALESCE(nama_kategori, \'KARYA\') AS kategori FROM v_katalog_karya ORDER BY id_karya DESC')->fetchAll(PDO::FETCH_ASSOC);
 $karya = [];
 foreach ($rows as $r) $karya[] = [$r['kategori'], $r['judul_karya'], $r['deskripsi'] ?? '', $r['isi_karya'] ?? '', 'Baca ringkasan'];
 ?>
