@@ -52,6 +52,7 @@ foreach ($preview as $b) {
                 <div class="hero-buttons">
                     <a href="/katalog.php" class="btn-primary">Lihat Katalog</a>
                     <a href="/reservasi.php" class="btn-secondary">Cek Jadwal Ruang</a>
+                    <a href="/kunjungan.php" class="btn-secondary">Isi Buku Tamu</a>
                 </div>
             </div>
             <div class="hero-image">
@@ -194,7 +195,7 @@ foreach ($preview as $b) {
             <form id="form-register" class="auth-form">
                 <div class="form-group"><label>Nama Lengkap</label><input type="text" placeholder="Nama lengkap"></div>
                 <div class="form-group"><label>Email</label><input type="email" placeholder="budi@ratna.org"></div>
-                <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" placeholder="0812XXXXXXXX"></div>
+                <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" inputmode="tel" placeholder="0812XXXXXXXX" pattern="(?:08[1-9][0-9]{7,10}|(?:\+?62)8[1-9][0-9]{7,10})" title="Gunakan nomor Indonesia 08... atau +628..., 10–13 digit dalam format 08..." required></div>
                 <div class="form-group"><label>Password</label><input type="password" placeholder="Minimal 8 karakter"></div>
                 <button type="submit" class="btn-primary full-width">Daftar Akun</button>
             </form>
