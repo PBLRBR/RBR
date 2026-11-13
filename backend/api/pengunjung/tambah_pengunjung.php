@@ -1,5 +1,6 @@
 
 <?php
+require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -20,14 +21,20 @@ try {
     $input = json_decode(file_get_contents('php://input'), true);
 
     $nama = trim($input['nama_pengunjung'] ?? '');
-    $no_hp = trim($input['no_hp'] ?? '');
+    $no_hp = normalizeIndonesianMobile($input['no_hp'] ?? null);
 
-    if ($nama === '' || $no_hp === '') {
+    if ($nama === '') {
         http_response_code(422);
         echo json_encode([
             'success' => false,
-            'message' => 'Nama dan nomor HP wajib diisi.'
+            'message' => 'Nama wajib diisi.'
         ]);
+        exit;
+    }
+
+    if ($no_hp === null) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => 'Nomor HP harus 10-13 digit angka berawalan 08, 62, atau +62.']);
         exit;
     }
 

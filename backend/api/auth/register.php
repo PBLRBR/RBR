@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/phone.php';
 header('Content-Type: application/json; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -10,10 +11,10 @@ try {
     if (!is_array($data)) throw new InvalidArgumentException('JSON tidak valid.');
     $nama = trim((string)($data['nama'] ?? ''));
     $email = strtolower(trim((string)($data['email'] ?? '')));
-    $hp = trim((string)($data['no_hp'] ?? ''));
+    $hp = normalizeIndonesianMobile($data['no_hp'] ?? null);
     $password = $data['password'] ?? '';
-    if ($nama === '' || strlen($nama) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($hp) < 8 || strlen($hp) > 20 || !is_string($password) || strlen($password) < 8) {
-        throw new InvalidArgumentException('Nama, email valid, nomor HP, dan password minimal 8 karakter wajib diisi.');
+    if ($nama === '' || strlen($nama) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL) || $hp === null || !is_string($password) || strlen($password) < 8) {
+        throw new InvalidArgumentException('Nama, email, dan nomor HP seluler valid (10-13 digit awalan 08), serta password minimal 8 karakter wajib diisi.');
     }
     $pdo = require __DIR__ . '/../../config/database.php';
     $stmt = $pdo->prepare("INSERT INTO users (nama, email, no_hp, password, role) VALUES (:nama,:email,:no_hp,:password,'member') RETURNING id_user");

@@ -1,6 +1,8 @@
 
 <?php
 
+require_once __DIR__ . '/../auth/auth.php';
+
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -11,6 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]);
     exit;
 }
+
+// Endpoint ini menerima ID pengunjung dari klien; batasi ke admin.
+// Pengunjung mandiri tetap memakai daftar_kunjungan.php.
+wajibAdmin();
 
 try {
     $pdo = require __DIR__ . '/../../config/database.php';

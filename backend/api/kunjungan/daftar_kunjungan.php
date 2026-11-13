@@ -1,5 +1,6 @@
 
 <?php
+require_once __DIR__ . '/../../helpers/phone.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -25,10 +26,10 @@ try {
     }
 
     $nama = trim($input['nama_pengunjung'] ?? '');
-    $no_hp = trim($input['no_hp'] ?? '');
+    $no_hp = normalizeIndonesianMobile($input['no_hp'] ?? null);
     $keperluan = trim($input['keperluan'] ?? '');
 
-    if ($nama === '' || $no_hp === '' || $keperluan === '') {
+    if ($nama === '' || $keperluan === '') {
         http_response_code(422);
         echo json_encode([
             'success' => false,
@@ -37,11 +38,11 @@ try {
         exit;
     }
 
-    if (!preg_match('/^[0-9+(). -]{8,20}$/', $no_hp)) {
+    if ($no_hp === null) {
         http_response_code(422);
         echo json_encode([
             'success' => false,
-            'message' => 'Format nomor HP tidak valid.'
+            'message' => 'Nomor HP harus 10-13 digit angka berawalan 08, 62, atau +62.'
         ]);
         exit;
     }

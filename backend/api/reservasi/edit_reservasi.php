@@ -1,5 +1,6 @@
 
 <?php
+require_once __DIR__ . '/../../helpers/phone.php';
 
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -82,21 +83,21 @@ try {
     $id_tempat = filter_var($input['id_tempat'] ?? null, FILTER_VALIDATE_INT);
     $nama_acara = trim($input['nama_acara'] ?? '');
     $penanggung_jawab = trim($input['penanggung_jawab'] ?? '');
-    $kontak_wa = trim($input['kontak_wa'] ?? '');
+    $kontak_wa = normalizeIndonesianMobile($input['kontak_wa'] ?? null);
     $tanggal_acara = $input['tanggal_acara'] ?? '';
     $jam_mulai = $input['jam_mulai'] ?? '';
     $jam_selesai = $input['jam_selesai'] ?? '';
 
     if (
         !$id_tempat || $nama_acara === '' ||
-        $penanggung_jawab === '' || $kontak_wa === '' ||
+        $penanggung_jawab === '' || $kontak_wa === null ||
         $tanggal_acara === '' || $jam_mulai === '' ||
         $jam_selesai === ''
     ) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'Data wajib belum lengkap.'
+            'message' => 'Data wajib belum lengkap atau nomor WhatsApp tidak valid. Gunakan 08 dan 10-13 digit angka.'
         ]);
         exit;
     }
