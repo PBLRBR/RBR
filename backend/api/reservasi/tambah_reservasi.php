@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';
@@ -109,6 +108,10 @@ try {
         exit;
     }
 
+    // Samakan format HH:MM dan HH:MM:SS sebelum membandingkan.
+    if (strlen($jam_mulai) === 5) $jam_mulai .= ':00';
+    if (strlen($jam_selesai) === 5) $jam_selesai .= ':00';
+
     if ($jam_selesai <= $jam_mulai) {
         http_response_code(400);
         echo json_encode([
@@ -119,34 +122,50 @@ try {
     }
 
     
-    // Periksa apakah tempat sudah dipesan pada waktu yang bertabrakan.
+    // Kunci tempat supaya validasi pembuatan dan persetujuan dilakukan berurutan.
+    $pdo->beginTransaction();
+    $stmtTempat = $pdo->prepare(
+        'SELECT id_tempat, status FROM tempat WHERE id_tempat = :id FOR UPDATE'
+    );
+    $stmtTempat->execute(['id' => $id_tempat]);
+    $tempat = $stmtTempat->fetch(PDO::FETCH_ASSOC);
+    if (!$tempat) {
+        $pdo->rollBack();
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Tempat tidak ditemukan.']);
+        exit;
+    }
+    if ($tempat['status'] !== 'aktif') {
+        $pdo->rollBack();
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'Tempat sedang tidak aktif dan tidak dapat dipesan.']);
+        exit;
+    }
+
     $stmtCek = $pdo->prepare(
-        "SELECT COUNT(*)
-         FROM reservasi
+        "SELECT 1 FROM reservasi
          WHERE id_tempat = :id_tempat
            AND tanggal_acara = :tanggal_acara
            AND status_reservasi = 'disetujui'
            AND jam_mulai < :jam_selesai
-           AND jam_selesai > :jam_mulai"
+           AND jam_selesai > :jam_mulai
+         LIMIT 1"
     );
-
     $stmtCek->execute([
         'id_tempat' => $id_tempat,
         'tanggal_acara' => $tanggal_acara,
         'jam_mulai' => $jam_mulai,
         'jam_selesai' => $jam_selesai
     ]);
-
-    if ((int) $stmtCek->fetchColumn() > 0) {
+    if ($stmtCek->fetchColumn() !== false) {
+        $pdo->rollBack();
         http_response_code(409);
-
         echo json_encode([
             'success' => false,
             'message' => 'Tempat sudah memiliki reservasi pada waktu tersebut.'
         ]);
         exit;
     }
-
 
     $stmt = $pdo->prepare(
         'INSERT INTO reservasi (
@@ -178,13 +197,17 @@ try {
         'status_reservasi' => 'menunggu'
     ]);
 
+    $reservasiBaru = $stmt->fetch(PDO::FETCH_ASSOC);
+    $pdo->commit();
+
     echo json_encode([
         'success' => true,
         'message' => 'Reservasi berhasil ditambahkan.',
-        'data' => $stmt->fetch(PDO::FETCH_ASSOC)
+        'data' => $reservasiBaru
     ]);
 
 } catch (Throwable $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     error_log($e->getMessage());
     http_response_code(500);
 
