@@ -263,6 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateChange();
     });
     renderCart();
+    // Pertahankan UUID jika request gagal di jaringan dan operator mencoba lagi
+    // dengan keranjang serta metode pembayaran yang sama.
+    let checkoutAttempt = null;
     $('#btn-checkout').addEventListener('click', async (e) => {
         if (!cart.size) return alert('Keranjang masih kosong.');
         const method = $('.pay-method.active').dataset.method === 'tunai' ? 'cash' : 'qris';
@@ -271,16 +274,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!confirm(`Simpan transaksi sebesar ${rupiah(cartTotal())}?`)) return;
         const button = e.currentTarget;
+        if (button.disabled) return;
         button.disabled = true;
         try {
+            const payload = {
+                metode_transaksi: method,
+                items: [...cart].map(([id, qty]) => ({ id_buku: Number(id), jumlah_beli: qty }))
+            };
+            // Signature berubah bila barang/jumlah/metode berubah.
+            const signature = JSON.stringify(payload);
+            if (!checkoutAttempt || checkoutAttempt.signature !== signature) {
+                checkoutAttempt = { signature, id: crypto.randomUUID() };
+            }
             const result = await apiRequest('transaksi/tambah_transaksi.php', {
-                method:'POST',
-                body:{metode_transaksi:method,items:[...cart].map(([id,qty])=>({id_buku:Number(id),jumlah_beli:qty}))}
+                method: 'POST',
+                body: { ...payload, idempotency_key: checkoutAttempt.id }
             });
+            checkoutAttempt = null; // transaksi sukses; checkout berikutnya wajib UUID baru
             alert(`Transaksi tersimpan. Invoice: ${result.transaksi.kode_invoice}`);
             reloadTab('pos');
-        } catch(error) {alert(error.message);}
-        finally {button.disabled = false;}
+        } catch (error) {
+            alert(error.message + '\nJika koneksi terputus, periksa riwayat invoice. ' +
+                'Untuk mencoba ulang checkout yang sama, jangan ubah keranjang atau metode pembayaran.');
+        } finally { button.disabled = false; }
     });
 
     // reservasi: filter status, setujui, tolak, edit
