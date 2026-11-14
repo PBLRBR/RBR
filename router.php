@@ -10,6 +10,10 @@ if (preg_match('~^/api/(auth|buku|karya|kategori|kunjungan|laporan|pengunjung|re
         echo json_encode(['success' => false, 'message' => 'API tidak ditemukan.']);
         exit;
     }
+    // Perlindungan terpusat: semua POST/PUT/PATCH/DELETE API memerlukan token CSRF.
+    require_once __DIR__ . '/backend/config/csrf.php';
+    csrfStartSession();
+    csrfRequireValid();
     require $file;
     exit;
 }
