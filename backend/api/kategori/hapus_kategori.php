@@ -73,7 +73,7 @@ try {
         http_response_code(409);
         echo json_encode([
             'success' => false,
-            'message' => 'Kategori masih digunakan oleh buku atau karya.'
+            'message' => 'Kategori masih digunakan. Pindahkan buku atau karya yang terkait ke kategori lain sebelum menghapusnya.',
         ]);
         exit;
     }
