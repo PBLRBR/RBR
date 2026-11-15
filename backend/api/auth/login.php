@@ -1,7 +1,7 @@
-
 <?php
 
-session_start();
+require_once __DIR__ . '/../../config/csrf.php';
+csrfStartSession();
 
 header('Content-Type: application/json; charset=utf-8');
 

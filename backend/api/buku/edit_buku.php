@@ -95,7 +95,7 @@ try {
 
     // Pastikan buku yang akan diperbarui memang ada.
     $cek = $pdo->prepare(
-        'SELECT id_buku FROM buku WHERE id_buku = :id_buku'
+        'SELECT id_buku FROM buku WHERE id_buku = :id_buku AND active = TRUE'
     );
     $cek->execute(['id_buku' => $idBuku]);
 
@@ -121,7 +121,7 @@ try {
             stok = :stok,
             deskripsi = :deskripsi,
             foto_sampul = :foto_sampul
-         WHERE id_buku = :id_buku
+         WHERE id_buku = :id_buku AND active = TRUE
          RETURNING id_buku, id_kategori, judul, penulis, penerbit,
                    tahun_terbit, bisa_dijual, kondisi, harga, stok,
                    deskripsi, foto_sampul'

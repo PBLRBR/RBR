@@ -1,5 +1,6 @@
 
 <?php
+require_once __DIR__ . '/../auth/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -11,6 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     ]);
     exit;
 }
+
+wajibAdmin();
 
 try {
     $tanggalMulai = $_GET['tanggal_mulai'] ?? '';

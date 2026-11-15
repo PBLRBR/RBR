@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../auth/auth.php';
@@ -118,7 +117,7 @@ try {
         // Kunci data tempat agar persetujuan untuk tempat
         // yang sama dapat diperiksa secara berurutan
         $stmtTempat = $pdo->prepare(
-            'SELECT id_tempat
+            'SELECT id_tempat, status
              FROM tempat
              WHERE id_tempat = :id_tempat
              FOR UPDATE'
@@ -127,6 +126,16 @@ try {
         $stmtTempat->execute([
             'id_tempat' => $reservasiLama['id_tempat']
         ]);
+        $tempat = $stmtTempat->fetch(PDO::FETCH_ASSOC);
+        if (!$tempat || $tempat['status'] !== 'aktif') {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Reservasi tidak dapat disetujui karena tempat sedang tidak aktif.'
+            ]);
+            exit;
+        }
 
         // Cari reservasi lain yang sudah disetujui
         // dan waktunya beririsan

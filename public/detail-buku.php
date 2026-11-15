@@ -2,11 +2,11 @@
 require_once __DIR__ . '/_data.php';
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id || $id < 1) { http_response_code(404); exit('Buku tidak ditemukan.'); }
-$stmt = db()->prepare('SELECT b.*, COALESCE(k.nama_kategori, \'Tanpa Kategori\') AS nama_kategori FROM buku b LEFT JOIN kategori k ON b.id_kategori = k.id_kategori WHERE b.id_buku = :id');
+$stmt = db()->prepare('SELECT *, COALESCE(nama_kategori, \'Tanpa Kategori\') AS kategori_tampil FROM v_katalog_buku WHERE id_buku = :id');
 $stmt->execute(['id' => $id]);
 $b = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$b) { http_response_code(404); exit('Buku tidak ditemukan.'); }
-$judul = $b['judul']; $penulis = $b['penulis']; $kategori = $b['nama_kategori'];
+$judul = $b['judul']; $penulis = $b['penulis']; $kategori = $b['kategori_tampil'];
 $jenis = boolPg($b['bisa_dijual']) ? 'dijual' : 'koleksi';
 $harga = (float)($b['harga'] ?? 0); $stok = $b['stok'];
 $deskripsi = $b['deskripsi'] ?? ''; $fotoSampul = $b['foto_sampul'];

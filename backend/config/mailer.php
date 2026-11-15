@@ -4,7 +4,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 function kirimEmail($tujuan, $subjek, $isiHtml, $isiText = '')
 {
@@ -41,12 +41,10 @@ function kirimEmail($tujuan, $subjek, $isiHtml, $isiText = '')
 
     } catch (Exception $e) {
     error_log('Gagal mengirim email: ' . $e->getMessage());
-    echo 'PHPMailer Error: ' . $e->getMessage();
     return false;
 
     } catch (Throwable $e) {
         error_log('Kesalahan mailer: ' . $e->getMessage());
-        echo 'PHP Error: ' . $e->getMessage();
         return false;
     }
 }
