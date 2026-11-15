@@ -10,7 +10,8 @@ function boolPg($value): bool {
     return $value === true || $value === 1 || $value === '1' || $value === 't' || $value === 'true';
 }
 function startAppSession(): void {
-    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    require_once __DIR__ . '/../backend/config/csrf.php';
+    csrfStartSession();
 }
 function requireAppUser(bool $admin = false): void {
     startAppSession();
