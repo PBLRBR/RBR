@@ -1,0 +1,16 @@
+/* SIMART FE bundle: small additions for modal details, navigation and printing. */
+.admin-topbar .admin-user-info { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.admin-details { display:grid; gap:8px; margin:10px 0 20px; }
+.admin-details > div { display:grid; grid-template-columns:130px minmax(0,1fr); gap:12px; border-bottom:1px solid var(--color-border,#ddd); padding:7px 0; }
+.admin-details dt { color:var(--color-text-muted,#777); }
+.admin-details dd { overflow-wrap:anywhere; font-weight:600; }
+#transaction-popup .data-table { width:100%; }
+@media (max-width: 600px) { .admin-details > div { grid-template-columns:1fr; gap:2px; } }
+@media print {
+  .admin-topbar,.admin-container, .popup-overlay:not(#transaction-popup),
+  #transaction-popup .popup-actions,#transaction-popup .popup-close { display:none !important; }
+  body.admin-body { background:white !important; }
+  #transaction-popup { position:static !important; display:block !important; background:transparent !important; padding:0 !important; }
+  #transaction-popup .popup-box { position:static !important; display:block !important; overflow:visible !important; max-width:none !important; max-height:none !important; box-shadow:none !important; border:0 !important; }
+  #transaction-popup .data-table { font-size:12px; }
+}

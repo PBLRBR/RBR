@@ -36,7 +36,7 @@ $bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
 ) SELECT judul, total_terjual, pendapatan FROM penjualan_buku
   ORDER BY total_terjual DESC, pendapatan DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 $totalPengunjung = (int)$pdo->query('SELECT COUNT(*) FROM buku_tamu')->fetchColumn();
-$latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_transaksi, t.total_bayar, COALESCE(SUM(d.jumlah_beli),0) AS jumlah_buku FROM transaksi_penjualan t LEFT JOIN detail_transaksi_penjualan d ON d.id_transaksi=t.id_transaksi GROUP BY t.id_transaksi ORDER BY t.tanggal_transaksi DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
+$latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaksi, t.metode_transaksi, t.total_bayar, COALESCE(SUM(d.jumlah_beli),0) AS jumlah_buku FROM transaksi_penjualan t LEFT JOIN detail_transaksi_penjualan d ON d.id_transaksi=t.id_transaksi GROUP BY t.id_transaksi ORDER BY t.tanggal_transaksi DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -45,6 +45,8 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $h($pageTitle) ?></title>
     <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/simart-fe-enhancements.css">
+    <link rel="stylesheet" href="/css/dashboard-analytics.css">
 </head>
 
 <body class="admin-body">
@@ -55,6 +57,8 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
             <span class="logo-text">SIMART ADMIN</span>
         </div>
         <div class="admin-user-info">
+            <a href="/" class="btn-sm btn-secondary">Lihat Website</a>
+            <a href="/admin/#analytics" class="btn-sm btn-secondary">Dashboard Admin</a>
             <button class="btn-sm btn-secondary" type="button" data-logout>Logout</button>
         </div>
     </header>
@@ -118,9 +122,9 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
                         <thead>
                             <tr><th>ID Transaksi</th><th>Tanggal</th><th>Item</th><th>Total</th><th>Metode</th></tr>
                         </thead>
-                        <tbody>
+                        <tbody id="recent-transactions">
                             <?php foreach ($latest as $t): ?>
-                            <tr><td><?= $h($t['kode_invoice']) ?></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
+                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
                             <?php endforeach; ?>
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
@@ -172,7 +176,8 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
                                     <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 2): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
                                     <td><span class="badge"><?= $h($kondisi) ?></span></td>
                                     <td>
-                                        <button class="btn-sm btn-secondary btn-edit-book">Edit</button>
+                                        <button type="button" class="btn-sm btn-secondary btn-detail-book">Detail</button>
+                                        <button type="button" class="btn-sm btn-secondary btn-edit-book">Edit</button>
                                         <button class="btn-sm btn-danger btn-delete-book">Hapus</button>
                                     </td>
                                 </tr>
@@ -241,6 +246,10 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
                         </div>
 
                         <div class="cart-payment">
+                            <div class="form-group">
+                                <label for="buyer-name">Nama pembeli (opsional)</label>
+                                <input id="buyer-name" type="text" maxlength="100" placeholder="Pengunjung umum">
+                            </div>
                             <span class="cart-label">Metode pembayaran</span>
                             <div class="pay-methods">
                                 <button type="button" class="pay-method active" data-method="tunai">💵 Tunai</button>
@@ -325,6 +334,31 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Modal detail transaksi dan buku. -->
+    <div class="popup-overlay" id="transaction-popup" hidden>
+        <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="transaction-title" style="max-width:700px">
+            <div class="popup-header">
+                <h3 id="transaction-title">Detail Transaksi</h3>
+                <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+            </div>
+            <div id="transaction-details"></div>
+            <div class="popup-actions">
+                <button type="button" class="btn-secondary" data-popup-close>Tutup</button>
+                <button type="button" class="btn-primary" id="btn-print-transaction">Cetak Struk</button>
+            </div>
+        </div>
+    </div>
+    <div class="popup-overlay" id="book-detail-popup" hidden>
+        <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="book-detail-title">
+            <div class="popup-header">
+                <h3 id="book-detail-title">Detail Buku</h3>
+                <button type="button" class="popup-close" data-popup-close aria-label="Tutup">✕</button>
+            </div>
+            <div id="book-detail-content"></div>
+            <div class="popup-actions"><button type="button" class="btn-primary" data-popup-close>Tutup</button></div>
+        </div>
     </div>
 
     <!-- popup tambah / edit buku -->
@@ -435,5 +469,6 @@ $latest = $pdo->query('SELECT t.kode_invoice, t.tanggal_transaksi, t.metode_tran
 
     <script src="/js/api.js"></script>
     <script src="/js/admin.js"></script>
+    <script src="/js/dashboard-analytics.js" defer></script>
 </body>
 </html>
