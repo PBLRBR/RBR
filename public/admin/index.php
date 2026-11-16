@@ -110,7 +110,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         <span class="stat-trend warning"><?= $rsvCount['pending'] ?? 0 ?> perlu review</span>
                     </div>
                     <div class="stat-card">
-                        <h4>Total Pengunjung</h4>
+                        <h4>Total Kunjungan</h4>
                         <p class="stat-number"><?= $totalPengunjung ?></p>
                         <span class="stat-trend neutral">Total catatan buku tamu</span>
                     </div>

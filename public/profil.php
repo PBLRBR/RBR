@@ -62,7 +62,7 @@ if (!$profile) { http_response_code(404); exit('Akun tidak ditemukan.'); }
                     </div>
                     <div class="form-group row-time">
                         <div><label>Alamat Email</label><input type="email" value="<?= htmlspecialchars($profile['email']) ?>" required></div>
-                        <div><label>Nomor WhatsApp</label><input type="tel" value="<?= htmlspecialchars($profile['no_hp']) ?>" maxlength="20"></div>
+                        <div><label>Nomor WhatsApp</label><input type="tel" value="<?= esc($profile['no_hp'] ?? '') ?>" maxlength="20"></div>
                     </div>
 
                     <hr class="form-divider">
