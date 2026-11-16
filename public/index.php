@@ -52,6 +52,7 @@ foreach ($preview as $b) {
                 <div class="hero-buttons">
                     <a href="/katalog.php" class="btn-primary">Lihat Katalog</a>
                     <a href="/reservasi.php" class="btn-secondary">Cek Jadwal Ruang</a>
+                    <a href="/kunjungan.php" class="btn-secondary">Isi Buku Tamu</a>
                 </div>
             </div>
             <div class="hero-image">
@@ -194,7 +195,7 @@ foreach ($preview as $b) {
             <form id="form-register" class="auth-form">
                 <div class="form-group"><label>Nama Lengkap</label><input type="text" placeholder="Nama lengkap"></div>
                 <div class="form-group"><label>Email</label><input type="email" placeholder="budi@ratna.org"></div>
-                <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" placeholder="0812XXXXXXXX"></div>
+                <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" data-simart-phone inputmode="tel" placeholder="0812XXXXXXXX" maxlength="16" required></div>
                 <div class="form-group"><label>Password</label><input type="password" placeholder="Minimal 8 karakter"></div>
                 <button type="submit" class="btn-primary full-width">Daftar Akun</button>
             </form>
@@ -204,5 +205,6 @@ foreach ($preview as $b) {
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/login.js"></script>
+    <script src="/js/phone-validation.js"></script>
 </body>
 </html>

@@ -96,7 +96,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                         </div>
                         <div class="form-group"><label>Nama acara</label><input id="reserve-name" type="text" maxlength="150" required></div>
                         <div class="form-group"><label>Penanggung jawab</label><input id="reserve-pic" type="text" maxlength="100" required></div>
-                        <div class="form-group"><label>Nomor WhatsApp</label><input id="reserve-phone" type="tel" maxlength="20" required></div>
+                        <div class="form-group"><label>Nomor WhatsApp</label><input id="reserve-phone" type="tel" data-simart-phone maxlength="16" required></div>
                         <div class="form-group"><label>Deskripsi acara (opsional)</label><textarea id="reserve-desc" rows="4"></textarea></div>
                         <button type="submit" class="btn-primary full-width btn-large">Simpan permintaan reservasi</button>
                     </form>
@@ -110,5 +110,6 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/reservasi.js"></script>
+    <script src="/js/phone-validation.js"></script>
 </body>
 </html>
