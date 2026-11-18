@@ -1,3 +1,4 @@
+/backend/config/app.local.php
 /backend/config/database.local.php
 /backend/config/mail.local.php
 /backend/config/mail.php

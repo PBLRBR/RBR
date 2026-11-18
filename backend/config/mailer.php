@@ -1,10 +1,16 @@
-
 <?php
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+$autoload = is_file(__DIR__ . '/../../vendor/autoload.php')
+    ? __DIR__ . '/../../vendor/autoload.php'
+    : __DIR__ . '/../vendor/autoload.php';
+
+// Composer bisa terpasang di root atau di folder backend.
+if (is_file($autoload)) {
+    require_once $autoload;
+}
 
 function kirimEmail($tujuan, $subjek, $isiHtml, $isiText = '')
 {
