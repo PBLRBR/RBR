@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -50,6 +49,17 @@ try {
     $kondisi = $input['kondisi'] ?? null;
     $harga = $input['harga'] ?? null;
     $stok = $input['stok'] ?? null;
+    // Wajib kirim stok yang terlihat saat form dibuka. Mencegah menimpa stok POS.
+    if (!array_key_exists('expected_stok', $input)) {
+        throw new InvalidArgumentException('Stok awal wajib disertakan. Muat ulang halaman admin.');
+    }
+    $expectedStok = $input['expected_stok'];
+    if ($expectedStok !== null) {
+        $expectedStok = filter_var($expectedStok, FILTER_VALIDATE_INT);
+        if ($expectedStok === false || $expectedStok < 0) {
+            throw new InvalidArgumentException('Stok awal tidak valid.');
+        }
+    }
     $deskripsi = trim($input['deskripsi'] ?? '');
     $fotoSampul = trim($input['foto_sampul'] ?? '');
 
@@ -122,6 +132,7 @@ try {
             deskripsi = :deskripsi,
             foto_sampul = :foto_sampul
          WHERE id_buku = :id_buku AND active = TRUE
+           AND stok IS NOT DISTINCT FROM :expected_stok
          RETURNING id_buku, id_kategori, judul, penulis, penerbit,
                    tahun_terbit, bisa_dijual, kondisi, harga, stok,
                    deskripsi, foto_sampul'
@@ -129,6 +140,7 @@ try {
 
     $stmt->execute([
         'id_buku' => $idBuku,
+        'expected_stok' => $expectedStok,
         'id_kategori' => $idKategori,
         'judul' => $judul,
         'penulis' => $penulis,
@@ -142,10 +154,20 @@ try {
         'foto_sampul' => $fotoSampul !== '' ? $fotoSampul : null
     ]);
 
+    $updatedBook = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$updatedBook) {
+        http_response_code(409);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Stok buku sudah berubah sejak form dibuka. Muat ulang halaman lalu coba lagi.'
+        ]);
+        exit;
+    }
+
     echo json_encode([
         'success' => true,
         'message' => 'Buku berhasil diperbarui.',
-        'data' => $stmt->fetch(PDO::FETCH_ASSOC)
+        'data' => $updatedBook
     ]);
 
 } catch (InvalidArgumentException $e) {

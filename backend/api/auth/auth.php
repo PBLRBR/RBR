@@ -3,6 +3,11 @@
 require_once __DIR__ . '/../../config/csrf.php';
 csrfStartSession();
 
+// Header harus tersedia sebelum wajibLogin/wajibAdmin dapat menghentikan request.
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+
 function wajibLogin(): void
 {
     if (!isset($_SESSION['user'])) {

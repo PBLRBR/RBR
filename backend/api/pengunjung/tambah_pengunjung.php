@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';

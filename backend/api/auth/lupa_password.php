@@ -1,4 +1,3 @@
-
 <?php
 
 header('Content-Type: application/json; charset=utf-8');
@@ -15,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     $pdo = require __DIR__ . '/../../config/database.php';
     require_once __DIR__ . '/../../config/mailer.php';
+    require_once __DIR__ . '/../../config/app.php';
+    require_once __DIR__ . '/../../helpers/rate_limit.php';
 
     $input = json_decode(file_get_contents('php://input'), true);
 
@@ -22,7 +23,13 @@ try {
         $input = $_POST;
     }
 
-    $email = trim($input['email'] ?? '');
+    $rawEmail = $input['email'] ?? null;
+    $email = is_string($rawEmail) ? strtolower(trim($rawEmail)) : '';
+    if (strlen($email) > 150) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Format email tidak valid.']);
+        exit;
+    }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         http_response_code(400);
@@ -33,11 +40,25 @@ try {
         exit;
     }
 
+    // Validasi URL konfigurasi bahkan bila email belum terdaftar.
+    $baseUrl = simartAppUrl();
+
+    // Perlambat permintaan email reset, tanpa mengungkap keberadaan akun.
+    $allowedIp = simartRateLimitConsume($pdo, 'forgot_ip', simartClientIp(), 12, 3600);
+    $allowedEmail = simartRateLimitConsume($pdo, 'forgot_email', strtolower($email), 3, 3600);
+    if (!$allowedIp || !$allowedEmail) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Jika email terdaftar, tautan reset password akan dikirim.'
+        ]);
+        exit;
+    }
+
     // Cari akun berdasarkan email
     $stmt = $pdo->prepare(
         'SELECT id_user, nama, email
          FROM users
-         WHERE email = :email
+         WHERE LOWER(email) = :email
          LIMIT 1'
     );
 
@@ -77,11 +98,8 @@ try {
 
         $pdo->commit();
 
-        // Tautan mengikuti frontend sekarang, bukan struktur lama.
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost:8000');
-        if (preg_match('/^[A-Za-z0-9.-]+(?::[0-9]{1,5})?$/', $host) !== 1) $host = 'localhost:8000';
-        $linkReset = $scheme . '://' . $host . '/reset-password.php?token=' . urlencode($token);
+        // URL resmi dari konfigurasi server, BUKAN header Host dari pengguna.
+        $linkReset = $baseUrl . '/reset-password.php?token=' . rawurlencode($token);
 
         $isiHtml = '
             <h2>Reset Password SIMART</h2>

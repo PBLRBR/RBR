@@ -179,7 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 deskripsi: bookInput('deskripsi').value.trim(),
                 foto_sampul: $('#book-cover').value.trim()
             };
-            if (editingBook) body.id_buku = Number(editingBook.dataset.id);
+            if (editingBook) {
+                body.id_buku = Number(editingBook.dataset.id);
+                body.expected_stok = editingBook.dataset.sale === '1'
+                    ? Number(editingBook.dataset.stok)
+                    : null;
+            }
             await apiRequest(editingBook ? 'buku/edit_buku.php':'buku/tambah_buku.php', {
                 method: editingBook ? 'PUT':'POST', body
             });
