@@ -58,7 +58,7 @@ try {
     $stmt = $pdo->prepare(
         'SELECT id_user, nama, email
          FROM users
-         WHERE email = :email
+         WHERE LOWER(email) = :email
          LIMIT 1'
     );
 
