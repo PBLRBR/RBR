@@ -22,7 +22,7 @@ foreach ($preview as $b) {
     <!-- navbar -->
     <header class="navbar">
         <div class="container nav-container">
-            <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">SIMART</span></a>
+            <a class="logo" href="/"><img src="/images/rbr-white.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a class="active" href="/">Beranda</a>
                 <a href="/tentang.php">Tentang</a>
@@ -33,7 +33,7 @@ foreach ($preview as $b) {
             </nav>
             <div class="nav-auth">
                 <?php if (!empty($_SESSION['user'])): ?>
-                <a class="btn-secondary" href="<?= ($_SESSION['user']['role'] ?? '') === 'admin' ? '/admin/' : '/riwayat.php' ?>"><?= esc($_SESSION['user']['nama']) ?></a>
+                <a class="btn-secondary" href="<?= ($_SESSION['user']['role'] ?? '') === 'admin' ? '/admin/' : '/riwayat.php' ?>"><?= ($_SESSION['user']['role'] ?? '') === 'admin' ? 'Admin' : esc($_SESSION['user']['nama']) ?></a>
                 <button type="button" class="btn-secondary" data-logout>Keluar</button>
                 <?php else: ?>
                 <a class="btn-secondary" href="/?auth=login">Masuk</a>
@@ -44,7 +44,7 @@ foreach ($preview as $b) {
     </header>
 
     <!-- hero -->
-    <section class="hero">
+    <section class="hero home-hero">
         <div class="container hero-container">
             <div class="hero-content">
                 <h1>Jelajahi Koleksi Buku &amp; Rumah Budaya Ratna</h1>
@@ -55,9 +55,7 @@ foreach ($preview as $b) {
                     <a href="/kunjungan.php" class="btn-secondary">Isi Buku Tamu</a>
                 </div>
             </div>
-            <div class="hero-image">
-                <img src="/images/rbrfront.jpeg" alt="Suasana Rumah Budaya Ratna" style="width:100%;height:320px;object-fit:cover;border-radius:16px">
-            </div>
+            <div class="home-hero-bottom"><span>Rumah Ratna Indraswari Ibrahim · Kota Malang</div>
         </div>
     </section>
 

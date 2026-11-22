@@ -15,7 +15,7 @@ $pageTitle = 'Buku Tamu | SIMART';
 </head>
 <body>
 <header class="navbar"><div class="container nav-container">
-    <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">SIMART</span></a>
+    <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
     <nav class="nav-menu"><a href="/">Beranda</a><a href="/tentang.php">Tentang</a><a href="/katalog.php">Katalog Buku</a><a href="/reservasi.php">Reservasi Ruang</a></nav>
     <div class="nav-auth"><?php if (($_SESSION['user']['role'] ?? '') === 'admin'): ?><a class="btn-secondary" href="/admin/">Dashboard Admin</a><?php endif; ?></div>
 </div></header>
