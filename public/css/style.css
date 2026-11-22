@@ -1097,7 +1097,7 @@ body {
 .logo-text,
 .footer h3 {
   color: var(--espresso);
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
 }
 .nav-menu a {
   color: var(--muted);
