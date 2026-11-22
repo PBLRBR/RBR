@@ -1989,6 +1989,22 @@ body:has(.home-hero) .tentang-section {
 body:has(.home-hero) .katalog-preview{
   background: #a36328;
 }
+body:has(.home-hero) .katalog-preview .book-card {
+  background: #f1e4cf;
+  border-color: #eadbc5;
+}
+body:has(.home-hero) .katalog-preview .book-cover {
+  background: linear-gradient(145deg, #dce2cf 0%, #bac8a8 100%);
+  color: #52634a;
+  border-bottom: 1px solid #c7d0b8;
+}
+body:has(.home-hero) .katalog-preview .category-badge {
+  background: #e8eddf;
+  color: #52634a;
+}
+body:has(.home-hero) .katalog-preview .book-info h3 {
+  color: #3c3027;
+}
 body:has(.home-hero) .ruang-section {
   background: #f8f5e8;
 }
