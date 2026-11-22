@@ -81,7 +81,7 @@ if (!$profile) { http_response_code(404); exit('Akun tidak ditemukan.'); }
     </main>
 
     <!-- footer -->
-    <footer class="footer"><div class="container"><h3>SIMART</h3><p>Rumah Budaya Ratna · Malang</p></div></footer>
+    <?php require __DIR__ . '/_footer.php'; ?>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
 </body>

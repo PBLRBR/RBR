@@ -36,6 +36,6 @@ $pageTitle = 'Buku Tamu | SIMART';
         <p class="subtitle" style="margin-top:18px">Data digunakan untuk pencatatan kunjungan. Mohon hanya mengisi untuk kunjungan yang benar-benar dilakukan.</p>
     </div>
 </main>
-<footer class="footer"><div class="container"><h3>SIMART</h3><p>Rumah Budaya Ratna · Malang</p></div></footer>
+<?php require __DIR__ . '/_footer.php'; ?>
 <script src="/js/api.js"></script><script src="/js/main.js"></script><script src="/js/kunjungan.js"></script><script src="/js/phone-validation.js"></script>
 </body></html>

@@ -24,6 +24,7 @@ $pageTitle = 'Reset Password | SIMART';
         </form>
         <p class="margin-top-30"><a href="/?auth=login">Kembali ke halaman masuk</a></p>
     </main>
+    <?php require __DIR__ . '/_footer.php'; ?>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/password.js"></script>

@@ -82,7 +82,7 @@ $values = [
     </main>
 
     <!-- footer -->
-    <footer class="footer"><div class="container"><h3>SIMART</h3><p>Rumah Budaya Ratna · Malang</p></div></footer>
+    <?php require __DIR__ . '/_footer.php'; ?>
     <script src="/js/main.js"></script>
 </body>
 </html>
