@@ -53,8 +53,8 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
     <!-- top admin bar -->
     <header class="admin-topbar">
         <div class="logo">
-            <img src="/images/rbr.png" alt="Logo" class="logo-img">
-            <span class="logo-text">SIMART ADMIN</span>
+            <img src="/images/rbr-white.png" alt="Logo" class="logo-img">
+            <span class="logo-text">RBR ADMIN</span>
         </div>
         <div class="admin-user-info">
             <a href="/" class="btn-sm btn-secondary">Lihat Website</a>
@@ -313,7 +313,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                             <div><dt>Ruangan</dt><dd data-f="ruangan"><?= $h($ruangan) ?></dd></div>
                             <div><dt>Tanggal</dt><dd data-f="tanggal"><?= $tglLabel($tanggal) ?></dd></div>
                             <div><dt>Waktu</dt><dd data-f="waktu"><?= $mulai ?> - <?= $selesai ?> WIB</dd></div>
-                            
+
                             <div><dt>Kontak WA</dt><dd><?= $h($wa) ?></dd></div>
                         </dl>
                         <?php if ($bentrok): ?>
@@ -442,7 +442,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                 </div>
                 <div class="form-group"><label for="edit-pemohon">Nama Pemohon / Komunitas</label><input type="text" id="edit-pemohon" required></div>
                 <div class="form-group"><label for="edit-agenda">Agenda / Keperluan</label><input type="text" id="edit-agenda" required></div>
-                
+
                 <div class="popup-actions">
                     <button type="button" class="btn-secondary" data-popup-close>Batal</button>
                     <button type="submit" class="btn-secondary btn-outline-primary">Simpan Perubahan</button>
