@@ -53,7 +53,7 @@ try {
     if ($tahunTerbit !== null && $tahunTerbit !== '') {
         $tahunTerbit = filter_var($tahunTerbit, FILTER_VALIDATE_INT);
 
-        if ($tahunTerbit === false || $tahunTerbit < 0) {
+        if ($tahunTerbit === false || $tahunTerbit < 0 || $tahunTerbit > (int) date('Y')) {
             throw new InvalidArgumentException(
                 'Tahun terbit harus berupa angka yang valid.'
             );

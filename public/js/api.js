@@ -31,6 +31,25 @@ async function fetchCsrfToken(forceNew = false) {
     return csrfTokenPromise;
 }
 
+let loadingCount = 0;
+let pageReloading = false;
+function setLoading(on, text = 'Memproses data…') {
+    let el = document.getElementById('simart-loading');
+    if (!el) {
+        if (!on) return;
+        const style = document.createElement('style');
+        style.textContent = '#simart-loading{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(43,38,35,.45);color:#fff;font:600 .95rem sans-serif}#simart-loading[hidden]{display:none}#simart-loading i{width:42px;height:42px;border:4px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:simart-spin .8s linear infinite}@keyframes simart-spin{to{transform:rotate(360deg)}}';
+        document.head.append(style);
+        el = document.createElement('div');
+        el.id = 'simart-loading';
+        el.setAttribute('role', 'status');
+        el.innerHTML = '<i></i><span>Memproses data…</span>';
+        document.body.append(el);
+    }
+    el.querySelector('span').textContent = text;
+    el.hidden = !on;
+}
+
 async function apiRequest(endpoint, options = {}) {
     const { body, headers, ...rest } = options;
     const method = String(rest.method || 'GET').toUpperCase();
@@ -69,7 +88,10 @@ async function apiRequest(endpoint, options = {}) {
         return result.data;
     }
 
-    return send();
+    if (!mutatesData) return send();
+    loadingCount++; setLoading(true);
+    try { return await send(); }
+    finally { if (--loadingCount === 0 && !pageReloading) setLoading(false); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
