@@ -14,8 +14,8 @@ $categories = array_unique(array_column($books, 2));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css?v=20261125-header-glass">
-    <link rel="stylesheet" href="/css/responsive.css?v=20261125-header-glass">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
     <style>
         .book-grid { grid-template-columns:repeat(auto-fill, minmax(185px, 1fr)); gap:16px; }
         .book-card-link { cursor:pointer; }
