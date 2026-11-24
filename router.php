@@ -1,6 +1,10 @@
 <?php
 // Jalankan: php -S localhost:8000 -t public router.php
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// Entry point fisik dipakai juga oleh frontend ketika Wasmer tanpa URL rewrite.
+if ($path === '/api/index.php') {
+    return false;
+}
 // Hanya endpoint PHP di grup yang dikenal boleh diakses melalui /api.
 if (preg_match('~^/api/(auth|buku|karya|kategori|kunjungan|laporan|pengunjung|reservasi|tempat|transaksi)/([a-z_]+\.php)$~', $path, $m)) {
     $file = __DIR__ . '/backend/api/' . $m[1] . '/' . $m[2];

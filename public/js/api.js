@@ -1,4 +1,11 @@
-const API_BASE = '/api';
+// Gunakan entry point fisik: berfungsi di Wasmer tanpa .htaccess / URL rewrite.
+// Endpoint asli masih bisa dipakai lewat router.php pada localhost.
+function apiUrl(endpoint) {
+    const [path, query = ''] = String(endpoint).split('?', 2);
+    const params = new URLSearchParams(query);
+    params.set('route', path);
+    return `/api/index.php?${params.toString()}`;
+}
 let csrfTokenPromise = null;
 
 async function fetchCsrfToken(forceNew = false) {
@@ -6,7 +13,7 @@ async function fetchCsrfToken(forceNew = false) {
 
     if (!csrfTokenPromise) {
         csrfTokenPromise = (async () => {
-            const response = await fetch(`${API_BASE}/auth/csrf.php`, {
+            const response = await fetch(apiUrl('auth/csrf.php'), {
                 method: 'GET', credentials: 'same-origin', cache: 'no-store'
             });
             const result = await response.json();
@@ -38,7 +45,7 @@ async function apiRequest(endpoint, options = {}) {
             requestHeaders['X-CSRF-Token'] = await fetchCsrfToken(retryToken);
         }
 
-        const response = await fetch(`${API_BASE}/${endpoint}`, {
+        const response = await fetch(apiUrl(endpoint), {
             credentials: 'same-origin', ...rest, headers: requestHeaders,
             ...(body !== undefined ? { body: JSON.stringify(body) } : {})
         });

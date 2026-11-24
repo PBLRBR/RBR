@@ -1,6 +1,13 @@
 <?php
-/** Front controller API untuk Apache. PHP built-in server tetap menggunakan router.php. */
-$path = parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+/**
+ * Front controller API untuk deployment tanpa rewrite (Wasmer/PHPix), juga Apache.
+ * Contoh: /api/index.php?route=auth/login.php
+ * URL /api/auth/login.php tetap diterima ketika server mendukung rewrite.
+ */
+$route = $_GET['route'] ?? null;
+$path = $route === null
+    ? parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH)
+    : (is_string($route) ? '/api/' . $route : null);
 if (!is_string($path) || !preg_match(
     '~^/api/(auth|buku|karya|kategori|kunjungan|laporan|pengunjung|reservasi|tempat|transaksi)/([a-z_]+\.php)$~',
     $path, $matches
