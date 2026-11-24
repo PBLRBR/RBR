@@ -14,8 +14,8 @@ foreach ($preview as $b) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-header-glass">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-header-glass">
 </head>
 
 <body>
@@ -31,15 +31,7 @@ foreach ($preview as $b) {
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <?php if (!empty($_SESSION['user'])): ?>
-                <a class="btn-secondary" href="<?= ($_SESSION['user']['role'] ?? '') === 'admin' ? '/admin/' : '/riwayat.php' ?>"><?= ($_SESSION['user']['role'] ?? '') === 'admin' ? 'Admin' : esc($_SESSION['user']['nama']) ?></a>
-                <button type="button" class="btn-secondary" data-logout>Keluar</button>
-                <?php else: ?>
-                <a class="btn-secondary" href="/?auth=login">Masuk</a>
-                <a class="btn-primary" href="/?auth=register">Daftar</a>
-                <?php endif; ?>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 
@@ -161,6 +153,7 @@ foreach ($preview as $b) {
 
             <!-- form daftar -->
             <form id="form-register" class="auth-form">
+                <p class="auth-warning" id="register-warning" role="alert" aria-live="polite" hidden></p>
                 <div class="form-group"><label>Nama Lengkap</label><input type="text" placeholder="Nama lengkap"></div>
                 <div class="form-group"><label>Email</label><input type="email" placeholder="budi@ratna.org"></div>
                 <div class="form-group"><label>Nomor WhatsApp</label><input type="tel" data-simart-phone inputmode="tel" placeholder="0812XXXXXXXX" maxlength="16" required></div>

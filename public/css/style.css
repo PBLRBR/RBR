@@ -121,6 +121,35 @@ body {
   align-items: center;
   gap: 12px;
 }
+.nav-auth .btn-secondary,
+.nav-auth .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 96px;
+  height: 40px;
+  padding: 5px 8px;
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+.nav-auth .user-profile {
+  gap: 8px;
+  padding: 5px 8px;
+}
+.nav-auth .profile-avatar {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+}
+.nav-account-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-auth a[href="/?auth=login"] {
+  font-weight: 700;
+}
 
 .simart-account-menu form {
   margin: 0;
@@ -502,6 +531,25 @@ body {
 
 .auth-form.active {
   display: block;
+}
+
+.auth-warning {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #e6b7a9;
+  border-radius: 8px;
+  background: #fff1ec;
+  color: #8a2f1b;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.auth-warning[hidden] {
+  display: none;
+}
+.auth-warning-success {
+  border-color: #a8c9a5;
+  background: #edf7eb;
+  color: #285b2c;
 }
 
 /* Footer */
@@ -1391,6 +1439,99 @@ h4 {
   }
 }
 
+/* Shared public header: dark RBR navigation across every page. */
+.navbar {
+  position: sticky;
+  inset: auto;
+  top: 0;
+  z-index: 100;
+  background: #27231e;
+  border-bottom: 1px solid #3e3733;
+}
+.navbar .nav-container {
+  height: 88px;
+}
+.navbar .logo-text,
+.navbar .nav-menu a {
+  color: #f7f4eb;
+}
+.navbar .logo-text {
+  font-size: 1.02rem;
+  white-space: nowrap;
+}
+.navbar .logo-image {
+  filter: brightness(0) invert(1);
+}
+.navbar .nav-menu a.active,
+.navbar .nav-menu a:hover {
+  color: #e5ae2f;
+}
+.navbar .nav-auth .btn-secondary {
+  background: #ece7de;
+  color: #27231e;
+  border: 1px solid #ece7de;
+}
+.navbar .nav-auth .btn-primary,
+.navbar .nav-auth [data-logout] {
+  background: #ad5d3d;
+  color: #fff;
+  border: 1px solid #ad5d3d;
+}
+.navbar .nav-auth .user-profile {
+  color: #27231e;
+}
+body:has(.home-hero) .navbar {
+  position: sticky;
+  inset: auto;
+  top: 0;
+  background: #27231e;
+  border-bottom: 1px solid #3e3733;
+  backdrop-filter: none;
+}
+body:has(.home-hero) .navbar.home-navbar-scrolled {
+  background: #27231e;
+}
+body:has(.home-hero) .nav-container {
+  height: 88px;
+}
+body:has(.home-hero) .logo-image {
+  filter: none;
+}
+body:has(.home-hero) .home-hero {
+  padding-top: 0;
+}
+
+/* Keep the shared dark header above legacy page palette overrides. */
+.navbar {
+  background: #27231e;
+  border-color: #3e3733;
+}
+.navbar .logo-text,
+.navbar .nav-menu a {
+  color: #f7f4eb;
+}
+.navbar .logo-image {
+  filter: brightness(0) invert(1);
+}
+.navbar .nav-menu a.active,
+.navbar .nav-menu a:hover {
+  color: #e5ae2f;
+}
+.navbar .nav-auth .btn-secondary {
+  background: #ece7de;
+  color: #27231e;
+  border-color: #ece7de;
+}
+.navbar .nav-auth .btn-primary,
+.navbar .nav-auth [data-logout] {
+  background: #ad5d3d;
+  color: #fff;
+  border-color: #ad5d3d;
+}
+body:has(.home-hero) .logo-image {
+  filter: none;
+}
+
 .cart-table {
   width: 100%;
   font-size: 0.85rem;
@@ -1835,12 +1976,17 @@ body:has(.home-hero) {
   background: #f8f5e8;
 }
 body:has(.home-hero) .navbar {
-  position: absolute;
+  position: fixed;
   inset: 0 0 auto;
   z-index: 10;
   background: transparent;
   border: 0;
   backdrop-filter: none;
+}
+body:has(.home-hero) .navbar.home-navbar-scrolled {
+  background: rgba(39, 35, 30, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
 }
 body:has(.home-hero) .nav-container {
   width: min(90%, 1268px);
@@ -1874,14 +2020,7 @@ body:has(.home-hero) .nav-menu a:hover {
   color: #e5ae2f;
 }
 body:has(.home-hero) .nav-auth {
-  gap: 10px;
-}
-body:has(.home-hero) .nav-auth .btn-secondary {
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
-  white-space: nowrap;
+  gap: 12px;
 }
 .home-hero {
   position: relative;
@@ -2021,7 +2160,7 @@ body:has(.home-hero) .ruang-section {
 }
 @media (max-width: 900px) {
   body:has(.home-hero) .navbar {
-    position: absolute;
+    position: fixed;
   }
   body:has(.home-hero) .nav-container {
     height: auto;
@@ -2046,10 +2185,64 @@ body:has(.home-hero) .ruang-section {
     width: 92%;
   }
   body:has(.home-hero) .nav-auth {
-    display: none;
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+  body:has(.home-hero) .nav-auth .btn-secondary,
+  body:has(.home-hero) .nav-auth .btn-primary {
+    width: 68px;
+    height: 36px;
+    padding: 4px 6px;
+    font-size: 0.78rem;
+  }
+  body:has(.home-hero) .nav-auth .user-profile {
+    width: 78px;
+    gap: 4px;
+  }
+  body:has(.home-hero) .nav-auth .profile-avatar {
+    flex-basis: 22px;
+    width: 22px;
+    height: 22px;
+  }
+  body:has(.home-hero) .nav-toggle {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
   }
   body:has(.home-hero) .nav-menu {
     order: 3;
+  }
+  body:has(.home-hero) .nav-menu {
+    background: rgba(39, 35, 30, 0.96);
+  }
+  body:has(.home-hero) .nav-menu a {
+    color: #f7f4eb;
+  }
+  body:has(.home-hero) .nav-menu a:hover,
+  body:has(.home-hero) .nav-menu a.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #e5ae2f;
+  }
+  body:has(.home-hero) .nav-menu > .nav-auth {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    margin: auto 0 0;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+  }
+  body:has(.home-hero) .nav-menu > .nav-auth .btn-secondary,
+  body:has(.home-hero) .nav-menu > .nav-auth .btn-primary {
+    width: 100%;
+    height: 42px;
+    padding: 6px 12px;
+    font-size: 0.92rem;
+  }
+  body:has(.home-hero) .nav-menu > .nav-auth .user-profile {
+    justify-content: flex-start;
   }
   .home-hero {
     min-height: 760px;
@@ -2080,4 +2273,59 @@ body:has(.home-hero) .ruang-section {
     width: 30px;
     height: 30px;
   }
+}
+
+body:has(.home-hero) .navbar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+}
+body:has(.home-hero) .nav-container {
+  height: 88px;
+}
+body:has(.home-hero) .home-hero {
+  padding-top: 100px;
+}
+
+/* Final shared header palette, after page-specific legacy rules. */
+.navbar {
+  background: rgba(39, 35, 30, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+.navbar .logo-text,
+.navbar .nav-menu a {
+  color: #f7f4eb;
+}
+.navbar .logo-image {
+  filter: brightness(0) invert(1);
+}
+.navbar .nav-menu a.active,
+.navbar .nav-menu a:hover {
+  color: #e5ae2f;
+}
+.navbar .nav-auth .btn-secondary {
+  background: #ece7de;
+  color: #27231e;
+  border-color: #ece7de;
+}
+.navbar .nav-auth .btn-primary,
+.navbar .nav-auth [data-logout] {
+  background: #ad5d3d;
+  color: #fff;
+  border-color: #ad5d3d;
+}
+body:has(.home-hero) .navbar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+}
+body:has(.home-hero) .logo-image {
+  filter: none;
 }

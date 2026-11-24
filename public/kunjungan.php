@@ -9,15 +9,15 @@ $pageTitle = 'Buku Tamu | SIMART';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= esc($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-header-glass">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-header-glass">
     <style>.visit-panel{max-width:600px;margin:36px auto;padding:28px;border:1px solid #ddd5c9;border-radius:16px;background:#fff}.visit-panel .form-group{margin-bottom:16px}.visit-message{margin-top:18px;padding:14px;border-radius:8px;background:#edf6ec}.visit-error{background:#ffeded;color:#8c231b}</style>
 </head>
 <body>
 <header class="navbar"><div class="container nav-container">
     <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
     <nav class="nav-menu"><a href="/">Beranda</a><a href="/tentang.php">Tentang</a><a href="/katalog.php">Katalog Buku</a><a href="/reservasi.php">Reservasi Ruang</a></nav>
-    <div class="nav-auth"><?php if (($_SESSION['user']['role'] ?? '') === 'admin'): ?><a class="btn-secondary" href="/admin/">Dashboard Admin</a><?php endif; ?></div>
+    <?php require __DIR__ . '/_nav-auth.php'; ?>
 </div></header>
 <main class="container page-content">
     <div class="visit-panel">

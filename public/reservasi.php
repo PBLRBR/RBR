@@ -15,8 +15,8 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-header-glass">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-header-glass">
 </head>
 
 <body>
@@ -32,10 +32,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a class="active" href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <a href="/profil.php" class="user-profile"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name"><?= esc($_SESSION['user']['nama'] ?? 'Masuk') ?></span></a>
-                <?php if (!empty($_SESSION['user'])): ?><button type="button" class="btn-secondary" data-logout>Keluar</button><?php else: ?><a class="btn-secondary" href="/?auth=login">Masuk</a><?php endif; ?>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 

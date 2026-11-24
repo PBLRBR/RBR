@@ -13,8 +13,8 @@ if (!$profile) { http_response_code(404); exit('Akun tidak ditemukan.'); }
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-header-glass">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-header-glass">
 </head>
 
 <body>
@@ -30,10 +30,7 @@ if (!$profile) { http_response_code(404); exit('Akun tidak ditemukan.'); }
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <a href="/profil.php" class="user-profile active"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name"><?= htmlspecialchars($profile['nama']) ?></span></a>
-                <button class="btn-secondary" type="button" data-logout>Keluar</button>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 
@@ -50,6 +47,7 @@ if (!$profile) { http_response_code(404); exit('Akun tidak ditemukan.'); }
                 <h3><?= htmlspecialchars($profile['nama']) ?></h3>
                 <p class="user-email-text"><?= htmlspecialchars($profile['email']) ?></p>
                 <span class="role-badge">Anggota Komunitas</span>
+                <p class="margin-top-30"><a class="btn-primary" href="/riwayat.php">Riwayat Reservasi</a></p>
             </div>
 
             <!-- form edit profil -->
