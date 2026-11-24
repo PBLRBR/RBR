@@ -83,10 +83,10 @@ body.admin-body {
 }
 
 .logo-img {
-    width: 34px;
-    height: 34px;
-    border-radius: 0px;
-    object-fit: cover;
+    width: auto;
+    height: 40px;
+    max-width: 120px;
+    object-fit: contain;
     display: block;
 }
 
@@ -1203,4 +1203,21 @@ body.admin-body {
     .admin-user-info span { display: none; }   /* sembunyikan sapaan, sisakan tombol */
     .stats-grid, .rsv-details, .row-time { grid-template-columns: 1fr; }
     .rsv-actions > *, .popup-actions > button { flex: 1 1 100%; }
+}
+
+/* analytics: filter periode + tombol download */
+.analytics-actions { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.analytics-actions .period-filters { margin-bottom: 0; }
+.analytics-actions .btn-primary { white-space: nowrap; }
+@media (max-width: 700px) {
+    .analytics-actions { width: 100%; justify-content: flex-start; }
+    .analytics-actions .btn-primary { width: 100%; }
+}
+
+/* keranjang transaksi: header rapi */
+.cart-head h3 { white-space: nowrap; }
+.invoice-no {
+    display: block; padding: 0; background: none;
+    font-family: inherit; font-size: 0.78rem; font-weight: 400;
+    color: var(--color-text-muted);
 }
