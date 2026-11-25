@@ -18,10 +18,12 @@ try {
 
     // Satu UUID harus dipertahankan FE saat mencoba ulang checkout yang sama.
     $checkoutKey = $input['idempotency_key'] ?? null;
-    if (!is_string($checkoutKey) || !preg_match(
-        '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
-        $checkoutKey
-    )) {
+    if (
+        !is_string($checkoutKey) || !preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $checkoutKey
+        )
+    ) {
         throw new InvalidArgumentException('ID checkout tidak valid. Pastikan JavaScript POS sudah diperbarui.');
     }
 
@@ -43,21 +45,23 @@ try {
     }
     $items = [];
     foreach ($rawItems as $row) {
-        if (!is_array($row)) throw new InvalidArgumentException('Item keranjang tidak valid.');
+        if (!is_array($row))
+            throw new InvalidArgumentException('Item keranjang tidak valid.');
         $id = filter_var($row['id_buku'] ?? null, FILTER_VALIDATE_INT);
         $qty = filter_var($row['jumlah_beli'] ?? null, FILTER_VALIDATE_INT);
         if (!$id || $id < 1 || !$qty || $qty < 1) {
             throw new InvalidArgumentException('ID buku atau jumlah tidak valid.');
         }
         $items[$id] = ($items[$id] ?? 0) + $qty;
-        if ($items[$id] > 10000) throw new InvalidArgumentException('Jumlah terlalu banyak.');
+        if ($items[$id] > 10000)
+            throw new InvalidArgumentException('Jumlah terlalu banyak.');
     }
     ksort($items, SORT_NUMERIC);
 
     // Fingerprint mencegah UUID checkout dipakai ulang untuk isi keranjang berbeda.
     $canonicalItems = [];
     foreach ($items as $id => $qty) {
-        $canonicalItems[] = ['id_buku' => (int)$id, 'jumlah_beli' => (int)$qty];
+        $canonicalItems[] = ['id_buku' => (int) $id, 'jumlah_beli' => (int) $qty];
     }
     $fingerprint = hash('sha256', json_encode([
         'metode_transaksi' => $metode,
@@ -70,20 +74,24 @@ try {
 
     // INSERT dibuat SEBELUM penguncian stok. UNIQUE index mengantrekan
     // dua request dengan key sama; yang kedua hanya menerima transaksi pertama.
-    $invoice = 'INV-' . date('YmdHis') . '-' . strtoupper(bin2hex(random_bytes(4)));
+    $waktuTransaksiWib = new DateTimeImmutable('now', new DateTimeZone('Asia/Jakarta'));
+    $invoice = 'INV-' . $waktuTransaksiWib->format('YmdHis') . '-' . strtoupper(bin2hex(random_bytes(4)));
+
     $reserve = $pdo->prepare(
         'INSERT INTO transaksi_penjualan
             (id_user, kode_invoice, tanggal_transaksi, nama_pembeli,
              metode_transaksi, total_bayar, idempotency_key, request_hash)
-         VALUES (:kasir, :invoice, CURRENT_TIMESTAMP, :pembeli,
+         VALUES (:kasir, :invoice, :tanggal_transaksi, :pembeli,
                  :metode, 0, :checkout_key, :request_hash)
          ON CONFLICT (id_user, idempotency_key) DO NOTHING
          RETURNING id_transaksi, kode_invoice, total_bayar'
     );
-    $kasir = (int)$_SESSION['user']['id_user'];
+
+    $kasir = (int) $_SESSION['user']['id_user'];
     $reserve->execute([
         'kasir' => $kasir,
         'invoice' => $invoice,
+        'tanggal_transaksi' => $waktuTransaksiWib->format('Y-m-d H:i:s.u'),
         'pembeli' => $pembeli !== '' ? $pembeli : null,
         'metode' => $metode,
         'checkout_key' => $checkoutKey,
@@ -99,7 +107,8 @@ try {
         );
         $existingQuery->execute(['kasir' => $kasir, 'checkout_key' => $checkoutKey]);
         $existing = $existingQuery->fetch(PDO::FETCH_ASSOC);
-        if (!$existing) throw new RuntimeException('Transaksi duplikat tidak dapat ditemukan.');
+        if (!$existing)
+            throw new RuntimeException('Transaksi duplikat tidak dapat ditemukan.');
 
         if (!is_string($existing['request_hash']) || !hash_equals($existing['request_hash'], $fingerprint)) {
             $pdo->rollBack();
@@ -145,19 +154,20 @@ try {
     foreach ($items as $id => $qty) {
         $lock->execute(['id' => $id]);
         $book = $lock->fetch(PDO::FETCH_ASSOC);
-        if (!$book) throw new InvalidArgumentException("Buku ID $id tidak ditemukan atau tidak aktif.");
+        if (!$book)
+            throw new InvalidArgumentException("Buku ID $id tidak ditemukan atau tidak aktif.");
         if (!in_array($book['bisa_dijual'], [true, 1, '1', 't', 'true'], true)) {
             throw new InvalidArgumentException('Buku ' . $book['judul'] . ' tidak untuk dijual.');
         }
-        if ((int)$book['stok'] < $qty) {
+        if ((int) $book['stok'] < $qty) {
             throw new InvalidArgumentException('Stok buku ' . $book['judul'] . ' tidak cukup.');
         }
-        $harga = (float)$book['harga'];
+        $harga = (float) $book['harga'];
         $subtotal = round($harga * $qty, 2);
         $total += $subtotal;
         $lines[] = [
-            'id_buku' => (int)$id,
-            'jumlah_beli' => (int)$qty,
+            'id_buku' => (int) $id,
+            'jumlah_beli' => (int) $qty,
             'subtotal' => $subtotal,
             'judul' => $book['judul'],
         ];
@@ -202,11 +212,13 @@ try {
         ]
     ]);
 } catch (InvalidArgumentException $e) {
-    if ($pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
+    if ($pdo instanceof PDO && $pdo->inTransaction())
+        $pdo->rollBack();
     http_response_code(422);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
-    if ($pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
+    if ($pdo instanceof PDO && $pdo->inTransaction())
+        $pdo->rollBack();
     error_log($e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Gagal menyimpan transaksi.']);
