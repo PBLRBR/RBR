@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../helpers/reservasi.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
@@ -30,9 +31,11 @@ try {
     $jam_mulai = $input['jam_mulai'] ?? null;
     $jam_selesai = $input['jam_selesai'] ?? null;
 
-    if (!$id_reservasi || $id_reservasi < 1 || !$id_tempat || $id_tempat < 1 ||
+    if (
+        !$id_reservasi || $id_reservasi < 1 || !$id_tempat || $id_tempat < 1 ||
         $nama_acara === '' || $penanggung_jawab === '' || $kontak_wa === null ||
-        !is_string($tanggal_acara) || !is_string($jam_mulai) || !is_string($jam_selesai)) {
+        !is_string($tanggal_acara) || !is_string($jam_mulai) || !is_string($jam_selesai)
+    ) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Data wajib tidak valid, termasuk nomor WhatsApp (08, 10-13 digit).']);
         exit;
@@ -50,8 +53,10 @@ try {
         echo json_encode(['success' => false, 'message' => 'Format jam harus HH:MM atau HH:MM:SS.']);
         exit;
     }
-    if (strlen($jam_mulai) === 5) $jam_mulai .= ':00';
-    if (strlen($jam_selesai) === 5) $jam_selesai .= ':00';
+    if (strlen($jam_mulai) === 5)
+        $jam_mulai .= ':00';
+    if (strlen($jam_selesai) === 5)
+        $jam_selesai .= ':00';
     if ($jam_selesai <= $jam_mulai) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Jam selesai harus setelah jam mulai.']);
@@ -59,21 +64,6 @@ try {
     }
 
     $pdo->beginTransaction();
-
-    // Urutan penguncian sama seperti ubah_status_reservasi.php:
-    // (1) reservasi yang akan diubah, kemudian (2) tempat yang dituju.
-    $stmtLama = $pdo->prepare(
-        'SELECT id_reservasi, id_user, status_reservasi FROM reservasi
-         WHERE id_reservasi = :id FOR UPDATE'
-    );
-    $stmtLama->execute(['id' => $id_reservasi]);
-    $reservasiLama = $stmtLama->fetch(PDO::FETCH_ASSOC);
-    if (!$reservasiLama) {
-        $pdo->rollBack();
-        http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'Reservasi tidak ditemukan.']);
-        exit;
-    }
 
     $stmtTempat = $pdo->prepare(
         'SELECT id_tempat, status FROM tempat WHERE id_tempat = :id FOR UPDATE'
@@ -90,6 +80,20 @@ try {
         $pdo->rollBack();
         http_response_code(409);
         echo json_encode(['success' => false, 'message' => 'Tempat tidak aktif dan tidak dapat digunakan untuk reservasi.']);
+        exit;
+    }
+    $stmtLama = $pdo->prepare(
+        'SELECT id_reservasi, id_user, status_reservasi, poster_acara, tautan_info,
+            id_tempat, tanggal_acara, jam_mulai, jam_selesai
+     FROM reservasi
+     WHERE id_reservasi = :id FOR UPDATE'
+    );
+    $stmtLama->execute(['id' => $id_reservasi]);
+    $reservasiLama = $stmtLama->fetch(PDO::FETCH_ASSOC);
+    if (!$reservasiLama) {
+        $pdo->rollBack();
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Reservasi tidak ditemukan.']);
         exit;
     }
 
@@ -142,11 +146,32 @@ try {
         'tanggal' => $tanggal_acara,
         'jam_mulai' => $jam_mulai,
         'jam_selesai' => $jam_selesai,
-        'poster' => $input['poster_acara'] ?? null,
-        'tautan' => $input['tautan_info'] ?? null,
+        'poster' => array_key_exists('poster_acara', $input)
+            ? $input['poster_acara']
+            : $reservasiLama['poster_acara'],
+        'tautan' => array_key_exists('tautan_info', $input)
+            ? $input['tautan_info']
+            : $reservasiLama['tautan_info'],
         'id' => $id_reservasi
     ]);
     $reservasi = $stmt->fetch(PDO::FETCH_ASSOC);
+    $jadwalBerubah = (int) $reservasiLama['id_tempat'] !== $id_tempat
+        || $reservasiLama['tanggal_acara'] !== $tanggal_acara
+        || $reservasiLama['jam_mulai'] !== $jam_mulai
+        || $reservasiLama['jam_selesai'] !== $jam_selesai;
+
+    $reservasi['jumlah_ditolak_otomatis'] = 0;
+
+    if ($reservasiLama['status_reservasi'] === 'disetujui' && $jadwalBerubah) {
+        $reservasi['jumlah_ditolak_otomatis'] = tolakReservasiMenungguYangBentrok(
+            $pdo,
+            $id_reservasi,
+            $id_tempat,
+            $tanggal_acara,
+            $jam_mulai,
+            $jam_selesai
+        );
+    }
     $pdo->commit();
 
     echo json_encode([
@@ -156,7 +181,8 @@ try {
     ]);
 
 } catch (Throwable $e) {
-    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction())
+        $pdo->rollBack();
     error_log($e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Gagal memperbarui reservasi.']);
