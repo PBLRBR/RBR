@@ -217,20 +217,6 @@ try {
             $reservasiLama['jam_mulai'],
             $reservasiLama['jam_selesai']
         );
-        $reservasi['jumlah_ditolak_otomatis'] = 0;
-
-        if ($status === 'disetujui') {
-            $reservasi['jumlah_ditolak_otomatis'] = tolakReservasiMenungguYangBentrok(
-                $pdo,
-                $id,
-                (int) $reservasiLama['id_tempat'],
-                $reservasiLama['tanggal_acara'],
-                $reservasiLama['jam_mulai'],
-                $reservasiLama['jam_selesai']
-            );
-        }
-
-        $pdo->commit();
     }
 
     $pdo->commit();
