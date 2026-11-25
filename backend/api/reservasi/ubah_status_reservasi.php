@@ -217,17 +217,20 @@ try {
             $reservasiLama['jam_mulai'],
             $reservasiLama['jam_selesai']
         );
+        $reservasi['jumlah_ditolak_otomatis'] = 0;
 
-        $stmtTolak->execute([
-            'alasan' => 'Jadwal bertabrakan dengan reservasi lain yang telah disetujui.',
-            'id_tempat' => $reservasiLama['id_tempat'],
-            'tanggal_acara' => $reservasiLama['tanggal_acara'],
-            'id' => $id,
-            'jam_selesai' => $reservasiLama['jam_selesai'],
-            'jam_mulai' => $reservasiLama['jam_mulai'],
-        ]);
+        if ($status === 'disetujui') {
+            $reservasi['jumlah_ditolak_otomatis'] = tolakReservasiMenungguYangBentrok(
+                $pdo,
+                $id,
+                (int) $reservasiLama['id_tempat'],
+                $reservasiLama['tanggal_acara'],
+                $reservasiLama['jam_mulai'],
+                $reservasiLama['jam_selesai']
+            );
+        }
 
-        $reservasi['jumlah_ditolak_otomatis'] = $stmtTolak->rowCount();
+        $pdo->commit();
     }
 
     $pdo->commit();
