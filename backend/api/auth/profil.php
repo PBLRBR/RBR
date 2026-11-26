@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/../../helpers/phone.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -36,8 +37,16 @@ if (!is_string($nama) || trim($nama) === '' || strlen(trim($nama)) > 100) {
     exit;
 }
 
-if (!is_string($noHp) || (trim($noHp) !== '' && !preg_match('/^\+?[0-9]{8,19}$/D', trim($noHp)))) {
-    responsProfil(422, 'Nomor WhatsApp harus berisi 8–19 digit, dengan tanda + opsional di awal.');
+if (!is_string($noHp)) {
+    responsProfil(422, 'Nomor WhatsApp harus berupa teks.');
+    exit;
+}
+
+$nomorKosong = trim($noHp) === '';
+$nomorBaku = $nomorKosong ? null : normalizeIndonesianMobile($noHp);
+
+if (!$nomorKosong && $nomorBaku === null) {
+    responsProfil(422, 'Gunakan nomor seluler Indonesia yang valid, misalnya 081234567890.');
     exit;
 }
 
@@ -45,13 +54,13 @@ try {
     $pdo = require __DIR__ . '/../../config/database.php';
     $stmt = $pdo->prepare(
         'UPDATE users
-         SET nama = :nama, no_hp = :no_hp
-         WHERE id_user = :id
-         RETURNING nama, email, no_hp'
+        SET nama = :nama, no_hp = :no_hp
+        WHERE id_user = :id
+        RETURNING nama, email, no_hp'
     );
     $stmt->execute([
         'nama' => trim($nama),
-        'no_hp' => trim($noHp) === '' ? null : trim($noHp),
+        'no_hp' => $nomorBaku,
         'id' => $_SESSION['user']['id_user'],
     ]);
 
