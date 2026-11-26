@@ -21,6 +21,8 @@ try {
     $formatTanggal = '/^\d{4}-\d{2}-\d{2}$/';
 
     if (
+        !is_string($tanggalMulai) ||
+        !is_string($tanggalSelesai) ||
         !preg_match($formatTanggal, $tanggalMulai) ||
         !preg_match($formatTanggal, $tanggalSelesai) ||
         !checkdate(
