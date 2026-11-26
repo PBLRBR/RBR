@@ -174,7 +174,9 @@ try {
             'id_pengunjung' => $id_pengunjung,
             'id_buku_tamu' => $kunjungan['id_buku_tamu'],
             'tanggal_kunjungan' => $kunjungan['tanggal_kunjungan'],
-            'jam_masuk' => $kunjungan['jam_masuk']
+            'jam_masuk' => $kunjungan['jam_masuk'] === null
+                ? null
+                : substr($kunjungan['jam_masuk'], 0, 8)
         ]
     ]);
 
