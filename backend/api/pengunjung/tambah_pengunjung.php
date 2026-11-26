@@ -19,7 +19,8 @@ try {
 
     $input = json_decode(file_get_contents('php://input'), true);
 
-    $nama = trim($input['nama_pengunjung'] ?? '');
+    $namaInput = $input['nama_pengunjung'] ?? null;
+    $nama = is_string($namaInput) ? trim($namaInput) : '';
     $no_hp = normalizeIndonesianMobile($input['no_hp'] ?? null);
 
     if ($nama === '') {
