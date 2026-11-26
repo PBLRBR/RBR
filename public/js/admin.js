@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fillBookRow = (tr, b) => {
         const stok = Number(b.stok);
-        const stokCell = stok === 0 ? '<span class="stock-out">Habis</span>' : stok <= 2 ? `<span class="stock-low">${stok}</span>` : stok;
+        const stokCell = stok === 0 ? '<span class="stock-out">Habis</span>' : stok <= 3 ? `<span class="stock-low">${stok}</span>` : stok;
         Object.assign(tr.dataset, b);
         tr.innerHTML = `<td><strong>${esc(b.judul)}</strong></td><td>${esc(b.penulis)}</td><td>${esc(b.kategori)}</td>`
             + `<td>${rupiah(b.harga)}</td><td>${stokCell}</td><td><span class="badge">${esc(b.kondisi)}</span></td>`
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const t = result.transaksi;
         const rows = result.detail;
         $('#transaction-title').textContent = `Invoice ${t.kode_invoice}`;
-        const fields = [['Kasir', t.nama_kasir], ['Tanggal', t.tanggal_transaksi],
+        const fields = [['Kasir', t.nama_kasir], ['Tanggal', String(t.tanggal_transaksi ?? '').replace(/(\d{2}:\d{2}:\d{2})\.\d+$/, '$1')],
         ['Pembeli', t.nama_pembeli || 'Pengunjung'],
         ['Metode', t.metode_transaksi === 'cash' ? 'Tunai' : 'QRIS']];
         $('#transaction-details').innerHTML = '<dl class="admin-details">'
@@ -366,11 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Hanya setelah respons sukses, UUID ini dianggap selesai.
             checkoutAttempt = null;
             // Data sudah di-commit pada backend. Perbarui stok DOM dan keranjang langsung.
-            result.items.forEach(({ id_buku, jumlah_beli, stok_tersisa }) => {
+            result.items.forEach(({ id_buku, stok_tersisa }) => {
                 const id = String(id_buku);
                 const b = catalog.get(id);
                 if (!b) return;
-                b.stok = Number.isFinite(Number(stok_tersisa)) ? Number(stok_tersisa) : Math.max(0, b.stok - Number(jumlah_beli));
+
+                if (stok_tersisa == null || !Number.isFinite(Number(stok_tersisa))) return;
+                b.stok = Number(stok_tersisa);
                 const card = posCards.find(el => el.dataset.id === id);
                 if (card) {
                     card.dataset.stok = b.stok;
@@ -378,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const label = $('.pos-stock', card);
                     if (label) {
                         label.textContent = `Stok ${b.stok}`;
-                        label.classList.toggle('low', b.stok <= 2);
+                        label.classList.toggle('low', b.stok <= 3);
                     }
                     if (b.stok === 0) {
                         const foot = $('.pos-item-foot', card);
@@ -396,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     row.dataset.stok = String(b.stok);
                     const cell = row.children[4];
                     if (cell) cell.innerHTML = b.stok === 0 ? '<span class="stock-out">Habis</span>'
-                        : b.stok <= 2 ? `<span class="stock-low">${b.stok}</span>` : String(b.stok);
+                        : b.stok <= 3 ? `<span class="stock-low">${b.stok}</span>` : String(b.stok);
                 }
             });
             cart.clear(); cashInput.value = ''; $('#buyer-name').value = ''; renderCart();
@@ -406,9 +408,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const tr = document.createElement('tr');
             tr.innerHTML = `<td><button type="button" class="btn-sm btn-secondary btn-view-transaction" data-id="${Number(result.transaksi.id_transaksi)}">${esc(result.transaksi.kode_invoice)}</button></td>`
-                + `<td>${esc(new Date().toLocaleString('id-ID'))}</td><td>${result.items.reduce((n, i) => n + Number(i.jumlah_beli), 0)} buku</td>`
+                + `<td>${esc(String(result.transaksi.tanggal_transaksi ?? '').replace(/(\d{2}:\d{2}:\d{2})\.\d+$/, '$1'))}</td><td>${result.items.reduce((n, i) => n + Number(i.jumlah_beli), 0)} buku</td>`
                 + `<td>${rupiah(result.transaksi.total_bayar)}</td><td>${esc(method)}</td>`;
             tbody.prepend(tr);
+            while (tbody.rows.length > 5) {
+                tbody.deleteRow(-1);
+            }
             // Jika detail gagal dimuat, transaksi tetap sukses. Hindari checkout ulang.
             try { await showTransactionDetail(result.transaksi.id_transaksi); }
             catch (detailError) { alert(`Transaksi BERHASIL disimpan (${result.transaksi.kode_invoice}), tetapi detail belum dapat dibuka: ${detailError.message}`); }
