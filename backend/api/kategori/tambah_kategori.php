@@ -27,6 +27,19 @@ try {
         exit;
     }
 
+        foreach (['nama_kategori', 'deskripsi'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => "Kolom {$field} harus berupa teks."
+            ]);
+            exit;
+        }
+    }
+
+    $nama = trim($input['nama_kategori'] ?? '');
+    $deskripsi = trim($input['deskripsi'] ?? '');
     $nama = trim($input['nama_kategori'] ?? '');
     $deskripsi = trim($input['deskripsi'] ?? '');
 
