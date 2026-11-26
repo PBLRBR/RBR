@@ -85,11 +85,14 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         <h2>Dashboard Analitik</h2>
                         <p class="subtitle">Ringkasan performa penjualan, reservasi, dan kunjungan Rumah Budaya Ratna.</p>
                     </div>
-                    <div class="period-filters" aria-label="Filter periode analitik">
-                        <button class="period-filter">Hari Ini</button>
-                        <button class="period-filter">7 Hari Terakhir</button>
-                        <button class="period-filter active">Bulan Ini</button>
-                        <button class="period-filter">Tahun Ini</button>
+                    <div class="analytics-actions">
+                        <div class="period-filters" aria-label="Filter periode analitik">
+                            <button class="period-filter">Hari Ini</button>
+                            <button class="period-filter">7 Hari Terakhir</button>
+                            <button class="period-filter active">Bulan Ini</button>
+                            <button class="period-filter">Tahun Ini</button>
+                        </div>
+                        <button type="button" class="btn-primary" id="btn-export-excel">⬇ Download Data</button>
                     </div>
                 </div>
 
@@ -167,7 +170,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                             </thead>
                             <tbody id="admin-book-list">
                                 <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $kondisi, $warna, $idBuku, $idKategori, $deskripsi, $penerbit, $tahun, $sale, $foto]): ?>
-                                <tr data-id="<?= $idBuku ?>" data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $idKategori ?>"
+                                <tr data-id="<?= $idBuku ?>" data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $idKategori ?>" data-namakategori="<?= $h($kategori) ?>"
                                     data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-deskripsi="<?= $h($deskripsi) ?>" data-penerbit="<?= $h($penerbit) ?>" data-tahun="<?= $h($tahun) ?>" data-sale="<?= $sale ? '1':'0' ?>" data-foto="<?= $h($foto) ?>">
                                     <td><strong><?= $h($judul) ?></strong></td>
                                     <td><?= $h($penulis) ?></td>

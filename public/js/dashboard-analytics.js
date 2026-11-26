@@ -31,7 +31,7 @@
     // Endpoint F7/F8 mengembalikan ringkasan pada level teratas JSON.
     // apiRequest() lama hanya mengembalikan result.data, sehingga modul ini memakai fetch langsung.
     const getReport = async (endpoint, period, signal) => {
-        const url = `/api/laporan/${endpoint}.php?` + new URLSearchParams({ periode: period });
+        const url = apiUrl(`laporan/${endpoint}.php?` + new URLSearchParams({ periode: period }));
         const response = await fetch(url, {
             credentials: 'same-origin',
             headers: { Accept: 'application/json' },

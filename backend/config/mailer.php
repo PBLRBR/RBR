@@ -12,6 +12,15 @@ if (is_file($autoload)) {
     require_once $autoload;
 }
 
+// Fallback ketika instalasi Composer tidak ikut terpaket pada runtime Wasmer.
+if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
+    $phpmailerSource = __DIR__ . '/../third_party/phpmailer';
+    require_once $phpmailerSource . '/Exception.php';
+    require_once $phpmailerSource . '/SMTP.php';
+    require_once $phpmailerSource . '/PHPMailer.php';
+}
+
+
 function kirimEmail($tujuan, $subjek, $isiHtml, $isiText = '')
 {
     try {

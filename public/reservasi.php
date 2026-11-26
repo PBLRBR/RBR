@@ -15,8 +15,8 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
 </head>
 
 <body>
@@ -32,10 +32,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a class="active" href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <a href="/profil.php" class="user-profile"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name"><?= esc($_SESSION['user']['nama'] ?? 'Masuk') ?></span></a>
-                <?php if (!empty($_SESSION['user'])): ?><button type="button" class="btn-secondary" data-logout>Keluar</button><?php else: ?><a class="btn-secondary" href="/?auth=login">Masuk</a><?php endif; ?>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 
@@ -76,7 +73,19 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                 <div class="reservation-form">
                     <h3>Ajukan Reservasi Ruangan</h3>
                     <p class="subtitle">Permintaan berstatus menunggu sampai disetujui admin. <a href="/riwayat.php">Lihat riwayat</a></p>
+                    <?php if (empty($_SESSION['user'])): ?>
+                    <p class="reservation-login-notice" role="note">Pastikan login terlebih dahulu sebelum mengisi formulir reservasi.</p>
+                    <?php endif; ?>
                     <form id="reservation-request-form">
+                        <div class="reservation-alert-overlay" id="reservation-message" role="alertdialog" aria-modal="true" aria-labelledby="reservation-message-title" hidden>
+                            <div class="reservation-alert-box">
+                                <button type="button" class="reservation-alert-close" aria-label="Tutup">&times;</button>
+                                <span class="reservation-alert-icon" aria-hidden="true">!</span>
+                                <h3 id="reservation-message-title">Perhatian</h3>
+                                <p class="reservation-alert-text"></p>
+                                <a class="btn-primary reservation-login-link" href="/?auth=login" hidden>Masuk</a>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label>Pilih Ruangan</label>
                             <select id="reserve-place" required>
@@ -109,7 +118,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
     <?php require __DIR__ . '/_footer.php'; ?>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
-    <script src="/js/reservasi.js"></script>
+    <script src="/js/reservasi.js?v=20261125-reservation-popup"></script>
     <script src="/js/phone-validation.js"></script>
 </body>
 </html>

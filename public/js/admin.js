@@ -23,7 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (button) button.click();
     }
     sidebarBtns.forEach(btn => btn.addEventListener('click', () => { history.replaceState(null, '', '#' + btn.dataset.tab); }));
-    const reloadTab = tab => location.assign('/admin/#' + tab);
+    const reloadTab = tab => {
+        history.replaceState(null, '', '#' + tab);
+        pageReloading = true;
+        setLoading(true, 'Menyegarkan halaman…');
+        location.reload();
+    };
 
     // popup: buka/tutup
     const openPopup = (popup) => { popup.hidden = false; };
@@ -76,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookForm = $('#form-add-book');
     const bookFields = ['judul', 'penulis', 'kategori', 'kondisi', 'harga', 'stok', 'deskripsi'];
     const bookInput = (f) => $(`#book-${f}`);
+    $('#book-tahun').max = new Date().getFullYear();
     let editingBook = null;
 
     const runBookSearch = bindSearch(
@@ -160,37 +166,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    bookForm.addEventListener('submit', async (e) => {
+    bookForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const button = bookForm.querySelector('[type="submit"]');
-        button.disabled = true;
-        try {
-            const sale = saleCheck.checked;
-            const body = {
-                id_kategori: Number(bookInput('kategori').value),
-                judul: bookInput('judul').value.trim(),
-                penulis: bookInput('penulis').value.trim(),
-                penerbit: $('#book-penerbit').value.trim(),
-                tahun_terbit: $('#book-tahun').value || null,
-                bisa_dijual: sale,
-                kondisi: sale ? bookInput('kondisi').value : null,
-                harga: sale ? Number(bookInput('harga').value) : null,
-                stok: sale ? Number(bookInput('stok').value) : null,
-                deskripsi: bookInput('deskripsi').value.trim(),
-                foto_sampul: $('#book-cover').value.trim()
-            };
-            if (editingBook) {
-                body.id_buku = Number(editingBook.dataset.id);
-                body.expected_stok = editingBook.dataset.sale === '1'
-                    ? Number(editingBook.dataset.stok)
-                    : null;
-            }
-            await apiRequest(editingBook ? 'buku/edit_buku.php' : 'buku/tambah_buku.php', {
-                method: editingBook ? 'PUT' : 'POST', body
-            });
-            reloadTab('buku');
-        } catch (error) { alert(error.message); }
-        finally { button.disabled = false; }
+        const save = async () => {
+            const button = bookForm.querySelector('[type="submit"]');
+            button.disabled = true;
+            try {
+                const sale = saleCheck.checked;
+                const body = {
+                    id_kategori: Number(bookInput('kategori').value),
+                    judul: bookInput('judul').value.trim(),
+                    penulis: bookInput('penulis').value.trim(),
+                    penerbit: $('#book-penerbit').value.trim(),
+                    tahun_terbit: $('#book-tahun').value || null,
+                    bisa_dijual: sale,
+                    kondisi: sale ? bookInput('kondisi').value : null,
+                    harga: sale ? Number(bookInput('harga').value) : null,
+                    stok: sale ? Number(bookInput('stok').value) : null,
+                    deskripsi: bookInput('deskripsi').value.trim(),
+                    foto_sampul: $('#book-cover').value.trim()
+                };
+                if (editingBook) {
+                    body.id_buku = Number(editingBook.dataset.id);
+                    body.expected_stok = editingBook.dataset.sale === '1'
+                        ? Number(editingBook.dataset.stok)
+                        : null;
+                }
+                await apiRequest(editingBook ? 'buku/edit_buku.php' : 'buku/tambah_buku.php', {
+                    method: editingBook ? 'PUT' : 'POST', body
+                });
+                reloadTab('buku');
+            } catch (error) { alert(error.message); }
+            finally { button.disabled = false; }
+        };
+        if (editingBook) return save(); // edit tetap langsung simpan
+        askConfirm({
+            title: 'Simpan Buku?',
+            message: `Simpan buku "${bookInput('judul').value.trim()}" ke database?`,
+            okText: 'Ya, Simpan', danger: false
+        }, save);
     });
 
 
@@ -199,7 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const showTransactionDetail = async (id) => {
         const transactionId = Number(id);
         if (!Number.isInteger(transactionId) || transactionId < 1) return;
-        const result = await apiRequest(`transaksi/detail_transaksi.php?id_transaksi=${transactionId}`);
+        setLoading(true, 'Memuat detail transaksi…');
+        let result;
+        try { result = await apiRequest(`transaksi/detail_transaksi.php?id_transaksi=${transactionId}`); }
+        finally { setLoading(false); }
         const t = result.transaksi;
         const rows = result.detail;
         $('#transaction-title').textContent = `Invoice ${t.kode_invoice}`;
@@ -443,6 +460,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         setStatus(card, status);
     };
+    const waRejectLink = (card, reason) => {
+        let n = (card.dataset.wa || '').replace(/\D/g, '');
+        if (n.startsWith('0')) n = '62' + n.slice(1);
+        const text = `Halo ${card.dataset.pemohon}, mohon maaf pengajuan reservasi "${card.dataset.agenda}" di Rumah Budaya Ratna belum dapat kami setujui.\nAlasan: ${reason}`;
+        return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
+    };
     const confirmStatus = (card, status) => {
         let reason = null;
         if (status === 'rejected') {
@@ -456,11 +479,26 @@ document.addEventListener('DOMContentLoaded', () => {
             message: `Ubah status reservasi "${card.dataset.agenda}" di database?`,
             okText: approve ? 'Ya, Setujui' : 'Ya, Tolak', danger: !approve
         }, async () => {
+            const wa = status === 'rejected' ? window.open('', '_blank') : null;
+            if (wa) wa.opener = null;
+
             try {
                 await updateStatus(card, status, reason);
-                window.location.reload();
+
+                if (status === 'rejected') {
+                    const url = waRejectLink(card, reason);
+                    if (wa) {
+                        wa.location.href = url;
+                    } else {
+                        location.assign(url);
+                    }
+                } else {
+                    window.location.reload();
+                }
+            } catch (error) {
+                if (wa) wa.close();
+                alert(error.message);
             }
-            catch (error) { alert(error.message); }
         });
     };
 
