@@ -127,7 +127,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </thead>
                         <tbody id="recent-transactions">
                             <?php foreach ($latest as $t): ?>
-                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
+                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h(substr($t['tanggal_transaksi'], 0, 19)) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
                             <?php endforeach; ?>
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
@@ -176,7 +176,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                                     <td><?= $h($penulis) ?></td>
                                     <td><?= $h($kategori) ?></td>
                                     <td><?= $rp($harga) ?></td>
-                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 2): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
+                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 3): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
                                     <td><span class="badge"><?= $h($kondisi) ?></span></td>
                                     <td>
                                         <button type="button" class="btn-sm btn-secondary btn-detail-book">Detail</button>
@@ -216,7 +216,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                                     <div class="pos-item-info">
                                         <h4><?= $h($judul) ?></h4>
                                         <p class="pos-item-author"><?= $h($penulis) ?></p>
-                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 2 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
+                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 3 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
                                     </div>
                                 </div>
                                 <div class="pos-item-foot">
