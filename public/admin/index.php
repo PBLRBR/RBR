@@ -25,7 +25,13 @@ $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Dise
 $rsvCount = array_count_values(array_column($reservations,9));
 $metrics = $pdo->query('SELECT total_pendapatan AS total, jumlah_transaksi AS transaksi, jumlah_buku_terjual FROM v_dashboard_penjualan')->fetch(PDO::FETCH_ASSOC);
 $terjual = (int)$metrics['jumlah_buku_terjual'];
-$bulanIni = $pdo->query("SELECT * FROM fn_ringkasan_penjualan(date_trunc('month', CURRENT_DATE)::DATE, CURRENT_DATE)")->fetch(PDO::FETCH_ASSOC);
+$bulanIni = $pdo->query("
+    SELECT *
+    FROM fn_ringkasan_penjualan(
+        date_trunc('month', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date,
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date
+    )
+")->fetch(PDO::FETCH_ASSOC);
 // Contoh nyata CTE, JOIN, GROUP BY, dan HAVING untuk dashboard.
 $bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
     SELECT b.id_buku, b.judul, SUM(d.jumlah_beli) AS total_terjual, SUM(d.subtotal) AS pendapatan
