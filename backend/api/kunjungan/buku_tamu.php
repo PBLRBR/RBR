@@ -17,9 +17,31 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
+    $tanggal = $_GET['tanggal'] ?? null;
 
-    $stmt = $pdo->query(
+    if (
+        $tanggal !== null && (
+            !is_string($tanggal) ||
+            !preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/', $tanggal) ||
+            !checkdate(
+                (int) substr($tanggal, 5, 2),
+                (int) substr($tanggal, 8, 2),
+                (int) substr($tanggal, 0, 4)
+            )
+        )
+    ) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Tanggal kunjungan harus valid dengan format YYYY-MM-DD.'
+        ]);
+        exit;
+    }
+
+    $pdo = require __DIR__ . '/../../config/database.php';
+    $filterTanggal = $tanggal === null ? '' : 'WHERE bt.tanggal_kunjungan = :tanggal';
+
+    $stmt = $pdo->prepare(
         'SELECT
             bt.id_buku_tamu,
             bt.tanggal_kunjungan,
@@ -33,13 +55,25 @@ try {
             ON bt.id_pengunjung = p.id_pengunjung
          LEFT JOIN users u
             ON p.id_user = u.id_user
+         ' . $filterTanggal . '
          ORDER BY bt.tanggal_kunjungan DESC,
-                  bt.jam_masuk DESC'
+                  bt.jam_masuk DESC,
+                  bt.id_buku_tamu DESC'
     );
+
+    $stmt->execute($tanggal === null ? [] : ['tanggal' => $tanggal]);
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($rows as $index => $row) {
+        if ($row['jam_masuk'] !== null) {
+            $rows[$index]['jam_masuk'] = substr($row['jam_masuk'], 0, 8);
+        }
+    }
 
     echo json_encode([
         'success' => true,
-        'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+        'data' => $rows
     ]);
 
 } catch (Throwable $e) {
