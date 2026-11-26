@@ -18,6 +18,26 @@ try {
 
     $input = json_decode(file_get_contents('php://input'), true);
 
+    if (!is_array($input)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Format JSON tidak valid.'
+        ]);
+        exit;
+    }
+
+    foreach (['judul_karya', 'isi_karya', 'deskripsi'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => "Kolom {$field} harus berupa teks."
+            ]);
+            exit;
+        }
+    }
+
     $judul = trim($input['judul_karya'] ?? '');
     $isi = trim($input['isi_karya'] ?? '');
 

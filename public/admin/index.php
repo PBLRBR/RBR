@@ -25,7 +25,13 @@ $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Dise
 $rsvCount = array_count_values(array_column($reservations,9));
 $metrics = $pdo->query('SELECT total_pendapatan AS total, jumlah_transaksi AS transaksi, jumlah_buku_terjual FROM v_dashboard_penjualan')->fetch(PDO::FETCH_ASSOC);
 $terjual = (int)$metrics['jumlah_buku_terjual'];
-$bulanIni = $pdo->query("SELECT * FROM fn_ringkasan_penjualan(date_trunc('month', CURRENT_DATE)::DATE, CURRENT_DATE)")->fetch(PDO::FETCH_ASSOC);
+$bulanIni = $pdo->query("
+    SELECT *
+    FROM fn_ringkasan_penjualan(
+        date_trunc('month', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date,
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date
+    )
+")->fetch(PDO::FETCH_ASSOC);
 // Contoh nyata CTE, JOIN, GROUP BY, dan HAVING untuk dashboard.
 $bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
     SELECT b.id_buku, b.judul, SUM(d.jumlah_beli) AS total_terjual, SUM(d.subtotal) AS pendapatan
@@ -127,7 +133,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </thead>
                         <tbody id="recent-transactions">
                             <?php foreach ($latest as $t): ?>
-                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
+                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h(substr($t['tanggal_transaksi'], 0, 19)) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
                             <?php endforeach; ?>
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
@@ -176,7 +182,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                                     <td><?= $h($penulis) ?></td>
                                     <td><?= $h($kategori) ?></td>
                                     <td><?= $rp($harga) ?></td>
-                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 2): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
+                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 3): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
                                     <td><span class="badge"><?= $h($kondisi) ?></span></td>
                                     <td>
                                         <button type="button" class="btn-sm btn-secondary btn-detail-book">Detail</button>
@@ -216,7 +222,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                                     <div class="pos-item-info">
                                         <h4><?= $h($judul) ?></h4>
                                         <p class="pos-item-author"><?= $h($penulis) ?></p>
-                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 2 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
+                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 3 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
                                     </div>
                                 </div>
                                 <div class="pos-item-foot">

@@ -101,7 +101,7 @@ try {
 
     if (!$transaksi) {
         $existingQuery = $pdo->prepare(
-            'SELECT id_transaksi, kode_invoice, total_bayar, request_hash
+            'SELECT id_transaksi, kode_invoice, total_bayar, request_hash, tanggal_transaksi
              FROM transaksi_penjualan
              WHERE id_user = :kasir AND idempotency_key = :checkout_key'
         );
@@ -121,11 +121,13 @@ try {
         }
 
         $details = $pdo->prepare(
-            'SELECT d.id_buku, d.jumlah_beli, d.subtotal, b.judul
-             FROM detail_transaksi_penjualan d
-             JOIN buku b ON b.id_buku = d.id_buku
-             WHERE d.id_transaksi = :id
-             ORDER BY d.id_buku'
+            'SELECT d.id_buku, d.jumlah_beli, d.subtotal, b.judul,
+            CASE WHEN b.active AND b.bisa_dijual
+            THEN b.stok ELSE 0 END AS stok_tersisa
+            FROM detail_transaksi_penjualan d
+            JOIN buku b ON b.id_buku = d.id_buku
+            WHERE d.id_transaksi = :id
+            ORDER BY d.id_buku'
         );
         $details->execute(['id' => $existing['id_transaksi']]);
         $lines = $details->fetchAll(PDO::FETCH_ASSOC);
@@ -176,26 +178,32 @@ try {
 
     $detailInsert = $pdo->prepare(
         'INSERT INTO detail_transaksi_penjualan
-         (id_transaksi, id_buku, jumlah_beli, subtotal)
-         VALUES (:transaksi, :buku, :qty, :subtotal)'
+        (id_transaksi, id_buku, jumlah_beli, subtotal)
+        VALUES (:transaksi, :buku, :qty, :subtotal)'
     );
     $stockUpdate = $pdo->prepare(
-        'UPDATE buku SET stok = stok - :qty WHERE id_buku = :id'
+        'UPDATE buku SET stok = stok - :qty WHERE id_buku = :id RETURNING stok'
     );
-    foreach ($lines as $line) {
+
+    foreach ($lines as $index => $line) {
         $detailInsert->execute([
             'transaksi' => $transaksi['id_transaksi'],
             'buku' => $line['id_buku'],
             'qty' => $line['jumlah_beli'],
             'subtotal' => $line['subtotal'],
         ]);
-        $stockUpdate->execute(['qty' => $line['jumlah_beli'], 'id' => $line['id_buku']]);
+
+        $stockUpdate->execute([
+            'qty' => $line['jumlah_beli'],
+            'id' => $line['id_buku'],
+        ]);
+        $lines[$index]['stok_tersisa'] = (int) $stockUpdate->fetchColumn();
     }
 
     $finish = $pdo->prepare(
         'UPDATE transaksi_penjualan SET total_bayar = :total
-         WHERE id_transaksi = :id
-         RETURNING id_transaksi, kode_invoice, total_bayar'
+        WHERE id_transaksi = :id
+        RETURNING id_transaksi, kode_invoice, total_bayar, tanggal_transaksi'
     );
     $finish->execute(['id' => $transaksi['id_transaksi'], 'total' => $total]);
     $transaksi = $finish->fetch(PDO::FETCH_ASSOC);
