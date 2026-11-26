@@ -20,12 +20,18 @@ try {
         $input = $_POST;
     }
 
-    $token = trim($input['token'] ?? '');
+    $tokenInput = $input['token'] ?? null;
+    $token = is_string($tokenInput) ? trim($tokenInput) : '';
+
     $password = $input['password'] ?? '';
     $konfirmasi = $input['konfirmasi_password'] ?? '';
 
     // Validasi input
-    if ($token === '' || $password === '' || $konfirmasi === '') {
+    if (
+        $token === '' ||
+        !is_string($password) || $password === '' ||
+        !is_string($konfirmasi) || $konfirmasi === ''
+    ) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
