@@ -27,6 +27,11 @@ try {
         FILTER_VALIDATE_INT
     );
 
+    foreach (['judul', 'penulis', 'penerbit', 'deskripsi', 'foto_sampul'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            throw new InvalidArgumentException("Kolom {$field} harus berupa teks.");
+        }
+    }
     $judul = trim($input['judul'] ?? '');
     $penulis = trim($input['penulis'] ?? '');
     $penerbit = trim($input['penerbit'] ?? '');
