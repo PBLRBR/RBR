@@ -28,8 +28,21 @@ try {
     }
 
     $id = filter_var($input['id_kategori'] ?? null, FILTER_VALIDATE_INT);
+
+    foreach (['nama_kategori', 'deskripsi'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => "Kolom {$field} harus berupa teks."
+            ]);
+            exit;
+        }
+    }
+
     $nama = trim($input['nama_kategori'] ?? '');
     $deskripsi = trim($input['deskripsi'] ?? '');
+
 
     if (!$id || $id < 1 || $nama === '') {
         http_response_code(422);
