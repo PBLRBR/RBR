@@ -35,8 +35,11 @@ try {
         FILTER_VALIDATE_INT
     );
 
-    $nama_acara = trim($input['nama_acara'] ?? '');
-    $penanggung_jawab = trim($input['penanggung_jawab'] ?? '');
+    $namaAcaraInput = $input['nama_acara'] ?? null;
+    $penanggungJawabInput = $input['penanggung_jawab'] ?? null;
+
+    $nama_acara = is_string($namaAcaraInput) ? trim($namaAcaraInput) : '';
+    $penanggung_jawab = is_string($penanggungJawabInput) ? trim($penanggungJawabInput) : '';
     $kontak_wa = normalizeIndonesianMobile($input['kontak_wa'] ?? null);
     $tanggal_acara = $input['tanggal_acara'] ?? '';
     $jam_mulai = $input['jam_mulai'] ?? '';
@@ -47,6 +50,7 @@ try {
         $nama_acara === '' ||
         $penanggung_jawab === '' ||
         $kontak_wa === null ||
+        !is_string($tanggal_acara) ||
         $tanggal_acara === '' ||
         $jam_mulai === '' ||
         $jam_selesai === ''

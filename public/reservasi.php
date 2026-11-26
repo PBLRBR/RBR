@@ -3,14 +3,28 @@ require_once __DIR__ . '/_data.php';
 startAppSession();
 $pageTitle = 'Reservasi Ruang | SIMART';
 $pdo = db();
-$approved = $pdo->query("SELECT r.tanggal_acara, r.jam_mulai, r.jam_selesai, r.nama_acara, t.nama_tempat FROM reservasi r JOIN tempat t ON t.id_tempat = r.id_tempat WHERE r.status_reservasi = 'disetujui' AND r.tanggal_acara >= CURRENT_DATE ORDER BY r.tanggal_acara, r.jam_mulai")->fetchAll(PDO::FETCH_ASSOC);
+$hariIniWib = (new DateTimeImmutable('today', new DateTimeZone('Asia/Jakarta')))
+    ->format('Y-m-d');
+
+$kalender = $pdo->prepare("
+    SELECT r.tanggal_acara, r.jam_mulai, r.jam_selesai, r.nama_acara, t.nama_tempat
+    FROM reservasi r
+    JOIN tempat t ON r.id_tempat = t.id_tempat
+    WHERE r.status_reservasi = 'disetujui'
+    AND r.tanggal_acara >= :hari_ini
+    ORDER BY r.tanggal_acara, r.jam_mulai");
+$kalender->execute(['hari_ini' => $hariIniWib]);
+$approved = $kalender->fetchAll(PDO::FETCH_ASSOC);
 $bookedDates = array_values(array_unique(array_column($approved, 'tanggal_acara')));
+
 $schedule = [];
-foreach (array_slice($approved, 0, 12) as $r) $schedule[] = [$r['nama_tempat'], $r['nama_acara'], substr($r['jam_mulai'],0,5) . '–' . substr($r['jam_selesai'],0,5) . ' (' . $r['tanggal_acara'] . ')'];
+foreach (array_slice($approved, 0, 12) as $r)
+    $schedule[] = [$r['nama_tempat'], $r['nama_acara'], substr($r['jam_mulai'], 0, 5) . '–' . substr($r['jam_selesai'], 0, 5) . ' (' . $r['tanggal_acara'] . ')'];
 $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE status = 'aktif' ORDER BY nama_tempat")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -91,23 +105,29 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                             <select id="reserve-place" required>
                                 <option value="">-- Pilih Ruangan --</option>
                                 <?php foreach ($rooms as $room): ?>
-                                <option value="<?= (int)$room['id_tempat'] ?>"><?= esc($room['nama_tempat']) ?> (<?= (int)$room['kapasitas'] ?> orang)</option>
+                                    <option value="<?= (int) $room['id_tempat'] ?>"><?= esc($room['nama_tempat']) ?>
+                                        (<?= (int) $room['kapasitas'] ?> orang)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Tanggal acara</label>
-                            <input id="reserve-date" type="date" min="<?= date('Y-m-d') ?>" required>
+                            <input id="reserve-date" type="date" min="<?= $hariIniWib ?>" required>
                         </div>
                         <div class="form-group row-time">
                             <div><label>Jam mulai</label><input id="reserve-start" type="time" required></div>
                             <div><label>Jam selesai</label><input id="reserve-end" type="time" required></div>
                         </div>
-                        <div class="form-group"><label>Nama acara</label><input id="reserve-name" type="text" maxlength="150" required></div>
-                        <div class="form-group"><label>Penanggung jawab</label><input id="reserve-pic" type="text" maxlength="100" required></div>
-                        <div class="form-group"><label>Nomor WhatsApp</label><input id="reserve-phone" type="tel" data-simart-phone maxlength="16" required></div>
-                        <div class="form-group"><label>Deskripsi acara (opsional)</label><textarea id="reserve-desc" rows="4"></textarea></div>
-                        <button type="submit" class="btn-primary full-width btn-large">Simpan permintaan reservasi</button>
+                        <div class="form-group"><label>Nama acara</label><input id="reserve-name" type="text"
+                                maxlength="150" required></div>
+                        <div class="form-group"><label>Penanggung jawab</label><input id="reserve-pic" type="text"
+                                maxlength="100" required></div>
+                        <div class="form-group"><label>Nomor WhatsApp</label><input id="reserve-phone" type="tel"
+                                data-simart-phone maxlength="16" required></div>
+                        <div class="form-group"><label>Deskripsi acara (opsional)</label><textarea id="reserve-desc"
+                                rows="4"></textarea></div>
+                        <button type="submit" class="btn-primary full-width btn-large">Simpan permintaan
+                            reservasi</button>
                     </form>
                 </div>
             </div>
