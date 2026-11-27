@@ -29,11 +29,11 @@ if (!$profile) {
                     class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
-                <a href="/tentang">Tentang</a>
-                <!-- <a href="/infoevent">Info Event</a> -->
-                <a href="/katalog">Katalog Buku</a>
-                <a href="/karya">Karya Bu Ratna</a>
-                <a href="/reservasi">Reservasi Ruang</a>
+                <a href="/tentang.php">Tentang</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
+                <a href="/katalog.php">Katalog Buku</a>
+                <a href="/karya.php">Karya Bu Ratna</a>
+                <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
             <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
@@ -53,7 +53,7 @@ if (!$profile) {
                 <h3 id="profile-display-name"><?= esc($profile['nama']) ?></h3>
                 <p class="user-email-text"><?= htmlspecialchars($profile['email']) ?></p>
                 <span class="role-badge">Anggota Komunitas</span>
-                <p class="margin-top-30"><a class="btn-primary" href="/riwayat">Riwayat Reservasi</a></p>
+                <p class="margin-top-30"><a class="btn-primary" href="/riwayat.php">Riwayat Reservasi</a></p>
             </div>
 
             <!-- form edit profil -->

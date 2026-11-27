@@ -8,9 +8,9 @@
             <h4>Tautan Cepat</h4>
             <ul>
                 <li><a href="/">Beranda</a></li>
-                <li><a href="/katalog">Katalog Buku</a></li>
-                <li><a href="/reservasi">Reservasi Ruang</a></li>
-                <li><a href="/tentang">Tentang</a></li>
+                <li><a href="/katalog.php">Katalog Buku</a></li>
+                <li><a href="/reservasi.php">Reservasi Ruang</a></li>
+                <li><a href="/tentang.php">Tentang</a></li>
             </ul>
         </div>
         <div class="footer-col">

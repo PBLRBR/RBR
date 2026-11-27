@@ -29,18 +29,18 @@ $pageTitle = $judul . ' | SIMART';
             <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
-                <a href="/tentang">Tentang</a>
-                <!-- <a href="/infoevent">Info Event</a> -->
-                <a class="active" href="/katalog">Katalog Buku</a>
-                <a href="/karya">Karya Bu Ratna</a>
-                <a href="/reservasi">Reservasi Ruang</a>
+                <a href="/tentang.php">Tentang</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
+                <a class="active" href="/katalog.php">Katalog Buku</a>
+                <a href="/karya.php">Karya Bu Ratna</a>
+                <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
             <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 
     <main class="container page-content">
-        <a href="/katalog" class="book-back-link">← <span>Kembali ke katalog</span></a>
+        <a href="/katalog.php" class="book-back-link">← <span>Kembali ke katalog</span></a>
 
         <!-- detail buku -->
         <section class="book-detail-layout">

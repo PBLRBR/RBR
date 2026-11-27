@@ -24,17 +24,17 @@ $pageTitle = $story['title'] . ' | Karya Bu Ratna';
             <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
-                <a href="/tentang">Tentang</a>
-                <a href="/katalog">Katalog Buku</a>
-                <a class="active" href="/karya">Karya Bu Ratna</a>
-                <a href="/reservasi">Reservasi Ruang</a>
+                <a href="/tentang.php">Tentang</a>
+                <a href="/katalog.php">Katalog Buku</a>
+                <a class="active" href="/karya.php">Karya Bu Ratna</a>
+                <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
             <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 
     <main class="container page-content">
-        <a href="/karya" class="book-back-link">← <span>Kembali ke karya</span></a>
+        <a href="/karya.php" class="book-back-link">← <span>Kembali ke karya</span></a>
 
         <section class="book-detail-layout story-detail-layout">
             <div class="book-detail-content">

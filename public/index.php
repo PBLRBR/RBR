@@ -25,11 +25,11 @@ foreach ($preview as $b) {
             <a class="logo" href="/"><img src="/images/rbr-white.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a class="active" href="/">Beranda</a>
-                <a href="/tentang">Tentang</a>
-                <!-- <a href="/infoevent">Info Event</a> -->
-                <a href="/katalog">Katalog Buku</a>
-                <a href="/karya">Karya Bu Ratna</a>
-                <a href="/reservasi">Reservasi Ruang</a>
+                <a href="/tentang.php">Tentang</a>
+                <!-- <a href="/infoevent.php">Info Event</a> -->
+                <a href="/katalog.php">Katalog Buku</a>
+                <a href="/karya.php">Karya Bu Ratna</a>
+                <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
             <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
@@ -42,9 +42,9 @@ foreach ($preview as $b) {
                 <h1>Jelajahi Koleksi Buku &amp; Rumah Budaya Ratna</h1>
                 <p>Temukan buku favorit Anda dan reservasi ruang budaya di Rumah Budaya Ratna, pusat literasi dan kebudayaan di Malang.</p>
                 <div class="hero-buttons">
-                    <a href="/katalog" class="btn-primary">Lihat Katalog</a>
-                    <a href="/reservasi" class="btn-secondary">Cek Jadwal Ruang</a>
-                    <a href="/kunjungan" class="btn-secondary">Isi Buku Tamu</a>
+                    <a href="/katalog.php" class="btn-primary">Lihat Katalog</a>
+                    <a href="/reservasi.php" class="btn-secondary">Cek Jadwal Ruang</a>
+                    <a href="/kunjungan.php" class="btn-secondary">Isi Buku Tamu</a>
                 </div>
             </div>
             <div class="home-hero-bottom"><span>Rumah Ratna Indraswari Ibrahim · Kota Malang</div>
@@ -64,7 +64,7 @@ foreach ($preview as $b) {
                 <h2>Rumah Budaya Ratna</h2>
                 <p>Rumah Budaya Ratna adalah ruang publik berbasis literasi dan budaya di kawasan Diponegoro, Malang. Pengelolaannya dilakukan secara swadaya agar koleksi buku, ruang berkumpul, dan kedai kopi dapat mendukung kegiatan masyarakat.</p>
                 <p>Di sini, pengunjung dapat membaca, berdiskusi, mengerjakan tugas, serta menikmati kegiatan seni seperti bedah karya, pembacaan puisi, teater, musik, dan seni tradisional. Rumah Budaya Ratna menjadi ruang yang terbuka bagi masyarakat untuk belajar, berkarya, dan berinteraksi.</p>
-                <a href="/tentang" class="btn-primary">Tentang Rumah Budaya Ratna <span aria-hidden="true">&rarr;</span></a>
+                <a href="/tentang.php" class="btn-primary">Tentang Rumah Budaya Ratna <span aria-hidden="true">&rarr;</span></a>
             </div>
         </div>
     </section>
@@ -77,7 +77,7 @@ foreach ($preview as $b) {
                     <h2>Katalog Buku</h2>
                     <p>Pilihan koleksi literasi terbaik di Rumah Budaya Ratna</p>
                 </div>
-                <a href="/katalog" class="btn-outline">Lihat Semua Buku &rarr;</a>
+                <a href="/katalog.php" class="btn-outline">Lihat Semua Buku &rarr;</a>
             </div>
             <div class="book-grid">
                 <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $fotoSampul]): ?>
@@ -128,7 +128,7 @@ foreach ($preview as $b) {
                 </div>
             </div>
             <div class="text-center margin-top-30">
-                <a href="/reservasi" class="btn-primary btn-large">Ajukan Reservasi Ruang</a>
+                <a href="/reservasi.php" class="btn-primary btn-large">Ajukan Reservasi Ruang</a>
             </div>
         </div>
     </section>
@@ -155,7 +155,7 @@ foreach ($preview as $b) {
                     <input type="password" placeholder="Masukkan password Anda">
                 </div>
                 <button type="submit" class="btn-primary full-width">Masuk</button>
-                <p><a href="/lupa-password">Lupa password?</a></p>
+                <p><a href="/lupa-password.php">Lupa password?</a></p>
             </form>
 
             <!-- form daftar -->
