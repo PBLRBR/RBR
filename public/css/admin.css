@@ -939,6 +939,10 @@ body.admin-body {
     color: var(--color-text-light);
 }
 
+#tab-reservasi a.rsv-filter {
+    text-decoration: none;
+}
+
 /* reservasi: kartu permintaan */
 .rsv-list {
     display: flex;
