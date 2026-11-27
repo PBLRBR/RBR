@@ -39,6 +39,7 @@ if (str_starts_with($path, '/api/')) {
 }
 
 // Whitelist eksplisit. Jangan pernah include file berdasarkan path pengguna secara langsung.
+// Routing halaman frontend menggunakan clean URL.
 $pages = [
     '/' => 'index.php',
     '/tentang' => 'tentang.php',
@@ -46,7 +47,6 @@ $pages = [
     '/karya' => 'karya.php',
     '/detail-buku' => 'detail-buku.php',
     '/detail-karya' => 'detail-karya.php',
-    '/infoevent' => 'infoevent.php',
     '/reservasi' => 'reservasi.php',
     '/kunjungan' => 'kunjungan.php',
     '/profil' => 'profil.php',
@@ -57,40 +57,39 @@ $pages = [
     '/admin/' => 'admin/index.php',
 ];
 
-// Kanonisasi URL lama, terbatas pada GET/HEAD agar body POST tidak terbuang.
-$method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-if (in_array($method, ['GET', 'HEAD'], true)) {
-    foreach ($pages as $clean => $file) {
-        if ($clean === '/admin/' || $clean === '/admin') {
-            continue;
-        }
-        if ($path === '/' . $file) {
-            $target = $clean;
-            $query = $_SERVER['QUERY_STRING'] ?? '';
-            if ($query !== '') {
-                $target .= '?' . $query;
-            }
-            header('Location: ' . $target, true, 301);
-            exit;
-        }
-    }
-}
-if ($path === '/admin') {
-    header('Location: /admin/', true, 308);
-    exit;
-}
 if (isset($pages[$path])) {
-    require __DIR__ . '/public/' . $pages[$path];
+    $file = __DIR__ . '/public/' . $pages[$path];
+
+    if (!is_file($file)) {
+        http_response_code(404);
+        exit('Halaman tidak ditemukan.');
+    }
+
+    require $file;
     exit;
 }
 
-// Aset statis yang benar-benar ada tetap dilayani oleh web server.
+// Kembalikan 404 untuk URL halaman yang tidak dikenal.
+$publicFile = realpath(__DIR__ . '/public' . $path);
 $publicRoot = realpath(__DIR__ . '/public');
-$requestedFile = realpath(__DIR__ . '/public' . $path);
-if ($publicRoot !== false && $requestedFile !== false
-    && str_starts_with($requestedFile, $publicRoot . DIRECTORY_SEPARATOR)
-    && is_file($requestedFile)) {
+
+$extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+$staticExtensions = [
+    'css', 'js', 'png', 'jpg', 'jpeg',
+    'gif', 'svg', 'webp', 'ico',
+    'woff', 'woff2', 'ttf', 'pdf'
+];
+
+if (
+    in_array($extension, $staticExtensions, true) &&
+    $publicFile !== false &&
+    $publicRoot !== false &&
+    str_starts_with($publicFile, $publicRoot . DIRECTORY_SEPARATOR) &&
+    is_file($publicFile)
+) {
     return false;
 }
+
 http_response_code(404);
 exit('Halaman tidak ditemukan.');
