@@ -3,6 +3,12 @@
 // Jalankan lokal:
 // php -S localhost:8000 -t public router.php
 
+if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/__router-check') {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'ROUTER_SIMART_AKTIF';
+    exit;
+}
+
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 // ========================================
