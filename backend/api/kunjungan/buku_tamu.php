@@ -38,6 +38,22 @@ try {
         exit;
     }
 
+    $limit = filter_var($_GET['limit'] ?? 50, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1, 'max_range' => 100],
+    ]);
+    $halaman = filter_var($_GET['halaman'] ?? 1, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1, 'max_range' => intdiv(PHP_INT_MAX, 100)],
+    ]);
+
+    if ($limit === false || $halaman === false) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Limit harus 1–100 dan halaman harus berupa bilangan bulat positif.'
+        ]);
+        exit;
+    }
+
     $pdo = require __DIR__ . '/../../config/database.php';
     $filterTanggal = $tanggal === null ? '' : 'WHERE bt.tanggal_kunjungan = :tanggal';
 
@@ -58,12 +74,25 @@ try {
          ' . $filterTanggal . '
          ORDER BY bt.tanggal_kunjungan DESC,
                   bt.jam_masuk DESC,
-                  bt.id_buku_tamu DESC'
+                  bt.id_buku_tamu DESC
+         LIMIT :limit OFFSET :offset'
     );
 
-    $stmt->execute($tanggal === null ? [] : ['tanggal' => $tanggal]);
+    if ($tanggal !== null) {
+        $stmt->bindValue(':tanggal', $tanggal, PDO::PARAM_STR);
+    }
+
+    $stmt->bindValue(':limit', $limit + 1, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', ($halaman - 1) * $limit, PDO::PARAM_INT);
+    $stmt->execute();
 
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $adaBerikutnya = count($rows) > $limit;
+
+    if ($adaBerikutnya) {
+        array_pop($rows);
+    }
 
     foreach ($rows as $index => $row) {
         if ($row['jam_masuk'] !== null) {
@@ -73,7 +102,12 @@ try {
 
     echo json_encode([
         'success' => true,
-        'data' => $rows
+        'data' => $rows,
+        'paginasi' => [
+            'halaman' => $halaman,
+            'limit' => $limit,
+            'ada_berikutnya' => $adaBerikutnya,
+        ],
     ]);
 
 } catch (Throwable $e) {
