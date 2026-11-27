@@ -97,7 +97,28 @@ $bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
 ) SELECT judul, total_terjual, pendapatan FROM penjualan_buku
   ORDER BY total_terjual DESC, pendapatan DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 $totalPengunjung = (int)$pdo->query('SELECT COUNT(*) FROM buku_tamu')->fetchColumn();
-$latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaksi, t.metode_transaksi, t.total_bayar, COALESCE(SUM(d.jumlah_beli),0) AS jumlah_buku FROM transaksi_penjualan t LEFT JOIN detail_transaksi_penjualan d ON d.id_transaksi=t.id_transaksi GROUP BY t.id_transaksi ORDER BY t.tanggal_transaksi DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
+$latest = $pdo->query(
+    'SELECT
+        t.id_transaksi,
+        t.kode_invoice,
+        t.tanggal_transaksi,
+        t.metode_transaksi,
+        t.total_bayar,
+        COALESCE(item.jumlah_buku, 0) AS jumlah_buku
+     FROM (
+        SELECT id_transaksi, kode_invoice, tanggal_transaksi,
+               metode_transaksi, total_bayar
+        FROM transaksi_penjualan
+        ORDER BY tanggal_transaksi DESC, id_transaksi DESC
+        LIMIT 5
+     ) AS t
+     LEFT JOIN LATERAL (
+        SELECT SUM(d.jumlah_beli) AS jumlah_buku
+        FROM detail_transaksi_penjualan d
+        WHERE d.id_transaksi = t.id_transaksi
+     ) AS item ON TRUE
+     ORDER BY t.tanggal_transaksi DESC, t.id_transaksi DESC'
+)->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -188,7 +209,19 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </thead>
                         <tbody id="recent-transactions">
                             <?php foreach ($latest as $t): ?>
-                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h(substr($t['tanggal_transaksi'], 0, 19)) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
+                                <tr data-transaksi-id="<?= (int) $t['id_transaksi'] ?>"
+                                    data-transaksi-waktu="<?= $h($t['tanggal_transaksi']) ?>">
+                                    <td>
+                                        <button type="button" class="btn-sm btn-secondary btn-view-transaction"
+                                            data-id="<?= (int) $t['id_transaksi'] ?>">
+                                            <?= $h($t['kode_invoice']) ?>
+                                        </button>
+                                    </td>
+                                    <td><?= $h(substr($t['tanggal_transaksi'], 0, 19)) ?></td>
+                                    <td><?= (int) $t['jumlah_buku'] ?> buku</td>
+                                    <td><?= $rp($t['total_bayar']) ?></td>
+                                    <td><?= $h($t['metode_transaksi']) ?></td>
+                                </tr>
                             <?php endforeach; ?>
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
@@ -330,7 +363,12 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </div>
 
                         <div class="cart-actions">
-                            <button id="btn-checkout" class="btn-primary full-width btn-large" type="button">Proses Transaksi</button>
+                            <button id="btn-checkout"
+                                class="btn-primary full-width btn-large"
+                                type="button"
+                                data-kasir-id="<?= (int) $_SESSION['user']['id_user'] ?>">
+                                Proses Transaksi
+                            </button>
                         </div>
                     </div>
                 </div>

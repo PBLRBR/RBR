@@ -176,6 +176,21 @@ try {
     }
     $total = round($total, 2);
 
+    if (array_key_exists('expected_total_minor', $input)) {
+        $expectedTotalMinor = $input['expected_total_minor'];
+        $actualTotalMinor = (int) round($total * 100);
+
+        if (!is_int($expectedTotalMinor) || $expectedTotalMinor < 0) {
+            throw new InvalidArgumentException('Nominal checkout tidak valid.');
+        }
+
+        if ($expectedTotalMinor !== $actualTotalMinor) {
+            throw new InvalidArgumentException(
+                'Total transaksi berubah. Periksa harga dan cocokkan pembayaran sebelum melanjutkan.'
+            );
+        }
+    }
+
     $detailInsert = $pdo->prepare(
         'INSERT INTO detail_transaksi_penjualan
         (id_transaksi, id_buku, jumlah_beli, subtotal)
