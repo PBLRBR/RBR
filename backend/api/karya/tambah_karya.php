@@ -54,9 +54,11 @@ try {
         exit;
     }
 
-    if ($tahun !== null &&
+    if (
+        $tahun !== null &&
         (!filter_var($tahun, FILTER_VALIDATE_INT) ||
-         $tahun < 1 || $tahun > (int) date('Y'))) {
+            $tahun < 1 || $tahun > (int) date('Y'))
+    ) {
         http_response_code(422);
         echo json_encode([
             'success' => false,
@@ -65,8 +67,10 @@ try {
         exit;
     }
 
-    if ($id_kategori !== null &&
-        (!filter_var($id_kategori, FILTER_VALIDATE_INT) || $id_kategori < 1)) {
+    if (
+        $id_kategori !== null &&
+        (!filter_var($id_kategori, FILTER_VALIDATE_INT) || $id_kategori < 1)
+    ) {
         http_response_code(422);
         echo json_encode([
             'success' => false,
@@ -99,6 +103,14 @@ try {
     ]);
 
 } catch (Throwable $e) {
+    if ($e instanceof PDOException && (string) $e->getCode() === '23503') {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Kategori karya tidak ditemukan.'
+        ]);
+        exit;
+    }
     error_log($e->getMessage());
     http_response_code(500);
 
