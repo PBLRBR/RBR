@@ -426,25 +426,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // reservasi: filter status, setujui, tolak, edit
     const rsvList = $('.rsv-list');
     const statusMeta = { pending: ['Menunggu Review', 'badge-warning'], approved: ['Disetujui', 'badge-success'], rejected: ['Ditolak', 'badge-danger'] };
-    let rsvFilter = 'pending';
+    const rsvFilter = $('.rsv-filter.active')?.dataset.filter ?? 'pending';
 
     const refreshRsv = () => {
-        const cards = $$('.rsv-card');
-        const count = { pending: 0, approved: 0, rejected: 0 };
         let shown = 0;
-        cards.forEach(c => {
-            count[c.dataset.status]++;
-            c.hidden = rsvFilter !== 'all' && c.dataset.status !== rsvFilter;
-            if (!c.hidden) shown++;
+
+        $$('.rsv-card').forEach(card => {
+            card.hidden = rsvFilter !== 'all' && card.dataset.status !== rsvFilter;
+            if (!card.hidden) shown++;
         });
-        $$('[data-count]').forEach(el => { el.textContent = count[el.dataset.count]; });
-        const nav = $('.nav-count');
-        nav.textContent = count.pending;
-        nav.hidden = count.pending === 0;
+
         $('#rsv-empty').hidden = shown > 0;
     };
 
     const setStatus = (card, status) => {
+        const previousStatus = card.dataset.status;
+
+        if (previousStatus !== status) {
+            const previousCount = $(`[data-count="${previousStatus}"]`);
+            const nextCount = $(`[data-count="${status}"]`);
+
+            previousCount.textContent = Math.max(0, Number(previousCount.textContent) - 1);
+            nextCount.textContent = Number(nextCount.textContent) + 1;
+        }
+
+        const pendingCount = Number($('[data-count="pending"]').textContent);
+        const nav = $('.nav-count');
+        nav.textContent = pendingCount;
+        nav.hidden = pendingCount === 0;
         card.dataset.status = status;
         card.classList.remove('rsv-pending', 'rsv-approved', 'rsv-rejected');
         card.classList.add(`rsv-${status}`);
@@ -506,15 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
-
-    $$('.rsv-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-            $$('.rsv-filter').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            rsvFilter = btn.dataset.filter;
-            refreshRsv();
-        });
-    });
 
     // popup edit reservasi
     const rsvPopup = $('#rsv-popup');
