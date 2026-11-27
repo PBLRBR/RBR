@@ -80,7 +80,9 @@ async function apiRequest(endpoint, options = {}) {
         catch { throw new Error(`Server bukan mengirim JSON (HTTP ${response.status}). Periksa konfigurasi PHP/router.`); }
 
         if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Terjadi kesalahan.');
+            const error = new Error(result.message || 'Terjadi kesalahan.');
+            error.status = response.status;
+            throw error;
         }
 
         // Logout menghancurkan session, jadi token lama tidak boleh digunakan lagi.
