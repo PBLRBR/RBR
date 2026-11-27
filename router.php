@@ -1,4 +1,11 @@
 <?php
+
+if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/__routing-check') {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'SIMART ROUTER ACTIVE';
+    exit;
+}
+
 /** SIMART: clean URL halaman + routing API lama. */
 $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 if (!is_string($path)) {
