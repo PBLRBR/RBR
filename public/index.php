@@ -2,10 +2,10 @@
 require_once __DIR__ . '/_data.php';
 startAppSession();
 $pageTitle = 'Rumah Budaya Ratna | SIMART';
-$preview = db()->query('SELECT judul, penulis, bisa_dijual, harga, stok, COALESCE(nama_kategori, \'Koleksi\') AS kategori FROM v_katalog_buku ORDER BY id_buku DESC LIMIT 4')->fetchAll(PDO::FETCH_ASSOC);
+$preview = db()->query('SELECT judul, penulis, bisa_dijual, harga, stok, foto_sampul, COALESCE(nama_kategori, \'Koleksi\') AS kategori FROM v_katalog_buku ORDER BY id_buku DESC LIMIT 4')->fetchAll(PDO::FETCH_ASSOC);
 $books = [];
 foreach ($preview as $b) {
-    $books[] = [$b['judul'], $b['penulis'], $b['kategori'], boolPg($b['bisa_dijual']) ? (float)$b['harga'] : 0, (int)($b['stok'] ?? 0)];
+    $books[] = [$b['judul'], $b['penulis'], $b['kategori'], boolPg($b['bisa_dijual']) ? (float)$b['harga'] : 0, (int)($b['stok'] ?? 0), $b['foto_sampul'] ?? null];
 }
 ?>
 <!DOCTYPE html>
@@ -51,17 +51,20 @@ foreach ($preview as $b) {
         </div>
     </section>
 
-    <!-- tentang bu ratna -->
+    <!-- Rumah Budaya Ratna -->
     <section id="tentang" class="tentang-section">
         <div class="container tentang-container">
             <div class="tentang-image">
-                <div class="profile-frame"><span>Foto / Ilustrasi Bu Ratna</span></div>
+                <div class="profile-frame">
+                    <img src="/images/rumah-budaya-ratna.png" alt="Suasana Rumah Budaya Ratna di kawasan Diponegoro, Malang" loading="lazy">
+                </div>
             </div>
-            <div class="tentang-content">
-                <span class="sub-title">Sosok Di Balik Layar</span>
-                <h2>Ratna Indraswari Ibrahim (Bu Ratna)</h2>
-                <p>Rumah Budaya Ratna (RBR) berada di rumah peninggalan Ratna Indraswari Ibrahim, sastrawati dan aktivis asal Malang (24 April 1949–28 Maret 2011), di Jalan Diponegoro No. 3, Klojen. Dibuka pada 24 Agustus 2024 oleh keluarga dan sahabatnya, RBR meneruskan semangat Ratna sebagai ruang literasi, seni, diskusi, dan berkumpul bagi komunitas serta generasi muda.</p>
-                <p>Semasa hidup, rumah ini menjadi tempat Ratna berkarya dan bertemu dengan kawan-kawan seniman serta pegiat sastra. Kini masyarakat dapat datang untuk membaca, berdiskusi, mengikuti kegiatan, dan berkarya.</p>
+            <div class="tentang-content home-about-content">
+                <span class="sub-title">Ruang literasi dan budaya</span>
+                <h2>Rumah Budaya Ratna</h2>
+                <p>Rumah Budaya Ratna adalah ruang publik berbasis literasi dan budaya di kawasan Diponegoro, Malang. Pengelolaannya dilakukan secara swadaya agar koleksi buku, ruang berkumpul, dan kedai kopi dapat mendukung kegiatan masyarakat.</p>
+                <p>Di sini, pengunjung dapat membaca, berdiskusi, mengerjakan tugas, serta menikmati kegiatan seni seperti bedah karya, pembacaan puisi, teater, musik, dan seni tradisional. Rumah Budaya Ratna menjadi ruang yang terbuka bagi masyarakat untuk belajar, berkarya, dan berinteraksi.</p>
+                <a href="/tentang.php" class="btn-primary">Tentang Rumah Budaya Ratna <span aria-hidden="true">&rarr;</span></a>
             </div>
         </div>
     </section>
@@ -77,9 +80,13 @@ foreach ($preview as $b) {
                 <a href="/katalog.php" class="btn-outline">Lihat Semua Buku &rarr;</a>
             </div>
             <div class="book-grid">
-                <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok]): ?>
+                <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $fotoSampul]): ?>
                 <div class="book-card">
-                    <div class="book-cover"><span>Cover Buku</span></div>
+                    <div class="book-cover<?= $fotoSampul ? ' has-image' : '' ?>">
+                        <?php if ($fotoSampul): ?>
+                            <img src="<?= htmlspecialchars($fotoSampul, ENT_QUOTES, 'UTF-8') ?>" alt="Sampul buku <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" loading="lazy">
+                        <?php else: ?><span>Cover Buku</span><?php endif; ?>
+                    </div>
                     <div class="book-info">
                         <span class="category-badge"><?= esc($kategori) ?></span>
                         <h3><?= htmlspecialchars($judul) ?></h3>

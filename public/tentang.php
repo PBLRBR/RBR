@@ -44,17 +44,17 @@ $values = [
             <p>Rumah Budaya Ratna adalah ruang budaya berbasis komunitas yang menghidupkan kembali rumah peninggalan Ratna sebagai tempat aman dan terbuka bagi generasi muda untuk membaca, bertukar gagasan, mengembangkan kreativitas, serta mengenal sastra dan kebudayaan.</p>
         </section>
 
-        <!-- profil bu ratna -->
+        <!-- sosok di balik Rumah Budaya Ratna -->
         <section class="tentang-container">
             <div class="tentang-image">
-                <img src="/images/rbrfront.jpeg" alt="Bagian depan Rumah Budaya Ratna" style="width:100%;height:340px;object-fit:cover;border-radius:16px">
+                <img src="/images/ratna-indraswari-ibrahim.jpg" alt="Ratna Indraswari Ibrahim bersama buku-bukunya" loading="lazy" style="width:100%;height:480px;object-fit:cover;object-position:center 38%;border-radius:16px">
             </div>
             <div class="tentang-content">
                 <span class="sub-title">Sosok di balik layar</span>
-                <h2>Ratna Indraswari Ibrahim</h2>
-                <p>Ratna Indraswari Ibrahim (24 April 1949–28 Maret 2011) adalah sastrawati dan aktivis asal Malang. Rumah yang dahulu menjadi tempat tinggal sekaligus ruang berkarya beliau kini dihidupkan kembali sebagai Rumah Budaya Ratna oleh keluarga dan sahabatnya, sebagai ruang bagi literasi, seni, dan komunitas.</p>
-                <p>SIMART hadir untuk memudahkan masyarakat mengenal koleksi, mengikuti kegiatan, dan mengajukan penggunaan ruang budaya.</p>
-                <!-- <a href="/infoevent.php" class="btn-primary">Jelajahi kegiatan</a> -->
+                <h2>Ratna Indraswari <em>Ibrahim</em></h2>
+                <p>Lahir di Malang pada 24 April 1949, Ratna adalah anak keenam dari sebelas bersaudara. Ayahnya, Saleh Ibrahim, seorang penulis dan aktivis berdarah Padang. Ratna pernah berkata bahwa lahir di keluarga itu membuatnya merasa seperti anak ikan yang bertemu dengan air. Ayahnya berpulang pada 1967, saat Ratna baru berusia 18 tahun.</p>
+                <p>Polio menyerangnya pada usia 12 tahun, dan sejak itu ia menjalani hari-hari di atas kursi roda. Dari kursi roda itulah Ratna menulis ratusan cerpen yang dimuat media lokal, nasional, hingga internasional.</p>
+                <p>Ratna juga dikenal sebagai pejuang hak difabel. Ia menolak difabel dipandang sebagai objek untuk dikasihani, dan terus mengingatkan bahwa mereka adalah subjek dan warga negara yang setara. Ratna berpulang di Malang pada 28 Maret 2011.</p>
             </div>
         </section>
 

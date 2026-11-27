@@ -295,6 +295,13 @@ body {
   color: #a0aec0;
 }
 
+.book-cover.has-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .book-info {
   padding: 16px;
 }
@@ -1390,6 +1397,48 @@ h4 {
   border: 1px solid var(--line);
   border-radius: 14px;
 }
+.story-card-link {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.story-card-link .category-badge {
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  padding: 5px 11px;
+  border: 1px solid rgba(163, 99, 40, .18);
+  border-radius: 999px;
+  background: #f5eadb;
+  color: #8c552f;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: .025em;
+}
+.story-card-link:hover,
+.story-card-link:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--terracotta);
+  box-shadow: 0 12px 28px rgba(53, 43, 33, .1);
+}
+.story-card-link:focus-visible {
+  outline: 3px solid var(--ochre);
+  outline-offset: 3px;
+}
+.story-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+  color: var(--terracotta);
+  font-weight: 700;
+}
 .story-card .story-mark {
   color: var(--terracotta);
   font-size: 1.8rem;
@@ -2193,6 +2242,45 @@ body:has(.home-hero) .nav-auth {
 body:has(.home-hero) .tentang-section {
   background: #f8f5e8;
   border: 0;
+}
+body:has(.home-hero) .tentang-image {
+  min-width: 0;
+}
+body:has(.home-hero) .profile-frame {
+  height: 480px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: #e8dfce;
+  box-shadow: 0 18px 40px rgba(47, 38, 24, 0.14);
+}
+body:has(.home-hero) .profile-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+}
+body:has(.home-hero) .home-about-content {
+  max-width: 680px;
+}
+body:has(.home-hero) .home-about-content h2 {
+  margin-bottom: 20px;
+}
+body:has(.home-hero) .home-about-content p {
+  margin: 0 0 16px;
+  color: #51483b;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+body:has(.home-hero) .home-about-content .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 12px 20px;
+  line-height: 1.35;
+  text-decoration: none;
 }
 body:has(.home-hero) .katalog-preview{
   background: #a36328;

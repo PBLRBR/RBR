@@ -129,6 +129,11 @@
 .book-facts span, .book-facts strong { display: block; }
 .book-facts span { margin-bottom: 5px; color: var(--muted, #6d6b64); font-size: .8rem; }
 .book-note { padding: 14px 16px; border-left: 3px solid var(--terracotta, #a8573f); background: rgba(168,87,63,.07); line-height: 1.6; }
+.story-detail-layout { grid-template-columns: minmax(0, 1fr); align-items: start; }
+.story-full-text { max-width: 820px; margin: 42px auto 0; padding: clamp(24px, 5vw, 56px); border: 1px solid var(--line, #ddd); border-radius: 22px; background: var(--paper, #fff); box-shadow: 0 18px 50px rgba(53, 43, 33, .05); }
+.story-full-text h2 { margin: 0 0 28px; color: var(--espresso, #302720); font: 600 clamp(1.8rem, 4vw, 2.5rem)/1.15 Georgia, serif; }
+.story-full-text p { margin: 0 0 1.25em; color: var(--color-text, #423b34); font: 1.05rem/1.9 Georgia, "Times New Roman", serif; white-space: normal; }
+.story-full-text p:last-child { margin-bottom: 0; }
 
 @media (max-width: 460px) {
     .nav-auth { gap: 8px; }
