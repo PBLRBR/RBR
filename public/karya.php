@@ -21,11 +21,11 @@ $stories = json_decode(file_get_contents($storiesFile), true) ?: [];
             <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
-                <a href="/tentang.php">Tentang</a>
-                <!-- <a href="/infoevent.php">Info Event</a> -->
-                <a href="/katalog.php">Katalog Buku</a>
-                <a class="active" href="/karya.php">Karya Bu Ratna</a>
-                <a href="/reservasi.php">Reservasi Ruang</a>
+                <a href="/tentang">Tentang</a>
+                <!-- <a href="/infoevent">Info Event</a> -->
+                <a href="/katalog">Katalog Buku</a>
+                <a class="active" href="/karya">Karya Bu Ratna</a>
+                <a href="/reservasi">Reservasi Ruang</a>
             </nav>
             <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
@@ -48,7 +48,7 @@ $stories = json_decode(file_get_contents($storiesFile), true) ?: [];
                 $excerpt = $excerptMatch[0] ?? $intro;
                 if (strlen($excerpt) < strlen($intro)) $excerpt .= '…';
             ?>
-            <a class="story-card story-card-link" href="/detail-karya.php?id=<?= $index ?>" aria-label="Baca cerpen: <?= htmlspecialchars($story['title'], ENT_QUOTES, 'UTF-8') ?>">
+            <a class="story-card story-card-link" href="/detail-karya?id=<?= $index ?>" aria-label="Baca cerpen: <?= htmlspecialchars($story['title'], ENT_QUOTES, 'UTF-8') ?>">
                 <span class="category-badge">Cerpen</span>
                 <h2><?= htmlspecialchars($story['title']) ?></h2>
                 <p><?= htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8') ?></p>
