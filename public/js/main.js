@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         message.hidden = true;
 
         try {
-            const profile = await apiRequest('auth/profil.php', {
+            const profile = await apiRequest('auth/profil', {
                 method: 'PATCH',
                 body: {
                     nama: nameInput.value.trim(),
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const displayName = document.getElementById('profile-display-name');
             if (displayName) displayName.textContent = profile.nama;
 
-            document.querySelectorAll('.nav-auth a[href="/profil.php"] .nav-account-name')
+            document.querySelectorAll('.nav-auth a[href="/profil"] .nav-account-name')
                 .forEach(label => {
                     label.textContent = profile.nama;
                 });

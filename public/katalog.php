@@ -43,11 +43,11 @@ $categories = array_unique(array_column($books, 2));
             <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
             <nav class="nav-menu">
                 <a href="/">Beranda</a>
-                <a href="/tentang.php">Tentang</a>
-                <!-- <a href="/infoevent.php">Info Event</a> -->
-                <a class="active" href="/katalog.php">Katalog Buku</a>
-                <a href="/karya.php">Karya Bu Ratna</a>
-                <a href="/reservasi.php">Reservasi Ruang</a>
+                <a href="/tentang">Tentang</a>
+                <!-- <a href="/infoevent">Info Event</a> -->
+                <a class="active" href="/katalog">Katalog Buku</a>
+                <a href="/karya">Karya Bu Ratna</a>
+                <a href="/reservasi">Reservasi Ruang</a>
             </nav>
             <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
@@ -71,7 +71,7 @@ $categories = array_unique(array_column($books, 2));
         <!-- daftar buku -->
         <div class="book-grid">
             <?php foreach ($books as $id => [$judul, $penulis, $kategori, $jenis, $harga, $deskripsi, $fotoSampul, $stok]): ?>
-            <article class="book-card book-card-link" data-category="<?= htmlspecialchars($kategori) ?>" tabindex="0" role="link" aria-label="Lihat detail buku: <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" onclick="if (!event.target.closest('a')) window.location.href='/detail-buku.php?id=<?= $id ?>'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='/detail-buku.php?id=<?= $id ?>'; }">
+            <article class="book-card book-card-link" data-category="<?= htmlspecialchars($kategori) ?>" tabindex="0" role="link" aria-label="Lihat detail buku: <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" onclick="if (!event.target.closest('a')) window.location.href='/detail-buku?id=<?= $id ?>'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='/detail-buku?id=<?= $id ?>'; }">
                 <div class="book-cover<?= $fotoSampul ? ' has-image' : '' ?>">
                     <?php if ($fotoSampul): ?>
                         <img src="<?= htmlspecialchars($fotoSampul, ENT_QUOTES, 'UTF-8') ?>" alt="Sampul buku <?= htmlspecialchars($judul, ENT_QUOTES, 'UTF-8') ?>" loading="lazy">

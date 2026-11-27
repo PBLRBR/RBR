@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.jam_selesai <= data.jam_mulai) throw new Error('Jam selesai harus setelah jam mulai.');
             await apiRequest('reservasi/tambah_reservasi.php', { method: 'POST', body: data });
             showMessage('Pengajuan reservasi tersimpan dan menunggu persetujuan admin.', true);
-            window.setTimeout(() => location.assign('/riwayat.php'), 1600);
+            window.setTimeout(() => location.assign('/riwayat'), 1600);
         } catch (error) {
             const needsLogin = error.message.toLowerCase().includes('login');
             showMessage(error.message, false, needsLogin);

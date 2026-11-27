@@ -16,7 +16,7 @@ $pageTitle = 'Buku Tamu | SIMART';
 <body>
 <header class="navbar"><div class="container nav-container">
     <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
-    <nav class="nav-menu"><a href="/">Beranda</a><a href="/tentang.php">Tentang</a><a href="/katalog.php">Katalog Buku</a><a href="/reservasi.php">Reservasi Ruang</a></nav>
+    <nav class="nav-menu"><a href="/">Beranda</a><a href="/tentang">Tentang</a><a href="/katalog">Katalog Buku</a><a href="/reservasi">Reservasi Ruang</a></nav>
     <?php require __DIR__ . '/_nav-auth.php'; ?>
 </div></header>
 <main class="container page-content">
