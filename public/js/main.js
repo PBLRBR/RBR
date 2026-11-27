@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const open = button.getAttribute('aria-expanded') !== 'true';
             button.setAttribute('aria-expanded', String(open));
             detail.hidden = !open;
-            button.innerHTML = `${open ? 'Tutup ringkasan' : 'Baca ringkasan'} <span aria-hidden="true">${open ? '↑' : '↓'}</span>`;
+            button.innerHTML = `${open ? 'Tutup cerpen' : 'Baca cerpen lengkap'} <span aria-hidden="true">${open ? '↑' : '↓'}</span>`;
         });
     });
     const profileForm = document.getElementById('profile-form');
