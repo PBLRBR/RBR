@@ -45,7 +45,16 @@ try {
         http_response_code(422);
         echo json_encode([
             'success' => false,
-            'message' => 'Nama pengunjung maksimal 100 karakter.',
+            'message' => 'Nama pengunjung maksimal 100 karakter.'
+        ]);
+        exit;
+    }
+
+    if (preg_match('/.{256}/us', $keperluan) === 1) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Keperluan kunjungan maksimal 255 karakter.'
         ]);
         exit;
     }
@@ -127,10 +136,17 @@ try {
 
     // Catat kunjungan pengunjung.
     $stmt = $pdo->prepare(
-        'INSERT INTO buku_tamu (id_pengunjung, keperluan, idempotency_key)
-     VALUES (:id_pengunjung, :keperluan, :request_id)
+        "INSERT INTO buku_tamu (
+         id_pengunjung, keperluan, idempotency_key,
+         tanggal_kunjungan, jam_masuk
+     )
+     VALUES (
+         :id_pengunjung, :keperluan, :request_id,
+         (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date,
+         (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::time
+     )
      ON CONFLICT (idempotency_key) DO NOTHING
-     RETURNING id_buku_tamu, tanggal_kunjungan, jam_masuk'
+     RETURNING id_buku_tamu, tanggal_kunjungan, jam_masuk"
     );
 
     $params = [

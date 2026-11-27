@@ -187,6 +187,14 @@ try {
     ]);
 
 } catch (PDOException $e) {
+    if ((string) $e->getCode() === '23503') {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Kategori buku tidak ditemukan.'
+        ]);
+        exit;
+    }
     error_log($e->getMessage());
     http_response_code(500);
     echo json_encode([

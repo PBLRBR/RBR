@@ -330,41 +330,103 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCart();
     // Pertahankan UUID yang sama jika checkout mengalami kegagalan jaringan.
     // UUID baru hanya dipakai ketika isi keranjang, pembeli atau metode berubah.
-    let checkoutAttempt = null;
-    $('#btn-checkout').addEventListener('click', async (e) => {
+    const checkoutButton = $('#btn-checkout');
+    const checkoutStorageKey = `simart:pos:pending:${checkoutButton.dataset.kasirId}`;
+    const updateCheckoutButton = () => {
+        const hasPendingCheckout = sessionStorage.getItem(checkoutStorageKey) !== null;
+        checkoutButton.textContent = hasPendingCheckout
+            ? 'Lanjutkan Checkout Tertunda'
+            : 'Proses Transaksi';
+    };
+
+    try {
+        updateCheckoutButton();
+    } catch {
+        // Handler checkout akan menampilkan pesan jika penyimpanan tidak bisa diakses.
+    }
+    checkoutButton.addEventListener('click', async (e) => {
         const button = e.currentTarget;
         if (button.disabled) return;
-        if (!cart.size) return alert('Keranjang masih kosong.');
-        const method = $('.pay-method.active').dataset.method === 'tunai' ? 'cash' : 'qris';
-        const cashAmount = Number(cashInput.value.replace(/\D/g, '')) || 0;
-        if (method === 'cash' && cashAmount < cartTotal()) {
-            return alert('Uang diterima masih kurang.');
+
+        let pending;
+        try {
+            pending = JSON.parse(sessionStorage.getItem(checkoutStorageKey) ?? 'null');
+        } catch {
+            return alert('Checkout tertunda tidak bisa dibaca. Periksa riwayat invoice sebelum melanjutkan.');
         }
-        const payload = {
-            metode_transaksi: method,
-            nama_pembeli: $('#buyer-name').value.trim(),
-            items: [...cart]
-                .map(([id, qty]) => ({ id_buku: Number(id), jumlah_beli: qty }))
-                .sort((a, b) => a.id_buku - b.id_buku),
-        };
-        const signature = JSON.stringify(payload);
-        if (!checkoutAttempt || checkoutAttempt.signature !== signature) {
-            if (!globalThis.crypto?.randomUUID) {
-                return alert('Browser harus mendukung UUID keamanan. Gunakan localhost atau HTTPS.');
+
+        let payload;
+        let checkoutId;
+
+        if (pending) {
+            const jumlahBuku = pending.payload.items.reduce(
+                (total, item) => total + item.jumlah_beli, 0
+            );
+            const metode = pending.payload.metode_transaksi === 'cash' ? 'Tunai' : 'QRIS';
+            const pembeli = pending.payload.nama_pembeli || 'Pengunjung';
+            const totalTersimpan = pending.payload.expected_total_minor;
+            const nominal = Number.isSafeInteger(totalTersimpan)
+                ? `\nTotal awal: ${rupiah(totalTersimpan / 100)}.`
+                : '\nNominal awal tidak tersedia. Periksa riwayat invoice sebelum melanjutkan.';
+
+            if (!confirm(
+                `Lanjutkan checkout tertunda untuk ${pembeli} (${jumlahBuku} buku, ${metode})?` +
+                `${nominal}\nPastikan pembayaran sudah diterima. ` +
+                'Jika transaksi sudah tercatat, invoice yang sama akan dibuka.'
+            )) return;
+
+            payload = pending.payload;
+            checkoutId = pending.id;
+        } else {
+            if (!cart.size) return alert('Keranjang masih kosong.');
+
+            const method = $('.pay-method.active').dataset.method === 'tunai' ? 'cash' : 'qris';
+            const cashAmount = Number(cashInput.value.replace(/\D/g, '')) || 0;
+
+            if (method === 'cash' && cashAmount < cartTotal()) {
+                return alert('Uang diterima masih kurang.');
             }
-            checkoutAttempt = { signature, id: crypto.randomUUID() };
+
+            if (!globalThis.crypto?.randomUUID) {
+                return alert('Gunakan localhost atau HTTPS agar checkout bisa membuat UUID.');
+            }
+
+            const pesan = method === 'qris'
+                ? `Pastikan pembayaran QRIS sudah diterima. Simpan transaksi ${rupiah(cartTotal())}?`
+                : `Simpan transaksi tunai sebesar ${rupiah(cartTotal())}?`;
+
+            if (!confirm(pesan)) return;
+
+            payload = {
+                metode_transaksi: method,
+                nama_pembeli: $('#buyer-name').value.trim(),
+                expected_total_minor: Math.round(cartTotal() * 100),
+                items: [...cart]
+                    .map(([id, qty]) => ({ id_buku: Number(id), jumlah_beli: qty }))
+                    .sort((a, b) => a.id_buku - b.id_buku),
+            };
+            checkoutId = crypto.randomUUID();
+
+            try {
+                sessionStorage.setItem(
+                    checkoutStorageKey,
+                    JSON.stringify({ id: checkoutId, payload })
+                );
+            } catch {
+                return alert('Data checkout tidak bisa disimpan sementara. Transaksi belum dikirim.');
+            }
         }
-        if (!confirm(method === 'qris'
-            ? `Pastikan pembayaran QRIS SUDAH DITERIMA secara manual. Simpan transaksi ${rupiah(cartTotal())}?`
-            : `Simpan transaksi tunai sebesar ${rupiah(cartTotal())}?`)) return;
+
+        const method = payload.metode_transaksi;
         button.disabled = true;
+
         try {
             const result = await apiRequest('transaksi/tambah_transaksi.php', {
                 method: 'POST',
-                body: { ...payload, idempotency_key: checkoutAttempt.id }
+                body: { ...payload, idempotency_key: checkoutId },
             });
             // Hanya setelah respons sukses, UUID ini dianggap selesai.
-            checkoutAttempt = null;
+            sessionStorage.removeItem(checkoutStorageKey);
             // Data sudah di-commit pada backend. Perbarui stok DOM dan keranjang langsung.
             result.items.forEach(({ id_buku, stok_tersisa }) => {
                 const id = String(id_buku);
@@ -410,7 +472,30 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `<td><button type="button" class="btn-sm btn-secondary btn-view-transaction" data-id="${Number(result.transaksi.id_transaksi)}">${esc(result.transaksi.kode_invoice)}</button></td>`
                 + `<td>${esc(String(result.transaksi.tanggal_transaksi ?? '').replace(/(\d{2}:\d{2}:\d{2})\.\d+$/, '$1'))}</td><td>${result.items.reduce((n, i) => n + Number(i.jumlah_beli), 0)} buku</td>`
                 + `<td>${rupiah(result.transaksi.total_bayar)}</td><td>${esc(method)}</td>`;
-            tbody.prepend(tr);
+            const invoiceId = Number(result.transaksi.id_transaksi);
+            const invoiceTime = String(result.transaksi.tanggal_transaksi ?? '');
+
+            tbody.querySelector(`.btn-view-transaction[data-id="${invoiceId}"]`)
+                ?.closest('tr')?.remove();
+
+            tr.dataset.transaksiId = String(invoiceId);
+            tr.dataset.transaksiWaktu = invoiceTime;
+
+            const normalizeTime = value => {
+                const [seconds, fraction = ''] = value.split('.');
+                return `${seconds}.${fraction.padEnd(6, '0')}`;
+            };
+
+            const invoiceOrderTime = normalizeTime(invoiceTime);
+            const olderRow = Array.from(tbody.rows).find(row => {
+                const rowTime = normalizeTime(row.dataset.transaksiWaktu ?? '');
+                const rowId = Number(row.dataset.transaksiId);
+
+                return rowTime < invoiceOrderTime ||
+                    (rowTime === invoiceOrderTime && rowId < invoiceId);
+            });
+
+            tbody.insertBefore(tr, olderRow ?? null);
             while (tbody.rows.length > 5) {
                 tbody.deleteRow(-1);
             }
@@ -418,33 +503,60 @@ document.addEventListener('DOMContentLoaded', () => {
             try { await showTransactionDetail(result.transaksi.id_transaksi); }
             catch (detailError) { alert(`Transaksi BERHASIL disimpan (${result.transaksi.kode_invoice}), tetapi detail belum dapat dibuka: ${detailError.message}`); }
         } catch (error) {
-            alert(`${error.message}\nJika koneksi terputus, periksa daftar invoice dahulu. Untuk mengulang checkout yang sama, jangan ubah keranjang atau metode.`);
+            if (error.status === 422) {
+                sessionStorage.removeItem(checkoutStorageKey);
+                alert(`${error.message}\nPerbaiki data checkout, lalu coba lagi.`);
+                return;
+            }
+
+            alert(
+                `${error.message}\n` +
+                'Periksa riwayat invoice. Jika perlu, tekan Proses Transaksi lagi ' +
+                'untuk melanjutkan checkout dengan kunci yang sama.'
+            );
         }
-        finally { button.disabled = false; }
+        finally {
+            button.disabled = false;
+
+            try {
+                updateCheckoutButton();
+            } catch {
+                // Pertahankan label tombol jika penyimpanan tidak bisa diakses.
+            }
+        }
     });
 
     // reservasi: filter status, setujui, tolak, edit
     const rsvList = $('.rsv-list');
     const statusMeta = { pending: ['Menunggu Review', 'badge-warning'], approved: ['Disetujui', 'badge-success'], rejected: ['Ditolak', 'badge-danger'] };
-    let rsvFilter = 'pending';
+    const rsvFilter = $('.rsv-filter.active')?.dataset.filter ?? 'pending';
 
     const refreshRsv = () => {
-        const cards = $$('.rsv-card');
-        const count = { pending: 0, approved: 0, rejected: 0 };
         let shown = 0;
-        cards.forEach(c => {
-            count[c.dataset.status]++;
-            c.hidden = rsvFilter !== 'all' && c.dataset.status !== rsvFilter;
-            if (!c.hidden) shown++;
+
+        $$('.rsv-card').forEach(card => {
+            card.hidden = rsvFilter !== 'all' && card.dataset.status !== rsvFilter;
+            if (!card.hidden) shown++;
         });
-        $$('[data-count]').forEach(el => { el.textContent = count[el.dataset.count]; });
-        const nav = $('.nav-count');
-        nav.textContent = count.pending;
-        nav.hidden = count.pending === 0;
+
         $('#rsv-empty').hidden = shown > 0;
     };
 
     const setStatus = (card, status) => {
+        const previousStatus = card.dataset.status;
+
+        if (previousStatus !== status) {
+            const previousCount = $(`[data-count="${previousStatus}"]`);
+            const nextCount = $(`[data-count="${status}"]`);
+
+            previousCount.textContent = Math.max(0, Number(previousCount.textContent) - 1);
+            nextCount.textContent = Number(nextCount.textContent) + 1;
+        }
+
+        const pendingCount = Number($('[data-count="pending"]').textContent);
+        const nav = $('.nav-count');
+        nav.textContent = pendingCount;
+        nav.hidden = pendingCount === 0;
         card.dataset.status = status;
         card.classList.remove('rsv-pending', 'rsv-approved', 'rsv-rejected');
         card.classList.add(`rsv-${status}`);
@@ -506,15 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
-
-    $$('.rsv-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-            $$('.rsv-filter').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            rsvFilter = btn.dataset.filter;
-            refreshRsv();
-        });
-    });
 
     // popup edit reservasi
     const rsvPopup = $('#rsv-popup');

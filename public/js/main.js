@@ -59,8 +59,50 @@ document.addEventListener('DOMContentLoaded', () => {
             button.innerHTML = `${open ? 'Tutup cerpen' : 'Baca cerpen lengkap'} <span aria-hidden="true">${open ? '↑' : '↓'}</span>`;
         });
     });
+    const profileForm = document.getElementById('profile-form');
 
-    // form dummy: tampilan saja, belum terhubung ke backend
+    profileForm?.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const button = profileForm.querySelector('button[type="submit"]');
+        if (button.disabled) return;
+
+        const message = document.getElementById('profile-message');
+        const nameInput = profileForm.elements.namedItem('nama');
+        const phoneInput = profileForm.elements.namedItem('no_hp');
+
+        button.disabled = true;
+        message.hidden = true;
+
+        try {
+            const profile = await apiRequest('auth/profil.php', {
+                method: 'PATCH',
+                body: {
+                    nama: nameInput.value.trim(),
+                    no_hp: phoneInput.value.trim(),
+                },
+            });
+
+            nameInput.value = profile.nama;
+            phoneInput.value = profile.no_hp ?? '';
+
+            const displayName = document.getElementById('profile-display-name');
+            if (displayName) displayName.textContent = profile.nama;
+
+            document.querySelectorAll('.nav-auth a[href="/profil.php"] .nav-account-name')
+                .forEach(label => {
+                    label.textContent = profile.nama;
+                });
+
+            message.textContent = 'Profil berhasil disimpan.';
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            message.hidden = false;
+            button.disabled = false;
+        }
+    });
+
     document.querySelectorAll('form[data-dummy]').forEach(form => {
         form.addEventListener('submit', e => {
             e.preventDefault();
