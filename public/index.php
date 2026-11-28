@@ -11,11 +11,12 @@ foreach ($preview as $b) {
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="/images/rbr.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
-    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/style.css?v=20261128-public-qa">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261128-public-qa">
 </head>
 
 <body>
@@ -47,7 +48,7 @@ foreach ($preview as $b) {
                     <a href="/kunjungan.php" class="btn-secondary">Isi Buku Tamu</a>
                 </div>
             </div>
-            <div class="home-hero-bottom"><span>Rumah Ratna Indraswari Ibrahim · Kota Malang</div>
+              <div class="home-hero-bottom"><span>Rumah Ratna Indraswari Ibrahim · Kota Malang</span></div>
         </div>
     </section>
 

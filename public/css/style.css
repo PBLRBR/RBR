@@ -1434,13 +1434,20 @@ h4 {
   outline-offset: 3px;
 }
 .story-card-action {
+  align-self: center;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
   margin-top: auto;
   padding-top: 18px;
   color: var(--terracotta);
   font-weight: 700;
+}
+.story-card-chevron {
+  display: inline-block;
+  transform: rotate(90deg);
+  transform-origin: center;
 }
 .story-card .story-mark {
   color: var(--terracotta);
@@ -1651,6 +1658,45 @@ body:has(.home-hero) .home-hero {
 }
 body:has(.home-hero) .logo-image {
   filter: none;
+}
+
+/* Keep the wide homepage header on one row before switching to the drawer. */
+body:has(.home-hero) .nav-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: clamp(10px, 1.4vw, 20px);
+  width: min(96%, 1440px);
+  height: 88px;
+}
+body:has(.home-hero) .logo {
+  flex: 0 0 auto;
+  gap: 10px;
+}
+body:has(.home-hero) .logo-text {
+  font-size: .98rem;
+}
+body:has(.home-hero) .nav-menu {
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: clamp(8px, 1.05vw, 16px);
+  min-width: 0;
+}
+body:has(.home-hero) .nav-menu a {
+  flex: 0 0 auto;
+  font-size: clamp(.8rem, .94vw, .94rem);
+  white-space: nowrap;
+}
+body:has(.home-hero) .nav-auth {
+  flex: 0 0 auto;
+  gap: 8px;
+}
+body:has(.home-hero) .nav-auth .btn-secondary,
+body:has(.home-hero) .nav-auth .btn-primary {
+  width: auto;
+  min-width: 78px;
+  padding-right: 12px;
+  padding-left: 12px;
 }
 
 .cart-table {
@@ -1920,6 +1966,40 @@ h4 {
 .calendar-days span.selected {
   background-color: var(--color-primary);
   color: var(--color-text-light);
+}
+
+.calendar-days span.is-past {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: .38;
+  pointer-events: none;
+}
+
+#prev-month:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+#profile-message.profile-message-success,
+#profile-message.profile-message-error {
+  margin: 18px 0;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+#profile-message.profile-message-success {
+  border-color: #b8d8ba;
+  background: #edf7ed;
+  color: #28633a;
+}
+
+#profile-message.profile-message-error {
+  border-color: #e6b8b3;
+  background: #fff0ef;
+  color: #9b3028;
 }
 
 .dot.available {

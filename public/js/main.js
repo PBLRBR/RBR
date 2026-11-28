@@ -29,10 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalParent = auth.parentElement;
             const originalNext = auth.nextSibling;
             const syncAuthPlacement = () => {
-                if (window.matchMedia('(max-width: 760px)').matches) {
+                if (window.matchMedia('(max-width: 1080px)').matches) {
                     if (auth.parentElement !== nav) nav.append(auth);
                 } else if (auth.parentElement !== originalParent) {
                     originalParent.insertBefore(auth, originalNext);
+                    container.classList.remove('nav-open');
+                    toggle.setAttribute('aria-expanded', 'false');
+                    toggle.setAttribute('aria-label', 'Buka menu navigasi');
                 }
             };
             syncAuthPlacement();
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         button.disabled = true;
         message.hidden = true;
+        message.classList.remove('profile-message-success', 'profile-message-error');
 
         try {
             const profile = await apiRequest('auth/profil.php', {
@@ -95,8 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             message.textContent = 'Profil berhasil disimpan.';
+            message.classList.add('profile-message-success');
+            message.setAttribute('role', 'status');
         } catch (error) {
             message.textContent = error.message;
+            message.classList.add('profile-message-error');
+            message.setAttribute('role', 'alert');
         } finally {
             message.hidden = false;
             button.disabled = false;
@@ -184,12 +192,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (days) {
         const title = document.getElementById('calendar-month-year');
         const booked = new Set(JSON.parse(days.dataset.bookedDates || '[]'));
-        const month = new Date();
-        month.setDate(1);
+        const minDateString = days.dataset.minDate;
+        const [minYear, minMonthNumber] = minDateString.split('-').map(Number);
+        const minMonth = new Date(minYear, minMonthNumber - 1, 1);
+        const month = new Date(minMonth);
+        const previousMonthButton = document.getElementById('prev-month');
+        const reservationDate = document.getElementById('reserve-date');
 
         const render = () => {
             days.replaceChildren();
             title.textContent = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(month);
+            previousMonthButton.disabled = month <= minMonth;
             const first = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
             const total = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
             for (let i = 0; i < first; i++) days.appendChild(document.createElement('span'));
@@ -197,15 +210,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const key = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const el = document.createElement('span');
                 el.textContent = d;
+                const isPast = key < minDateString;
+                if (isPast) {
+                    el.classList.add('is-past');
+                    el.setAttribute('aria-disabled', 'true');
+                    days.appendChild(el);
+                    continue;
+                }
                 if (booked.has(key)) el.classList.add('has-event');
                 el.addEventListener('click', () => {
                     days.querySelectorAll('span').forEach(s => s.classList.remove('selected'));
                     el.classList.add('selected');
+                    if (reservationDate) {
+                        reservationDate.value = key;
+                        reservationDate.dispatchEvent(new Event('input', { bubbles: true }));
+                        reservationDate.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                 });
                 days.appendChild(el);
             }
         };
-        document.getElementById('prev-month').addEventListener('click', () => { month.setMonth(month.getMonth() - 1); render(); });
+        previousMonthButton.addEventListener('click', () => {
+            if (month <= minMonth) return;
+            month.setMonth(month.getMonth() - 1);
+            render();
+        });
         document.getElementById('next-month').addEventListener('click', () => { month.setMonth(month.getMonth() + 1); render(); });
         render();
     }

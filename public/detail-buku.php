@@ -1,11 +1,48 @@
 <?php
 require_once __DIR__ . '/_data.php';
+function renderBookNotFound(): void {
+    http_response_code(404);
+    ?>
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+    <link rel="icon" type="image/png" href="/images/rbr.png">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Buku tidak ditemukan | SIMART</title>
+        <link rel="stylesheet" href="/css/style.css?v=20261128-public-qa">
+        <link rel="stylesheet" href="/css/responsive.css?v=20261128-public-qa">
+    </head>
+    <body>
+        <header class="navbar">
+            <div class="container nav-container">
+                <a class="logo" href="/"><img src="/images/rbr.png" alt="Logo" class="logo-image"><span class="logo-text">Rumah Budaya Ratna</span></a>
+                <nav class="nav-menu"><a href="/">Beranda</a><a href="/tentang.php">Tentang</a><a class="active" href="/katalog.php">Katalog Buku</a><a href="/karya.php">Karya Bu Ratna</a><a href="/reservasi.php">Reservasi Ruang</a></nav>
+                <?php require __DIR__ . '/_nav-auth.php'; ?>
+            </div>
+        </header>
+        <main class="container page-content">
+            <a href="/katalog.php" class="book-back-link">← <span>Kembali ke katalog</span></a>
+            <section class="editorial-hero">
+                <span class="eyebrow">Katalog buku</span>
+                <h1>Buku tidak ditemukan.</h1>
+                <p>Buku yang Anda cari tidak tersedia atau tautannya sudah tidak berlaku.</p>
+                <a class="btn-primary" href="/katalog.php">Lihat katalog buku</a>
+            </section>
+        </main>
+        <?php require __DIR__ . '/_footer.php'; ?>
+        <script src="/js/main.js?v=20261128-public-qa"></script>
+    </body>
+    </html>
+    <?php
+    exit;
+}
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$id || $id < 1) { http_response_code(404); exit('Buku tidak ditemukan.'); }
+if (!$id || $id < 1) renderBookNotFound();
 $stmt = db()->prepare('SELECT *, COALESCE(nama_kategori, \'Tanpa Kategori\') AS kategori_tampil FROM v_katalog_buku WHERE id_buku = :id');
 $stmt->execute(['id' => $id]);
 $b = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$b) { http_response_code(404); exit('Buku tidak ditemukan.'); }
+if (!$b) renderBookNotFound();
 $judul = $b['judul']; $penulis = $b['penulis']; $kategori = $b['kategori_tampil'];
 $jenis = boolPg($b['bisa_dijual']) ? 'dijual' : 'koleksi';
 $harga = (float)($b['harga'] ?? 0); $stok = $b['stok'];
@@ -15,11 +52,12 @@ $pageTitle = $judul . ' | SIMART';
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="/images/rbr.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
-    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/style.css?v=20261128-public-qa">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261128-public-qa">
 </head>
 
 <body>
