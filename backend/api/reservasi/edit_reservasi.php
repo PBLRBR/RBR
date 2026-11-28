@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';
 require_once __DIR__ . '/../../helpers/reservasi.php';
@@ -14,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
     $input = json_decode(file_get_contents('php://input'), true);
     if (!is_array($input)) {
         http_response_code(400);
@@ -63,6 +63,14 @@ try {
         exit;
     }
 
+    simartValidateText($nama_acara, 'nama_acara', 150);
+    simartValidateText($penanggung_jawab, 'penanggung_jawab', 100);
+    foreach (['deskripsi_acara' => null, 'poster_acara' => 255, 'tautan_info' => 255] as $field => $max) {
+        simartValidateText($input[$field] ?? null, $field, $max);
+    }
+
+    $pdo = require __DIR__ . '/../../config/database.php';
+    // Kunci tempat supaya validasi pembuatan dan persetujuan dilakukan berurutan.
     $pdo->beginTransaction();
 
     $stmtTempat = $pdo->prepare(
@@ -180,6 +188,12 @@ try {
         'data' => $reservasi
     ]);
 
+} catch (InvalidArgumentException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo->inTransaction())
         $pdo->rollBack();

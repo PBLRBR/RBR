@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($input)) {
@@ -79,6 +78,11 @@ try {
         exit;
     }
 
+    simartValidateText($judul, 'judul_karya', 200);
+    simartValidateText($isi, 'isi_karya');
+    simartValidateText($deskripsi, 'deskripsi');
+
+    $pdo = require __DIR__ . '/../../config/database.php';
     $stmt = $pdo->prepare(
         'INSERT INTO karya
             (id_kategori, judul_karya, tahun_publikasi, deskripsi, isi_karya)
@@ -102,6 +106,9 @@ try {
         'data' => $stmt->fetch()
     ]);
 
+} catch (InvalidArgumentException $e) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
     if ($e instanceof PDOException && (string) $e->getCode() === '23503') {
         http_response_code(404);

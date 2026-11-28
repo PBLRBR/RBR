@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($input)) {
@@ -53,6 +52,24 @@ try {
         exit;
     }
 
+    simartValidateText($nama, 'nama_kategori', 100);
+    simartValidateText($deskripsi, 'deskripsi');
+
+    $pdo = require __DIR__ . '/../../config/database.php';
+    $pdo->beginTransaction();
+    // Serialize category writes without changing the database schema.
+    $pdo->exec('LOCK TABLE kategori IN SHARE ROW EXCLUSIVE MODE');
+    $duplicate = $pdo->prepare(
+        'SELECT 1 FROM kategori WHERE lower(btrim(nama_kategori)) = lower(:nama) AND id_kategori <> :id LIMIT 1'
+    );
+    $duplicate->execute(['nama' => $nama, 'id' => $id]);
+    if ($duplicate->fetchColumn() !== false) {
+        $pdo->rollBack();
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'Nama kategori sudah digunakan.']);
+        exit;
+    }
+
     $stmt = $pdo->prepare(
         'UPDATE kategori
          SET nama_kategori = :nama,
@@ -70,6 +87,7 @@ try {
     $kategori = $stmt->fetch();
 
     if (!$kategori) {
+        $pdo->rollBack();
         http_response_code(404);
         echo json_encode([
             'success' => false,
@@ -78,13 +96,24 @@ try {
         exit;
     }
 
+    $pdo->commit();
+
     echo json_encode([
         'success' => true,
         'message' => 'Kategori berhasil diperbarui.',
         'data' => $kategori
     ]);
 
+} catch (InvalidArgumentException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (PDOException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log($e->getMessage());
 
     if ($e->getCode() === '23505') {
@@ -101,4 +130,11 @@ try {
         'success' => false,
         'message' => 'Gagal memperbarui kategori.'
     ]);
+} catch (Throwable $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log($e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Terjadi kesalahan pada server.']);
 }
