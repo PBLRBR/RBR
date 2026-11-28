@@ -18,8 +18,8 @@ $pageTitle = $judul . ' | SIMART';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
 </head>
 
 <body>
@@ -35,10 +35,7 @@ $pageTitle = $judul . ' | SIMART';
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <a class="btn-secondary" href="/?auth=login">Masuk</a>
-                <a class="btn-primary" href="/?auth=register">Daftar</a>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 

@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../auth/auth.php';
+require_once __DIR__ . '/../../helpers/reservasi.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PATCH') {
@@ -65,7 +66,8 @@ try {
     }
 
     // Alasan wajib diisi jika reservasi ditolak
-    $alasan = trim($input['alasan_penolakan'] ?? '');
+    $alasanInput = $input['alasan_penolakan'] ?? null;
+    $alasan = is_string($alasanInput) ? trim($alasanInput) : '';
 
     if ($status === 'ditolak' && $alasan === '') {
         http_response_code(400);
@@ -82,6 +84,16 @@ try {
     }
 
     $pdo->beginTransaction();
+
+    $stmtTempat = $pdo->prepare(
+        'SELECT t.id_tempat, t.status
+     FROM tempat AS t
+     JOIN reservasi AS r ON r.id_tempat = t.id_tempat
+     WHERE r.id_reservasi = :id
+     FOR UPDATE OF t'
+    );
+    $stmtTempat->execute(['id' => $id]);
+    $tempat = $stmtTempat->fetch(PDO::FETCH_ASSOC);
 
     // Ambil dan kunci data reservasi yang akan diubah
     $stmt = $pdo->prepare(
@@ -102,7 +114,6 @@ try {
 
     if (!$reservasiLama) {
         $pdo->rollBack();
-
         http_response_code(404);
         echo json_encode([
             'success' => false,
@@ -111,23 +122,19 @@ try {
         exit;
     }
 
-    // Jika akan disetujui, periksa bentrok jadwal
-    if ($status === 'disetujui') {
-
-        // Kunci data tempat agar persetujuan untuk tempat
-        // yang sama dapat diperiksa secara berurutan
-        $stmtTempat = $pdo->prepare(
-            'SELECT id_tempat, status
-             FROM tempat
-             WHERE id_tempat = :id_tempat
-             FOR UPDATE'
-        );
-
-        $stmtTempat->execute([
-            'id_tempat' => $reservasiLama['id_tempat']
+    if (!$tempat || (int) $tempat['id_tempat'] !== (int) $reservasiLama['id_tempat']) {
+        $pdo->rollBack();
+        http_response_code(409);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Tempat reservasi berubah. Muat ulang dan coba lagi.'
         ]);
-        $tempat = $stmtTempat->fetch(PDO::FETCH_ASSOC);
-        if (!$tempat || $tempat['status'] !== 'aktif') {
+        exit;
+    }
+
+    // Jika akan disetujui, periksa tempat dan jadwalnya.
+    if ($status === 'disetujui') {
+        if ($tempat['status'] !== 'aktif') {
             $pdo->rollBack();
             http_response_code(409);
             echo json_encode([
@@ -198,6 +205,19 @@ try {
     ]);
 
     $reservasi = $stmtUpdate->fetch(PDO::FETCH_ASSOC);
+
+    $reservasi['jumlah_ditolak_otomatis'] = 0;
+
+    if ($status === 'disetujui') {
+        $reservasi['jumlah_ditolak_otomatis'] = tolakReservasiMenungguYangBentrok(
+            $pdo,
+            $id,
+            (int) $reservasiLama['id_tempat'],
+            $reservasiLama['tanggal_acara'],
+            $reservasiLama['jam_mulai'],
+            $reservasiLama['jam_selesai']
+        );
+    }
 
     $pdo->commit();
 

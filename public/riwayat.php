@@ -13,8 +13,8 @@ $badges = ['disetujui' => 'badge-success', 'ditolak' => 'badge-danger', 'menungg
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
 </head>
 
 <body>
@@ -30,10 +30,7 @@ $badges = ['disetujui' => 'badge-success', 'ditolak' => 'badge-danger', 'menungg
                 <a href="/karya.php">Karya Bu Ratna</a>
                 <a class="active" href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <a href="/profil.php" class="user-profile"><img src="/images/rbr.png" alt="Foto Profil" class="profile-avatar"><span class="user-name"><?= esc($_SESSION['user']['nama']) ?></span></a>
-                <button class="btn-secondary" type="button" data-logout>Keluar</button>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 

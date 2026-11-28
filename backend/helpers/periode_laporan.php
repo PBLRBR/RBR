@@ -49,9 +49,18 @@ function rentangPeriodeLaporan(array $query): array
             if (!is_string($tanggalMulai) || !is_string($tanggalSelesai)) {
                 throw new InvalidArgumentException('Tanggal mulai dan selesai wajib diisi.');
             }
+            $formatTanggal = '/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/';
+
+            if (
+                preg_match($formatTanggal, $tanggalMulai) !== 1 ||
+                preg_match($formatTanggal, $tanggalSelesai) !== 1
+            ) {
+                throw new InvalidArgumentException('Format tanggal harus YYYY-MM-DD.');
+            }
             $mulai = DateTimeImmutable::createFromFormat('!Y-m-d', $tanggalMulai, $zona);
             $selesai = DateTimeImmutable::createFromFormat('!Y-m-d', $tanggalSelesai, $zona);
-            if (!$mulai || !$selesai
+            if (
+                !$mulai || !$selesai
                 || $mulai->format('Y-m-d') !== $tanggalMulai
                 || $selesai->format('Y-m-d') !== $tanggalSelesai
             ) {

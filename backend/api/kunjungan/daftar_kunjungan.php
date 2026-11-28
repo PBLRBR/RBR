@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../helpers/phone.php';
+require_once __DIR__ . '/../../helpers/rate_limit.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -24,15 +25,36 @@ try {
         exit;
     }
 
-    $nama = trim($input['nama_pengunjung'] ?? '');
+    $namaInput = $input['nama_pengunjung'] ?? null;
+    $keperluanInput = $input['keperluan'] ?? null;
+
+    $nama = is_string($namaInput) ? trim($namaInput) : '';
     $no_hp = normalizeIndonesianMobile($input['no_hp'] ?? null);
-    $keperluan = trim($input['keperluan'] ?? '');
+    $keperluan = is_string($keperluanInput) ? trim($keperluanInput) : '';
 
     if ($nama === '' || $keperluan === '') {
         http_response_code(422);
         echo json_encode([
             'success' => false,
             'message' => 'Nama, nomor HP, dan keperluan wajib diisi.'
+        ]);
+        exit;
+    }
+
+    if (preg_match('/.{101}/us', $nama) === 1) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Nama pengunjung maksimal 100 karakter.'
+        ]);
+        exit;
+    }
+
+    if (preg_match('/.{256}/us', $keperluan) === 1) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Keperluan kunjungan maksimal 255 karakter.'
         ]);
         exit;
     }
@@ -47,50 +69,117 @@ try {
     }
 
     $pdo = require __DIR__ . '/../../config/database.php';
+
+    $requestId = $input['idempotency_key'] ?? null;
+
+    if (
+        $requestId !== null && (
+            !is_string($requestId) ||
+            !preg_match('/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/iD', $requestId)
+        )
+    ) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Kunci pengiriman tidak valid.',
+        ]);
+        exit;
+    }
+
+    $windowSeconds = 600;
+
+    if (!simartRateLimitConsume($pdo, 'guestbook_ip', simartClientIp(), 60, $windowSeconds)) {
+        http_response_code(429);
+        header('Retry-After: ' . $windowSeconds);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Terlalu banyak kiriman. Coba lagi nanti.',
+        ]);
+        exit;
+    }
+
     $pdo->beginTransaction();
 
     // Cari pengunjung berdasarkan nomor HP.
     $stmt = $pdo->prepare(
-        'SELECT id_pengunjung
+        'INSERT INTO pengunjung (id_user, nama_pengunjung, no_hp)
+     VALUES (NULL, :nama, :no_hp)
+     ON CONFLICT (no_hp) DO NOTHING
+     RETURNING id_pengunjung'
+    );
+    $stmt->execute([
+        'nama' => $nama,
+        'no_hp' => $no_hp,
+    ]);
+    $id_pengunjung = $stmt->fetchColumn();
+
+    if ($id_pengunjung === false) {
+        $stmt = $pdo->prepare(
+            'SELECT id_pengunjung
          FROM pengunjung
          WHERE no_hp = :no_hp
-         LIMIT 1'
-    );
-    $stmt->execute([':no_hp' => $no_hp]);
-    $pengunjung = $stmt->fetch();
-
-    if ($pengunjung) {
-        $id_pengunjung = (int) $pengunjung['id_pengunjung'];
-    } else {
-        // Daftarkan pengunjung baru.
-        $stmt = $pdo->prepare(
-            'INSERT INTO pengunjung
-                (id_user, nama_pengunjung, no_hp)
-             VALUES (NULL, :nama, :no_hp)
-             RETURNING id_pengunjung'
+         FOR KEY SHARE'
         );
+        $stmt->execute(['no_hp' => $no_hp]);
+        $id_pengunjung = $stmt->fetchColumn();
 
-        $stmt->execute([
-            ':nama' => $nama,
-            ':no_hp' => $no_hp
-        ]);
-
-        $id_pengunjung = (int) $stmt->fetchColumn();
+        if ($id_pengunjung === false) {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Profil pengunjung berubah. Silakan kirim ulang.',
+            ]);
+            exit;
+        }
     }
 
     // Catat kunjungan pengunjung.
     $stmt = $pdo->prepare(
-        'INSERT INTO buku_tamu (id_pengunjung, keperluan)
-         VALUES (:id_pengunjung, :keperluan)
-         RETURNING id_buku_tamu, tanggal_kunjungan, jam_masuk'
+        "INSERT INTO buku_tamu (
+         id_pengunjung, keperluan, idempotency_key,
+         tanggal_kunjungan, jam_masuk
+     )
+     VALUES (
+         :id_pengunjung, :keperluan, :request_id,
+         (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date,
+         (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::time
+     )
+     ON CONFLICT (idempotency_key) DO NOTHING
+     RETURNING id_buku_tamu, tanggal_kunjungan, jam_masuk"
     );
 
-    $stmt->execute([
-        ':id_pengunjung' => $id_pengunjung,
-        ':keperluan' => $keperluan
-    ]);
+    $params = [
+        'id_pengunjung' => $id_pengunjung,
+        'keperluan' => $keperluan,
+        'request_id' => $requestId,
+    ];
 
-    $kunjungan = $stmt->fetch();
+    $stmt->execute($params);
+    $kunjungan = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($kunjungan === false) {
+        $stmt = $pdo->prepare(
+            'SELECT id_buku_tamu, tanggal_kunjungan, jam_masuk
+         FROM buku_tamu
+         WHERE idempotency_key = :request_id
+           AND id_pengunjung = :id_pengunjung
+           AND keperluan = :keperluan'
+        );
+
+        $stmt->execute($params);
+        $kunjungan = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($kunjungan === false) {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Kunci pengiriman sudah dipakai untuk data lain.',
+            ]);
+            exit;
+        }
+    }
 
     $pdo->commit();
 
@@ -101,7 +190,9 @@ try {
             'id_pengunjung' => $id_pengunjung,
             'id_buku_tamu' => $kunjungan['id_buku_tamu'],
             'tanggal_kunjungan' => $kunjungan['tanggal_kunjungan'],
-            'jam_masuk' => $kunjungan['jam_masuk']
+            'jam_masuk' => $kunjungan['jam_masuk'] === null
+                ? null
+                : substr($kunjungan['jam_masuk'], 0, 8)
         ]
     ]);
 

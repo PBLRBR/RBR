@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const homeNavbar = document.querySelector('.home-hero')?.closest('body')?.querySelector('.navbar');
+    if (homeNavbar) {
+        const updateHomeNavbar = () => homeNavbar.classList.toggle('home-navbar-scrolled', window.scrollY > 24);
+        updateHomeNavbar();
+        window.addEventListener('scroll', updateHomeNavbar, { passive: true });
+    }
+
     // Navigasi ringkas untuk layar kecil, dipasang otomatis di semua header.
     document.querySelectorAll('.navbar .nav-container').forEach(container => {
         const nav = container.querySelector('.nav-menu');
@@ -16,6 +23,31 @@ document.addEventListener('DOMContentLoaded', () => {
             container.classList.toggle('nav-open', open);
         });
         container.insertBefore(toggle, nav);
+
+        const auth = container.querySelector('.nav-auth');
+        if (auth) {
+            const originalParent = auth.parentElement;
+            const originalNext = auth.nextSibling;
+            const syncAuthPlacement = () => {
+                if (window.matchMedia('(max-width: 760px)').matches) {
+                    if (auth.parentElement !== nav) nav.append(auth);
+                } else if (auth.parentElement !== originalParent) {
+                    originalParent.insertBefore(auth, originalNext);
+                }
+            };
+            syncAuthPlacement();
+            window.addEventListener('resize', syncAuthPlacement);
+        }
+
+        const drawerHeader = document.createElement('div');
+        drawerHeader.className = 'mobile-nav-header';
+        drawerHeader.innerHTML = '<a class="mobile-nav-brand" href="/"><img src="/images/rbr.png" alt=""><span>Rumah Budaya Ratna</span></a><button type="button" class="mobile-nav-close" aria-label="Tutup menu">&times;</button>';
+        nav.prepend(drawerHeader);
+        drawerHeader.querySelector('.mobile-nav-close').addEventListener('click', () => {
+            container.classList.remove('nav-open');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'Buka menu navigasi');
+        });
     });
 
     document.querySelectorAll('.story-toggle').forEach(button => {
@@ -24,11 +56,53 @@ document.addEventListener('DOMContentLoaded', () => {
             const open = button.getAttribute('aria-expanded') !== 'true';
             button.setAttribute('aria-expanded', String(open));
             detail.hidden = !open;
-            button.innerHTML = `${open ? 'Tutup ringkasan' : 'Baca ringkasan'} <span aria-hidden="true">${open ? '↑' : '↓'}</span>`;
+            button.innerHTML = `${open ? 'Tutup cerpen' : 'Baca cerpen lengkap'} <span aria-hidden="true">${open ? '↑' : '↓'}</span>`;
         });
     });
+    const profileForm = document.getElementById('profile-form');
 
-    // form dummy: tampilan saja, belum terhubung ke backend
+    profileForm?.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const button = profileForm.querySelector('button[type="submit"]');
+        if (button.disabled) return;
+
+        const message = document.getElementById('profile-message');
+        const nameInput = profileForm.elements.namedItem('nama');
+        const phoneInput = profileForm.elements.namedItem('no_hp');
+
+        button.disabled = true;
+        message.hidden = true;
+
+        try {
+            const profile = await apiRequest('auth/profil.php', {
+                method: 'PATCH',
+                body: {
+                    nama: nameInput.value.trim(),
+                    no_hp: phoneInput.value.trim(),
+                },
+            });
+
+            nameInput.value = profile.nama;
+            phoneInput.value = profile.no_hp ?? '';
+
+            const displayName = document.getElementById('profile-display-name');
+            if (displayName) displayName.textContent = profile.nama;
+
+            document.querySelectorAll('.nav-auth a[href="/profil.php"] .nav-account-name')
+                .forEach(label => {
+                    label.textContent = profile.nama;
+                });
+
+            message.textContent = 'Profil berhasil disimpan.';
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            message.hidden = false;
+            button.disabled = false;
+        }
+    });
+
     document.querySelectorAll('form[data-dummy]').forEach(form => {
         form.addEventListener('submit', e => {
             e.preventDefault();

@@ -1,9 +1,8 @@
 <?php
 require_once __DIR__ . '/_data.php';
 $pageTitle = 'Karya Bu Ratna | SIMART';
-$rows = db()->query('SELECT judul_karya, deskripsi, isi_karya, COALESCE(nama_kategori, \'KARYA\') AS kategori FROM v_katalog_karya ORDER BY id_karya DESC')->fetchAll(PDO::FETCH_ASSOC);
-$karya = [];
-foreach ($rows as $r) $karya[] = [$r['kategori'], $r['judul_karya'], $r['deskripsi'] ?? '', $r['isi_karya'] ?? '', 'Baca ringkasan'];
+$storiesFile = __DIR__ . '/data/cerpen-ratna.json';
+$stories = json_decode(file_get_contents($storiesFile), true) ?: [];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -11,8 +10,8 @@ foreach ($rows as $r) $karya[] = [$r['kategori'], $r['judul_karya'], $r['deskrip
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
 </head>
 
 <body>
@@ -28,32 +27,33 @@ foreach ($rows as $r) $karya[] = [$r['kategori'], $r['judul_karya'], $r['deskrip
                 <a class="active" href="/karya.php">Karya Bu Ratna</a>
                 <a href="/reservasi.php">Reservasi Ruang</a>
             </nav>
-            <div class="nav-auth">
-                <a class="btn-secondary" href="/?auth=login">Masuk</a>
-                <a class="btn-primary" href="/?auth=register">Daftar</a>
-            </div>
+            <?php require __DIR__ . '/_nav-auth.php'; ?>
         </div>
     </header>
 
     <main class="container page-content">
         <!-- hero -->
         <section class="editorial-hero">
-            <span class="eyebrow">Arsip dan warisan</span>
-            <h1>Karya yang menyimpan jejak zaman.</h1>
-            <p>Ruang untuk mengenal karya, pemikiran, dan perjalanan Sutrisni Ratna Artsanti. Daftar karya dan arsip yang tercatat di SIMART.</p>
+            <span class="eyebrow">Cerpen pilihan</span>
+            <h1>Menelusuri dunia dalam cerita Ratna.</h1>
+            <p>Empat cerpen Ratna Indraswari Ibrahim dari arsip yang dihimpun Rumah Budaya Ratna. Pilih “Baca cerpen lengkap” untuk membuka ceritanya.</p>
         </section>
 
         <!-- daftar karya -->
         <div class="story-grid">
-            <?php foreach ($karya as $index => [$kategori, $judul, $isi, $ringkasan, $tombol]): ?>
-            <article class="story-card">
-                <span class="story-mark">✦</span>
-                <span class="category-badge"><?= htmlspecialchars($kategori) ?></span>
-                <h2><?= htmlspecialchars($judul) ?></h2>
-                <p><?= htmlspecialchars($isi) ?></p>
-                <button class="btn-outline story-toggle" type="button" aria-expanded="false" aria-controls="story-detail-<?= $index ?>"><?= htmlspecialchars($tombol) ?> <span aria-hidden="true">↓</span></button>
-                <div class="story-detail" id="story-detail-<?= $index ?>" hidden><h3>Ringkasan</h3><p><?= htmlspecialchars($ringkasan) ?></p></div>
-            </article>
+            <?php foreach ($stories as $index => $story): ?>
+            <?php
+                $intro = $story['paragraphs'][0] ?? 'Baca cerpen lengkap karya Ratna Indraswari Ibrahim.';
+                preg_match('/^.{1,220}/us', $intro, $excerptMatch);
+                $excerpt = $excerptMatch[0] ?? $intro;
+                if (strlen($excerpt) < strlen($intro)) $excerpt .= '…';
+            ?>
+            <a class="story-card story-card-link" href="/detail-karya.php?id=<?= $index ?>" aria-label="Baca cerpen: <?= htmlspecialchars($story['title'], ENT_QUOTES, 'UTF-8') ?>">
+                <span class="category-badge">Cerpen</span>
+                <h2><?= htmlspecialchars($story['title']) ?></h2>
+                <p><?= htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8') ?></p>
+                <span class="story-card-action">Baca cerpen lengkap <span aria-hidden="true">→</span></span>
+            </a>
             <?php endforeach; ?>
         </div>
     </main>

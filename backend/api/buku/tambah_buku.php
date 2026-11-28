@@ -27,6 +27,11 @@ try {
         FILTER_VALIDATE_INT
     );
 
+    foreach (['judul', 'penulis', 'penerbit', 'deskripsi', 'foto_sampul'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            throw new InvalidArgumentException("Kolom {$field} harus berupa teks.");
+        }
+    }
     $judul = trim($input['judul'] ?? '');
     $penulis = trim($input['penulis'] ?? '');
     $penerbit = trim($input['penerbit'] ?? '');
@@ -53,7 +58,7 @@ try {
     if ($tahunTerbit !== null && $tahunTerbit !== '') {
         $tahunTerbit = filter_var($tahunTerbit, FILTER_VALIDATE_INT);
 
-        if ($tahunTerbit === false || $tahunTerbit < 0) {
+        if ($tahunTerbit === false || $tahunTerbit < 0 || $tahunTerbit > (int) date('Y')) {
             throw new InvalidArgumentException(
                 'Tahun terbit harus berupa angka yang valid.'
             );
@@ -146,6 +151,14 @@ try {
     ]);
 
 } catch (PDOException $e) {
+    if ((string) $e->getCode() === '23503') {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Kategori buku tidak ditemukan.'
+        ]);
+        exit;
+    }
     error_log($e->getMessage());
     http_response_code(500);
 

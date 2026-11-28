@@ -36,7 +36,8 @@ try {
         FILTER_VALIDATE_INT
     );
 
-    $keperluan = trim($input['keperluan'] ?? '');
+    $keperluanInput = $input['keperluan'] ?? null;
+    $keperluan = is_string($keperluanInput) ? trim($keperluanInput) : '';
 
     if (!$id_pengunjung || $id_pengunjung < 1 || $keperluan === '') {
         http_response_code(400);
@@ -47,11 +48,27 @@ try {
         exit;
     }
 
+    if (preg_match('/.{256}/us', $keperluan) === 1) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Keperluan kunjungan maksimal 255 karakter.'
+        ]);
+        exit;
+    }
+
     $stmt = $pdo->prepare(
-        'INSERT INTO buku_tamu (id_pengunjung, keperluan)
-         VALUES (:id_pengunjung, :keperluan)
-         RETURNING id_buku_tamu, id_pengunjung,
-                   tanggal_kunjungan, jam_masuk, keperluan'
+        "INSERT INTO buku_tamu (
+         id_pengunjung, keperluan, tanggal_kunjungan, jam_masuk
+     )
+     VALUES (
+         :id_pengunjung,
+         :keperluan,
+         (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date,
+         (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::time
+     )
+     RETURNING id_buku_tamu, id_pengunjung,
+               tanggal_kunjungan, jam_masuk, keperluan"
     );
 
     $stmt->execute([
@@ -59,15 +76,32 @@ try {
         'keperluan' => $keperluan
     ]);
 
+    $kunjungan = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($kunjungan === false) {
+        throw new RuntimeException('Hasil INSERT buku tamu tidak tersedia.');
+    }
+
+    if ($kunjungan['jam_masuk'] !== null) {
+        $kunjungan['jam_masuk'] = substr($kunjungan['jam_masuk'], 0, 8);
+    }
+
     http_response_code(201);
 
     echo json_encode([
         'success' => true,
         'message' => 'Catatan kunjungan berhasil ditambahkan.',
-        'data' => $stmt->fetch(PDO::FETCH_ASSOC)
+        'data' => $kunjungan
     ]);
-
 } catch (Throwable $e) {
+    if ($e instanceof PDOException && (string) $e->getCode() === '23503') {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Pengunjung tidak ditemukan.'
+        ]);
+        exit;
+    }
     error_log($e->getMessage());
     http_response_code(500);
 

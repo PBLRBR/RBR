@@ -32,6 +32,16 @@ try {
         FILTER_VALIDATE_INT
     );
 
+        foreach (['judul_karya', 'isi_karya', 'deskripsi'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => "Kolom {$field} harus berupa teks."
+            ]);
+            exit;
+        }
+    }
     $judul = trim($input['judul_karya'] ?? '');
     $isi = trim($input['isi_karya'] ?? '');
 

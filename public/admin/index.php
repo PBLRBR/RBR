@@ -15,17 +15,78 @@ foreach ($dbBooks as $b) {
     $sale = boolPg($b['bisa_dijual']);
     $books[] = [$b['judul'],$b['penulis'],$b['kategori_tampil'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
 }
-$resRows = $pdo->query("SELECT r.id_reservasi,r.id_tempat,r.nama_acara,r.penanggung_jawab,r.kontak_wa,r.deskripsi_acara,r.tanggal_acara,r.jam_mulai,r.jam_selesai,r.status_reservasi,t.nama_tempat FROM reservasi r JOIN tempat t ON r.id_tempat=t.id_tempat ORDER BY r.id_reservasi DESC")->fetchAll(PDO::FETCH_ASSOC);
+$rsvFilters = [
+    'pending' => 'menunggu',
+    'approved' => 'disetujui',
+    'rejected' => 'ditolak',
+    'all' => null,
+];
+
+$rsvFilter = $_GET['rsv_status'] ?? 'pending';
+if (!is_string($rsvFilter) || !array_key_exists($rsvFilter, $rsvFilters)) {
+    $rsvFilter = 'pending';
+}
+
+$rsvPage = filter_var($_GET['rsv_page'] ?? 1, FILTER_VALIDATE_INT, [
+    'options' => ['min_range' => 1, 'max_range' => intdiv(PHP_INT_MAX, 20)],
+]) ?: 1;
+
+$sql = 'SELECT r.id_reservasi, r.id_tempat, r.nama_acara, r.penanggung_jawab,
+               r.kontak_wa, r.deskripsi_acara, r.tanggal_acara, r.jam_mulai,
+               r.jam_selesai, r.status_reservasi, t.nama_tempat
+        FROM reservasi r
+        JOIN tempat t ON r.id_tempat = t.id_tempat';
+
+if ($rsvFilter !== 'all') {
+    $sql .= ' WHERE r.status_reservasi = :status';
+}
+
+$sql .= ' ORDER BY r.id_reservasi DESC LIMIT 21 OFFSET :offset';
+
+$stmtReservasi = $pdo->prepare($sql);
+if ($rsvFilter !== 'all') {
+    $stmtReservasi->bindValue(':status', $rsvFilters[$rsvFilter]);
+}
+$stmtReservasi->bindValue(':offset', ($rsvPage - 1) * 20, PDO::PARAM_INT);
+$stmtReservasi->execute();
+
+$resRows = $stmtReservasi->fetchAll(PDO::FETCH_ASSOC);
+$rsvHasNext = count($resRows) > 20;
+if ($rsvHasNext) {
+    array_pop($resRows);
+}
+
+$rsvUrl = static fn(string $filter, int $page): string =>
+    '?' . http_build_query(['rsv_status' => $filter, 'rsv_page' => $page]) . '#reservasi';
 $metaStatus = ['menunggu'=>'pending','disetujui'=>'approved','ditolak'=>'rejected'];
 $reservations = [];
 foreach ($resRows as $r) {
     $reservations[] = [$r['penanggung_jawab'],$r['nama_acara'],$r['nama_tempat'],$r['tanggal_acara'],substr($r['jam_mulai'],0,5),substr($r['jam_selesai'],0,5),0,$r['kontak_wa'],'—',$metaStatus[$r['status_reservasi']] ?? 'pending',false,(int)$r['id_reservasi'],(int)$r['id_tempat'],$r['deskripsi_acara'] ?? ''];
 }
 $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Disetujui','badge-success'],'rejected'=>['Ditolak','badge-danger']];
-$rsvCount = array_count_values(array_column($reservations,9));
+$rsvCount = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+
+$statusCounts = $pdo->query(
+    'SELECT status_reservasi, COUNT(*) AS jumlah
+     FROM reservasi
+     GROUP BY status_reservasi'
+);
+
+foreach ($statusCounts->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $status = $metaStatus[$row['status_reservasi']] ?? null;
+    if ($status !== null) {
+        $rsvCount[$status] = (int) $row['jumlah'];
+    }
+}
 $metrics = $pdo->query('SELECT total_pendapatan AS total, jumlah_transaksi AS transaksi, jumlah_buku_terjual FROM v_dashboard_penjualan')->fetch(PDO::FETCH_ASSOC);
 $terjual = (int)$metrics['jumlah_buku_terjual'];
-$bulanIni = $pdo->query("SELECT * FROM fn_ringkasan_penjualan(date_trunc('month', CURRENT_DATE)::DATE, CURRENT_DATE)")->fetch(PDO::FETCH_ASSOC);
+$bulanIni = $pdo->query("
+    SELECT *
+    FROM fn_ringkasan_penjualan(
+        date_trunc('month', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date,
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date
+    )
+")->fetch(PDO::FETCH_ASSOC);
 // Contoh nyata CTE, JOIN, GROUP BY, dan HAVING untuk dashboard.
 $bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
     SELECT b.id_buku, b.judul, SUM(d.jumlah_beli) AS total_terjual, SUM(d.subtotal) AS pendapatan
@@ -36,7 +97,28 @@ $bukuTerlaris = $pdo->query('WITH penjualan_buku AS (
 ) SELECT judul, total_terjual, pendapatan FROM penjualan_buku
   ORDER BY total_terjual DESC, pendapatan DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
 $totalPengunjung = (int)$pdo->query('SELECT COUNT(*) FROM buku_tamu')->fetchColumn();
-$latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaksi, t.metode_transaksi, t.total_bayar, COALESCE(SUM(d.jumlah_beli),0) AS jumlah_buku FROM transaksi_penjualan t LEFT JOIN detail_transaksi_penjualan d ON d.id_transaksi=t.id_transaksi GROUP BY t.id_transaksi ORDER BY t.tanggal_transaksi DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
+$latest = $pdo->query(
+    'SELECT
+        t.id_transaksi,
+        t.kode_invoice,
+        t.tanggal_transaksi,
+        t.metode_transaksi,
+        t.total_bayar,
+        COALESCE(item.jumlah_buku, 0) AS jumlah_buku
+     FROM (
+        SELECT id_transaksi, kode_invoice, tanggal_transaksi,
+               metode_transaksi, total_bayar
+        FROM transaksi_penjualan
+        ORDER BY tanggal_transaksi DESC, id_transaksi DESC
+        LIMIT 5
+     ) AS t
+     LEFT JOIN LATERAL (
+        SELECT SUM(d.jumlah_beli) AS jumlah_buku
+        FROM detail_transaksi_penjualan d
+        WHERE d.id_transaksi = t.id_transaksi
+     ) AS item ON TRUE
+     ORDER BY t.tanggal_transaksi DESC, t.id_transaksi DESC'
+)->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -85,11 +167,14 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         <h2>Dashboard Analitik</h2>
                         <p class="subtitle">Ringkasan performa penjualan, reservasi, dan kunjungan Rumah Budaya Ratna.</p>
                     </div>
-                    <div class="period-filters" aria-label="Filter periode analitik">
-                        <button class="period-filter">Hari Ini</button>
-                        <button class="period-filter">7 Hari Terakhir</button>
-                        <button class="period-filter active">Bulan Ini</button>
-                        <button class="period-filter">Tahun Ini</button>
+                    <div class="analytics-actions">
+                        <div class="period-filters" aria-label="Filter periode analitik">
+                            <button class="period-filter">Hari Ini</button>
+                            <button class="period-filter">7 Hari Terakhir</button>
+                            <button class="period-filter active">Bulan Ini</button>
+                            <button class="period-filter">Tahun Ini</button>
+                        </div>
+                        <button type="button" class="btn-primary" id="btn-export-excel">⬇ Download Data</button>
                     </div>
                 </div>
 
@@ -106,7 +191,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                     </div>
                     <div class="stat-card">
                         <h4>Pengajuan Reservasi</h4>
-                        <p class="stat-number"><?= count($reservations) ?></p>
+                        <p class="stat-number"><?= array_sum($rsvCount) ?></p>
                         <span class="stat-trend warning"><?= $rsvCount['pending'] ?? 0 ?> perlu review</span>
                     </div>
                     <div class="stat-card">
@@ -124,7 +209,19 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </thead>
                         <tbody id="recent-transactions">
                             <?php foreach ($latest as $t): ?>
-                            <tr><td><button class="btn-sm btn-secondary btn-view-transaction" type="button" data-id="<?= (int)$t['id_transaksi'] ?>"><?= $h($t['kode_invoice']) ?></button></td><td><?= $h($t['tanggal_transaksi']) ?></td><td><?= (int)$t['jumlah_buku'] ?> buku</td><td><?= $rp($t['total_bayar']) ?></td><td><?= $h($t['metode_transaksi']) ?></td></tr>
+                                <tr data-transaksi-id="<?= (int) $t['id_transaksi'] ?>"
+                                    data-transaksi-waktu="<?= $h($t['tanggal_transaksi']) ?>">
+                                    <td>
+                                        <button type="button" class="btn-sm btn-secondary btn-view-transaction"
+                                            data-id="<?= (int) $t['id_transaksi'] ?>">
+                                            <?= $h($t['kode_invoice']) ?>
+                                        </button>
+                                    </td>
+                                    <td><?= $h(substr($t['tanggal_transaksi'], 0, 19)) ?></td>
+                                    <td><?= (int) $t['jumlah_buku'] ?> buku</td>
+                                    <td><?= $rp($t['total_bayar']) ?></td>
+                                    <td><?= $h($t['metode_transaksi']) ?></td>
+                                </tr>
                             <?php endforeach; ?>
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
@@ -167,13 +264,13 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                             </thead>
                             <tbody id="admin-book-list">
                                 <?php foreach ($books as [$judul, $penulis, $kategori, $harga, $stok, $kondisi, $warna, $idBuku, $idKategori, $deskripsi, $penerbit, $tahun, $sale, $foto]): ?>
-                                <tr data-id="<?= $idBuku ?>" data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $idKategori ?>"
+                                <tr data-id="<?= $idBuku ?>" data-judul="<?= $h($judul) ?>" data-penulis="<?= $h($penulis) ?>" data-kategori="<?= $idKategori ?>" data-namakategori="<?= $h($kategori) ?>"
                                     data-harga="<?= $harga ?>" data-stok="<?= $stok ?>" data-kondisi="<?= $h($kondisi) ?>" data-deskripsi="<?= $h($deskripsi) ?>" data-penerbit="<?= $h($penerbit) ?>" data-tahun="<?= $h($tahun) ?>" data-sale="<?= $sale ? '1':'0' ?>" data-foto="<?= $h($foto) ?>">
                                     <td><strong><?= $h($judul) ?></strong></td>
                                     <td><?= $h($penulis) ?></td>
                                     <td><?= $h($kategori) ?></td>
                                     <td><?= $rp($harga) ?></td>
-                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 2): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
+                                    <td><?php if ($stok === 0): ?><span class="stock-out">Habis</span><?php elseif ($stok <= 3): ?><span class="stock-low"><?= $stok ?></span><?php else: echo $stok; endif; ?></td>
                                     <td><span class="badge"><?= $h($kondisi) ?></span></td>
                                     <td>
                                         <button type="button" class="btn-sm btn-secondary btn-detail-book">Detail</button>
@@ -213,7 +310,7 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                                     <div class="pos-item-info">
                                         <h4><?= $h($judul) ?></h4>
                                         <p class="pos-item-author"><?= $h($penulis) ?></p>
-                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 2 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
+                                        <div class="pos-item-tags"><span class="badge"><?= $h($kondisi) ?></span><span class="pos-stock<?= $stok <= 3 ? ' low' : '' ?>">Stok <?= $stok ?></span></div>
                                     </div>
                                 </div>
                                 <div class="pos-item-foot">
@@ -266,7 +363,12 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </div>
 
                         <div class="cart-actions">
-                            <button id="btn-checkout" class="btn-primary full-width btn-large" type="button">Proses Transaksi</button>
+                            <button id="btn-checkout"
+                                class="btn-primary full-width btn-large"
+                                type="button"
+                                data-kasir-id="<?= (int) $_SESSION['user']['id_user'] ?>">
+                                Proses Transaksi
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -290,10 +392,18 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
 
                 <!-- filter -->
                 <div class="rsv-filters">
-                    <button class="rsv-filter active" data-filter="pending">Menunggu Review</button>
-                    <button class="rsv-filter" data-filter="approved">Disetujui</button>
-                    <button class="rsv-filter" data-filter="rejected">Ditolak</button>
-                    <button class="rsv-filter" data-filter="all">Semua</button>
+                    <?php foreach ([
+                        'pending' => 'Menunggu Review',
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                        'all' => 'Semua',
+                    ] as $filter => $label): ?>
+                        <a class="rsv-filter<?= $rsvFilter === $filter ? ' active' : '' ?>"
+                            data-filter="<?= $h($filter) ?>"
+                            href="<?= $h($rsvUrl($filter, 1)) ?>">
+                            <?= $h($label) ?>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
 
                 <!-- daftar permintaan -->
@@ -330,8 +440,25 @@ $latest = $pdo->query('SELECT t.id_transaksi, t.kode_invoice, t.tanggal_transaks
                         </div>
                     </article>
                     <?php endforeach; ?>
-                    <p class="subtitle" id="rsv-empty" hidden>Tidak ada permintaan reservasi pada filter ini.</p>
-                </div>
+                       <p class="subtitle" id="rsv-empty" hidden>Tidak ada permintaan reservasi pada filter ini.</p>
+            </div>
+<?php if ($rsvPage > 1 || $rsvHasNext): ?>
+            <nav class="rsv-filters" aria-label="Halaman reservasi">
+                <?php if ($rsvPage > 1): ?>
+                    <a class="btn-secondary" href="<?= $h($rsvUrl($rsvFilter, $rsvPage - 1)) ?>">
+                        Sebelumnya
+                    </a>
+                <?php endif; ?>
+
+                <span>Halaman <?= $rsvPage ?></span>
+
+                <?php if ($rsvHasNext): ?>
+                    <a class="btn-secondary" href="<?= $h($rsvUrl($rsvFilter, $rsvPage + 1)) ?>">
+                        Berikutnya
+                    </a>
+                <?php endif; ?>
+            </nav>
+            <?php endif; ?>
             </section>
         </main>
     </div>

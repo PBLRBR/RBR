@@ -1,4 +1,11 @@
-const API_BASE = '/api';
+// Gunakan entry point fisik: berfungsi di Wasmer tanpa .htaccess / URL rewrite.
+// Endpoint asli masih bisa dipakai lewat router.php pada localhost.
+function apiUrl(endpoint) {
+    const [path, query = ''] = String(endpoint).split('?', 2);
+    const params = new URLSearchParams(query);
+    params.set('route', path);
+    return `/api/index.php?${params.toString()}`;
+}
 let csrfTokenPromise = null;
 
 async function fetchCsrfToken(forceNew = false) {
@@ -6,7 +13,7 @@ async function fetchCsrfToken(forceNew = false) {
 
     if (!csrfTokenPromise) {
         csrfTokenPromise = (async () => {
-            const response = await fetch(`${API_BASE}/auth/csrf.php`, {
+            const response = await fetch(apiUrl('auth/csrf.php'), {
                 method: 'GET', credentials: 'same-origin', cache: 'no-store'
             });
             const result = await response.json();
@@ -24,6 +31,25 @@ async function fetchCsrfToken(forceNew = false) {
     return csrfTokenPromise;
 }
 
+let loadingCount = 0;
+let pageReloading = false;
+function setLoading(on, text = 'Memproses data…') {
+    let el = document.getElementById('simart-loading');
+    if (!el) {
+        if (!on) return;
+        const style = document.createElement('style');
+        style.textContent = '#simart-loading{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(43,38,35,.45);color:#fff;font:600 .95rem sans-serif}#simart-loading[hidden]{display:none}#simart-loading i{width:42px;height:42px;border:4px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:simart-spin .8s linear infinite}@keyframes simart-spin{to{transform:rotate(360deg)}}';
+        document.head.append(style);
+        el = document.createElement('div');
+        el.id = 'simart-loading';
+        el.setAttribute('role', 'status');
+        el.innerHTML = '<i></i><span>Memproses data…</span>';
+        document.body.append(el);
+    }
+    el.querySelector('span').textContent = text;
+    el.hidden = !on;
+}
+
 async function apiRequest(endpoint, options = {}) {
     const { body, headers, ...rest } = options;
     const method = String(rest.method || 'GET').toUpperCase();
@@ -38,7 +64,7 @@ async function apiRequest(endpoint, options = {}) {
             requestHeaders['X-CSRF-Token'] = await fetchCsrfToken(retryToken);
         }
 
-        const response = await fetch(`${API_BASE}/${endpoint}`, {
+        const response = await fetch(apiUrl(endpoint), {
             credentials: 'same-origin', ...rest, headers: requestHeaders,
             ...(body !== undefined ? { body: JSON.stringify(body) } : {})
         });
@@ -54,7 +80,9 @@ async function apiRequest(endpoint, options = {}) {
         catch { throw new Error(`Server bukan mengirim JSON (HTTP ${response.status}). Periksa konfigurasi PHP/router.`); }
 
         if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Terjadi kesalahan.');
+            const error = new Error(result.message || 'Terjadi kesalahan.');
+            error.status = response.status;
+            throw error;
         }
 
         // Logout menghancurkan session, jadi token lama tidak boleh digunakan lagi.
@@ -62,7 +90,10 @@ async function apiRequest(endpoint, options = {}) {
         return result.data;
     }
 
-    return send();
+    if (!mutatesData) return send();
+    loadingCount++; setLoading(true);
+    try { return await send(); }
+    finally { if (--loadingCount === 0 && !pageReloading) setLoading(false); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

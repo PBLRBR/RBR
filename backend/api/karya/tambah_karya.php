@@ -18,6 +18,26 @@ try {
 
     $input = json_decode(file_get_contents('php://input'), true);
 
+    if (!is_array($input)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Format JSON tidak valid.'
+        ]);
+        exit;
+    }
+
+    foreach (['judul_karya', 'isi_karya', 'deskripsi'] as $field) {
+        if (isset($input[$field]) && !is_string($input[$field])) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => "Kolom {$field} harus berupa teks."
+            ]);
+            exit;
+        }
+    }
+
     $judul = trim($input['judul_karya'] ?? '');
     $isi = trim($input['isi_karya'] ?? '');
 
@@ -34,9 +54,11 @@ try {
         exit;
     }
 
-    if ($tahun !== null &&
+    if (
+        $tahun !== null &&
         (!filter_var($tahun, FILTER_VALIDATE_INT) ||
-         $tahun < 1 || $tahun > (int) date('Y'))) {
+            $tahun < 1 || $tahun > (int) date('Y'))
+    ) {
         http_response_code(422);
         echo json_encode([
             'success' => false,
@@ -45,8 +67,10 @@ try {
         exit;
     }
 
-    if ($id_kategori !== null &&
-        (!filter_var($id_kategori, FILTER_VALIDATE_INT) || $id_kategori < 1)) {
+    if (
+        $id_kategori !== null &&
+        (!filter_var($id_kategori, FILTER_VALIDATE_INT) || $id_kategori < 1)
+    ) {
         http_response_code(422);
         echo json_encode([
             'success' => false,
@@ -79,6 +103,14 @@ try {
     ]);
 
 } catch (Throwable $e) {
+    if ($e instanceof PDOException && (string) $e->getCode() === '23503') {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Kategori karya tidak ditemukan.'
+        ]);
+        exit;
+    }
     error_log($e->getMessage());
     http_response_code(500);
 

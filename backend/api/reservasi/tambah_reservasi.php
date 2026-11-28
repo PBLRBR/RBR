@@ -35,8 +35,11 @@ try {
         FILTER_VALIDATE_INT
     );
 
-    $nama_acara = trim($input['nama_acara'] ?? '');
-    $penanggung_jawab = trim($input['penanggung_jawab'] ?? '');
+    $namaAcaraInput = $input['nama_acara'] ?? null;
+    $penanggungJawabInput = $input['penanggung_jawab'] ?? null;
+
+    $nama_acara = is_string($namaAcaraInput) ? trim($namaAcaraInput) : '';
+    $penanggung_jawab = is_string($penanggungJawabInput) ? trim($penanggungJawabInput) : '';
     $kontak_wa = normalizeIndonesianMobile($input['kontak_wa'] ?? null);
     $tanggal_acara = $input['tanggal_acara'] ?? '';
     $jam_mulai = $input['jam_mulai'] ?? '';
@@ -47,6 +50,7 @@ try {
         $nama_acara === '' ||
         $penanggung_jawab === '' ||
         $kontak_wa === null ||
+        !is_string($tanggal_acara) ||
         $tanggal_acara === '' ||
         $jam_mulai === '' ||
         $jam_selesai === ''
@@ -59,7 +63,7 @@ try {
         exit;
     }
 
-    
+
     // Validasi format dan tanggal acara.
     $tanggalObj = DateTimeImmutable::createFromFormat(
         '!Y-m-d',
@@ -80,7 +84,9 @@ try {
         exit;
     }
 
-    if ($tanggal_acara < date('Y-m-d')) {
+    $hariIniWib = new DateTimeImmutable('today', new DateTimeZone('Asia/Jakarta'));
+    if ($tanggal_acara < $hariIniWib->format('Y-m-d')) {
+
         http_response_code(400);
 
         echo json_encode([
@@ -89,7 +95,7 @@ try {
         ]);
         exit;
     }
- 
+
     // Validasi format jam HH:MM atau HH:MM:SS.
     $formatJam = '/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/';
 
@@ -109,8 +115,10 @@ try {
     }
 
     // Samakan format HH:MM dan HH:MM:SS sebelum membandingkan.
-    if (strlen($jam_mulai) === 5) $jam_mulai .= ':00';
-    if (strlen($jam_selesai) === 5) $jam_selesai .= ':00';
+    if (strlen($jam_mulai) === 5)
+        $jam_mulai .= ':00';
+    if (strlen($jam_selesai) === 5)
+        $jam_selesai .= ':00';
 
     if ($jam_selesai <= $jam_mulai) {
         http_response_code(400);
@@ -121,7 +129,7 @@ try {
         exit;
     }
 
-    
+
     // Kunci tempat supaya validasi pembuatan dan persetujuan dilakukan berurutan.
     $pdo->beginTransaction();
     $stmtTempat = $pdo->prepare(
@@ -207,7 +215,8 @@ try {
     ]);
 
 } catch (Throwable $e) {
-    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction())
+        $pdo->rollBack();
     error_log($e->getMessage());
     http_response_code(500);
 
