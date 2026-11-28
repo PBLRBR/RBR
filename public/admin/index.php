@@ -8,13 +8,7 @@ $rp = fn($n) => 'Rp ' . number_format((float)$n, 0, ',', '.');
 $hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 $bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 $tglLabel = fn($d) => $hari[date('w', strtotime($d))] . ', ' . date('j', strtotime($d)) . ' ' . $bulan[date('n', strtotime($d))-1] . ' ' . date('Y', strtotime($d));
-$kategoriList = $pdo->query('SELECT id_kategori,nama_kategori FROM kategori ORDER BY nama_kategori')->fetchAll(PDO::FETCH_ASSOC);
-$dbBooks = $pdo->query("SELECT *, COALESCE(nama_kategori,'Tanpa Kategori') AS kategori_tampil FROM v_katalog_buku ORDER BY id_buku DESC")->fetchAll(PDO::FETCH_ASSOC);
-$books = [];
-foreach ($dbBooks as $b) {
-    $sale = boolPg($b['bisa_dijual']);
-    $books[] = [$b['judul'],$b['penulis'],$b['kategori_tampil'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
-}
+
 $rsvFilters = [
     'pending' => 'menunggu',
     'approved' => 'disetujui',
@@ -27,43 +21,90 @@ if (!is_string($rsvFilter) || !array_key_exists($rsvFilter, $rsvFilters)) {
     $rsvFilter = 'pending';
 }
 
+$rsvPerPage = 10;
 $rsvPage = filter_var($_GET['rsv_page'] ?? 1, FILTER_VALIDATE_INT, [
-    'options' => ['min_range' => 1, 'max_range' => intdiv(PHP_INT_MAX, 20)],
+    'options' => ['min_range' => 1],
 ]) ?: 1;
 
-$sql = 'SELECT r.id_reservasi, r.id_tempat, r.nama_acara, r.penanggung_jawab,
-               r.kontak_wa, r.deskripsi_acara, r.tanggal_acara, r.jam_mulai,
-               r.jam_selesai, r.status_reservasi, t.nama_tempat
-        FROM reservasi r
-        JOIN tempat t ON r.id_tempat = t.id_tempat';
+$rsvSearch = $_GET['rsv_q'] ?? '';
+$rsvSearch = is_string($rsvSearch) ? trim($rsvSearch) : '';
+
+$from = ' FROM reservasi r JOIN tempat t ON r.id_tempat = t.id_tempat';
+$conditions = [];
+$params = [];
 
 if ($rsvFilter !== 'all') {
-    $sql .= ' WHERE r.status_reservasi = :status';
+    $conditions[] = 'r.status_reservasi = :status';
+    $params['status'] = $rsvFilters[$rsvFilter];
 }
 
-$sql .= ' ORDER BY r.id_reservasi DESC LIMIT 21 OFFSET :offset';
+if ($rsvSearch !== '') {
+    $conditions[] = "(
+        r.nama_acara ~* :agenda
+        OR r.penanggung_jawab ~* :pemohon
+        OR t.nama_tempat ~* :ruangan
+    )";
 
-$stmtReservasi = $pdo->prepare($sql);
-if ($rsvFilter !== 'all') {
-    $stmtReservasi->bindValue(':status', $rsvFilters[$rsvFilter]);
+    $pattern = '\m' . preg_quote($rsvSearch);
+    $params['agenda'] = $pattern;
+    $params['pemohon'] = $pattern;
+    $params['ruangan'] = $pattern;
 }
-$stmtReservasi->bindValue(':offset', ($rsvPage - 1) * 20, PDO::PARAM_INT);
+
+$where = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
+
+$stmtTotal = $pdo->prepare('SELECT COUNT(*)' . $from . $where);
+$stmtTotal->execute($params);
+$rsvTotal = (int) $stmtTotal->fetchColumn();
+
+$rsvTotalPages = max(1, (int) ceil($rsvTotal / $rsvPerPage));
+$rsvPage = min($rsvPage, $rsvTotalPages);
+$rsvHasNext = $rsvPage < $rsvTotalPages;
+
+$stmtReservasi = $pdo->prepare(
+    'SELECT r.id_reservasi, r.id_tempat, r.nama_acara, r.penanggung_jawab,
+            r.kontak_wa, r.deskripsi_acara, r.tanggal_acara, r.jam_mulai,
+            r.jam_selesai, r.status_reservasi, t.nama_tempat'
+    . $from . $where
+    . ' ORDER BY r.id_reservasi DESC LIMIT :limit OFFSET :offset'
+);
+
+foreach ($params as $nama => $nilai) {
+    $stmtReservasi->bindValue(':' . $nama, $nilai, PDO::PARAM_STR);
+}
+
+$stmtReservasi->bindValue(':limit', $rsvPerPage, PDO::PARAM_INT);
+$stmtReservasi->bindValue(':offset', ($rsvPage - 1) * $rsvPerPage, PDO::PARAM_INT);
 $stmtReservasi->execute();
 
 $resRows = $stmtReservasi->fetchAll(PDO::FETCH_ASSOC);
-$rsvHasNext = count($resRows) > 20;
-if ($rsvHasNext) {
-    array_pop($resRows);
-}
 
 $rsvUrl = static fn(string $filter, int $page): string =>
-    '?' . http_build_query(['rsv_status' => $filter, 'rsv_page' => $page]) . '#reservasi';
+    '?' . http_build_query([
+        'rsv_status' => $filter,
+        'rsv_page' => $page,
+        'rsv_q' => $rsvSearch,
+    ]) . '#reservasi';
 $metaStatus = ['menunggu'=>'pending','disetujui'=>'approved','ditolak'=>'rejected'];
 $reservations = [];
 foreach ($resRows as $r) {
     $reservations[] = [$r['penanggung_jawab'],$r['nama_acara'],$r['nama_tempat'],$r['tanggal_acara'],substr($r['jam_mulai'],0,5),substr($r['jam_selesai'],0,5),0,$r['kontak_wa'],'—',$metaStatus[$r['status_reservasi']] ?? 'pending',false,(int)$r['id_reservasi'],(int)$r['id_tempat'],$r['deskripsi_acara'] ?? ''];
 }
 $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Disetujui','badge-success'],'rejected'=>['Ditolak','badge-danger']];
+if (($_GET['rsv_partial'] ?? '') === '1') {
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+
+    require __DIR__ . '/_reservasi-list.php';
+    exit;
+}
+$kategoriList = $pdo->query('SELECT id_kategori,nama_kategori FROM kategori ORDER BY nama_kategori')->fetchAll(PDO::FETCH_ASSOC);
+$dbBooks = $pdo->query("SELECT *, COALESCE(nama_kategori,'Tanpa Kategori') AS kategori_tampil FROM v_katalog_buku ORDER BY id_buku DESC")->fetchAll(PDO::FETCH_ASSOC);
+$books = [];
+foreach ($dbBooks as $b) {
+    $sale = boolPg($b['bisa_dijual']);
+    $books[] = [$b['judul'],$b['penulis'],$b['kategori_tampil'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
+}
 $rsvCount = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
 
 $statusCounts = $pdo->query(
@@ -391,74 +432,33 @@ $latest = $pdo->query(
                 </div>
 
                 <!-- filter -->
-                <div class="rsv-filters">
-                    <?php foreach ([
-                        'pending' => 'Menunggu Review',
-                        'approved' => 'Disetujui',
-                        'rejected' => 'Ditolak',
-                        'all' => 'Semua',
-                    ] as $filter => $label): ?>
-                        <a class="rsv-filter<?= $rsvFilter === $filter ? ' active' : '' ?>"
-                            data-filter="<?= $h($filter) ?>"
-                            href="<?= $h($rsvUrl($filter, 1)) ?>">
-                            <?= $h($label) ?>
-                        </a>
-                    <?php endforeach; ?>
+                <div class="rsv-toolbar">
+                    <div class="rsv-filters">
+                        <?php foreach ([
+                            'pending' => 'Menunggu Review',
+                            'approved' => 'Disetujui',
+                            'rejected' => 'Ditolak',
+                            'all' => 'Semua',
+                        ] as $filter => $label): ?>
+                            <a class="rsv-filter<?= $rsvFilter === $filter ? ' active' : '' ?>"
+                                data-filter="<?= $h($filter) ?>"
+                                href="<?= $h($rsvUrl($filter, 1)) ?>">
+                                <?= $h($label) ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <form id="rsv-search-form" class="rsv-search-form" method="get" action="/admin/#reservasi">
+                        <input type="hidden" name="rsv_status" value="<?= $h($rsvFilter) ?>">
+                        <input type="hidden" name="rsv_page" value="1">
+
+                        <input type="search" class="search-input" name="rsv_q"
+                            value="<?= $h($rsvSearch) ?>"
+                            aria-label="Cari reservasi"
+                            placeholder="Cari acara, pemohon, atau ruangan">
+                    </form>
                 </div>
-
-                <!-- daftar permintaan -->
-                <div class="rsv-list">
-                    <?php foreach ($reservations as [$pemohon, $agenda, $ruangan, $tanggal, $mulai, $selesai, $peserta, $wa, $diajukan, $status, $bentrok, $idReservasi, $idTempat, $deskripsi]): ?>
-                    <article class="rsv-card rsv-<?= $status ?>" data-id="<?= $idReservasi ?>" data-idtempat="<?= $idTempat ?>" data-status="<?= $status ?>"
-                        data-pemohon="<?= $h($pemohon) ?>" data-agenda="<?= $h($agenda) ?>" data-ruangan="<?= $h($ruangan) ?>" data-wa="<?= $h($wa) ?>" data-deskripsi="<?= $h($deskripsi) ?>"
-                        data-tanggal="<?= $h($tanggal) ?>" data-mulai="<?= $h($mulai) ?>" data-selesai="<?= $h($selesai) ?>">
-                        <div class="rsv-card-head">
-                            <div>
-                                <h3 data-f="agenda"><?= $h($agenda) ?></h3>
-                                <p class="rsv-by">Oleh <strong data-f="pemohon"><?= $h($pemohon) ?></strong> </p>
-                            </div>
-                            <span class="badge rsv-badge <?= $statusMeta[$status][1] ?>"><?= $statusMeta[$status][0] ?></span>
-                        </div>
-                        <dl class="rsv-details">
-                            <div><dt>Ruangan</dt><dd data-f="ruangan"><?= $h($ruangan) ?></dd></div>
-                            <div><dt>Tanggal</dt><dd data-f="tanggal"><?= $tglLabel($tanggal) ?></dd></div>
-                            <div><dt>Waktu</dt><dd data-f="waktu"><?= $mulai ?> - <?= $selesai ?> WIB</dd></div>
-
-                            <div><dt>Kontak WA</dt><dd><?= $h($wa) ?></dd></div>
-                        </dl>
-                        <?php if ($bentrok): ?>
-                        <div class="rsv-warning">⚠️ <strong>Bentrok jadwal:</strong> Workshop Puisi (10:00 - 14:00) sudah disetujui di ruangan &amp; tanggal yang sama. Edit jadwalnya sebelum menyetujui.</div>
-                        <?php endif; ?>
-                        <!-- tombol tampil sesuai status kartu (diatur CSS) -->
-                        <div class="rsv-actions">
-                            <a class="btn-sm btn-secondary" href="https://wa.me/<?= preg_replace('/\D/', '', $wa) ?>" target="_blank" rel="noopener">💬 Chat WA</a>
-                            <button class="btn-sm btn-secondary hide-rejected" data-action="edit">✏️ Edit</button>
-                            <button class="btn-sm btn-danger only-pending" data-action="reject">Tolak</button>
-                            <button class="btn-sm btn-approve only-pending" data-action="approve">✔ Setujui</button>
-                            <button class="btn-sm btn-secondary only-approved" data-action="reset">Batalkan Persetujuan</button>
-                            <button class="btn-sm btn-secondary only-rejected" data-action="reset">Kembalikan ke Review</button>
-                        </div>
-                    </article>
-                    <?php endforeach; ?>
-                       <p class="subtitle" id="rsv-empty" hidden>Tidak ada permintaan reservasi pada filter ini.</p>
-            </div>
-<?php if ($rsvPage > 1 || $rsvHasNext): ?>
-            <nav class="rsv-filters" aria-label="Halaman reservasi">
-                <?php if ($rsvPage > 1): ?>
-                    <a class="btn-secondary" href="<?= $h($rsvUrl($rsvFilter, $rsvPage - 1)) ?>">
-                        Sebelumnya
-                    </a>
-                <?php endif; ?>
-
-                <span>Halaman <?= $rsvPage ?></span>
-
-                <?php if ($rsvHasNext): ?>
-                    <a class="btn-secondary" href="<?= $h($rsvUrl($rsvFilter, $rsvPage + 1)) ?>">
-                        Berikutnya
-                    </a>
-                <?php endif; ?>
-            </nav>
-            <?php endif; ?>
+                <?php require __DIR__ . '/_reservasi-list.php'; ?>
             </section>
         </main>
     </div>
@@ -595,7 +595,7 @@ $latest = $pdo->query(
     </div>
 
     <script src="/js/api.js"></script>
-    <script src="/js/admin.js"></script>
+    <script src="/js/admin.js?v=<?= filemtime(__DIR__ . '/../js/admin.js') ?>"></script>
     <script src="/js/dashboard-analytics.js" defer></script>
 </body>
 </html>
