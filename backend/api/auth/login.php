@@ -58,6 +58,8 @@ try {
     }
 
     session_regenerate_id(true);
+    unset($_SESSION['session_expired']);
+    $_SESSION['login_at'] = $_SESSION['last_activity_at'] = time();
     $_SESSION['user'] = [
         'id_user' => $user['id_user'],
         'nama' => $user['nama'],
