@@ -22,6 +22,17 @@ try {
         exit;
     }
 
+    $setujui = array_key_exists('setujui', $input) ? $input['setujui'] : false;
+
+    if (!is_bool($setujui)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Pilihan setujui harus berupa boolean.',
+        ]);
+        exit;
+    }
+
     $id_reservasi = filter_var($input['id_reservasi'] ?? null, FILTER_VALIDATE_INT);
     $id_tempat = filter_var($input['id_tempat'] ?? null, FILTER_VALIDATE_INT);
     $nama_acara = is_string($input['nama_acara'] ?? null) ? trim($input['nama_acara']) : '';
@@ -130,6 +141,10 @@ try {
         exit;
     }
 
+    $perubahanStatus = $setujui
+        ? ", status_reservasi = 'disetujui', alasan_penolakan = NULL"
+        : '';
+
     $stmt = $pdo->prepare(
         'UPDATE reservasi SET
             id_tempat = :id_tempat,
@@ -141,7 +156,7 @@ try {
             jam_mulai = :jam_mulai,
             jam_selesai = :jam_selesai,
             poster_acara = :poster,
-            tautan_info = :tautan
+            tautan_info = :tautan' . $perubahanStatus . '
          WHERE id_reservasi = :id
          RETURNING id_reservasi, nama_acara, status_reservasi'
     );
@@ -170,7 +185,7 @@ try {
 
     $reservasi['jumlah_ditolak_otomatis'] = 0;
 
-    if ($reservasiLama['status_reservasi'] === 'disetujui' && $jadwalBerubah) {
+    if ($setujui || ($reservasiLama['status_reservasi'] === 'disetujui' && $jadwalBerubah)) {
         $reservasi['jumlah_ditolak_otomatis'] = tolakReservasiMenungguYangBentrok(
             $pdo,
             $id_reservasi,

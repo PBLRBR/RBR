@@ -1,4 +1,5 @@
-<div id="rsv-results">
+<div id="rsv-results" data-page="<?= (int) $rsvPage ?>" data-pending="<?= (int) $rsvCount['pending'] ?>"
+    data-approved="<?= (int) $rsvCount['approved'] ?>" data-rejected="<?= (int) $rsvCount['rejected'] ?>">
     <div class="rsv-list">
         <?php foreach ($reservations as [$pemohon, $agenda, $ruangan, $tanggal, $mulai, $selesai, $peserta, $wa, $diajukan, $status, $bentrok, $idReservasi, $idTempat, $deskripsi]): ?>
             <article class="rsv-card rsv-<?= $status ?>" data-id="<?= $idReservasi ?>" data-idtempat="<?= $idTempat ?>"

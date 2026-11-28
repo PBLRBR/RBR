@@ -554,6 +554,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const partialUrl = new URL(pageUrl);
         partialUrl.searchParams.set('rsv_partial', '1');
         rsvList.setAttribute('aria-busy', 'true');
+        const loadingMessage = $('#rsv-loading');
+        const requestedFilter = pageUrl.searchParams.get('rsv_status') ?? 'pending';
+        const filterLabels = {
+            pending: 'Menunggu Review',
+            approved: 'Disetujui',
+            rejected: 'Ditolak',
+            all: 'Semua',
+        };
+
+        loadingMessage.textContent =
+            `Memuat reservasi: ${filterLabels[requestedFilter] ?? 'Menunggu Review'}…`;
 
         try {
             const response = await fetch(partialUrl, {
@@ -579,6 +590,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const search = pageUrl.searchParams.get('rsv_q') ?? '';
 
             rsvList.replaceChildren(...results.childNodes);
+            for (const status of ['pending', 'approved', 'rejected']) {
+                $(`[data-count="${status}"]`).textContent = results.dataset[status];
+            }
+
+            const pendingCount = Number(results.dataset.pending);
+            const navCount = $('.nav-count');
+            navCount.textContent = pendingCount;
+            navCount.hidden = pendingCount === 0;
             rsvSearchForm.elements.namedItem('rsv_status').value = rsvFilter;
 
             $$('.rsv-filter[data-filter]').forEach(filterLink => {
@@ -589,6 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterLink.href = filterUrl.href;
             });
 
+            pageUrl.searchParams.set('rsv_page', results.dataset.page);
             history.replaceState(null, '', pageUrl);
             refreshRsv();
         } catch {
@@ -598,6 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             if (rsvRequest === request) {
                 rsvList.removeAttribute('aria-busy');
+                loadingMessage.textContent = '';
             }
         }
     }
@@ -719,6 +740,23 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshRsv();
     };
 
+    const reloadRsvAfterSave = () => {
+        rsvBeforeSearch = null;
+        clearTimeout(rsvSearchTimer);
+
+        const pageUrl = new URL(location.href);
+        const search = rsvSearchInput.value.trim();
+
+        if ((pageUrl.searchParams.get('rsv_q') ?? '') !== search) {
+            pageUrl.searchParams.set('rsv_page', '1');
+        }
+
+        pageUrl.searchParams.set('rsv_status', rsvFilter);
+        pageUrl.searchParams.set('rsv_q', search);
+
+        return loadRsvPage(pageUrl);
+    };
+
     const updateStatus = async (card, status, alasan = null) => {
         await apiRequest('reservasi/ubah_status_reservasi.php', {
             method: 'PATCH',
@@ -763,7 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         location.assign(url);
                     }
                 } else {
-                    window.location.reload();
+                    await reloadRsvAfterSave();
                 }
             } catch (error) {
                 if (wa) wa.close();
@@ -794,31 +832,24 @@ document.addEventListener('DOMContentLoaded', () => {
             penanggung_jawab: fields.pemohon.value.trim(),
             kontak_wa: d.wa, deskripsi_acara: d.deskripsi || ''
         };
-        const card = editingCard;
-        let editSaved = false;
         editSaveButton.disabled = true;
         editApproveButton.disabled = true;
 
         try {
             await apiRequest('reservasi/edit_reservasi.php', {
                 method: 'PUT',
-                body: payload
+                body: { ...payload, setujui: andApprove },
             });
-            editSaved = true;
-
-            if (andApprove) await updateStatus(card, 'approved');
         } catch (error) {
-            alert(editSaved
-                ? `Perubahan tersimpan, tetapi persetujuan belum terkonfirmasi. ${error.message}`
-                : error.message);
+            alert(error.message);
+            return;
         } finally {
-            if (!editSaved) {
-                editSaveButton.disabled = false;
-                editApproveButton.disabled = false;
-            }
+            editSaveButton.disabled = false;
+            editApproveButton.disabled = false;
         }
 
-        if (editSaved) window.location.reload();
+        closePopup(rsvPopup);
+        await reloadRsvAfterSave();
     };
     rsvList.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
@@ -835,7 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, async () => {
                 try {
                     await updateStatus(card, 'pending');
-                    window.location.reload();
+                    await reloadRsvAfterSave();
                 } catch (error) {
                     alert(error.message);
                 }
