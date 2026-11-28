@@ -612,6 +612,9 @@ body {
 .reservation-alert-box h3 { margin-bottom: 8px; color: inherit; }
 .reservation-alert-text { margin: 0 0 20px; color: #5c544b; line-height: 1.55; }
 .reservation-login-link { display: inline-flex; justify-content: center; min-width: 120px; }
+.reservation-login-link[hidden] {
+    display: none;
+}
 .reservation-alert-success .reservation-alert-icon { background: #e1ebe2; color: #2f5332; }
 .reservation-login-notice {
   margin: 0 0 18px;
