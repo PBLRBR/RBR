@@ -80,6 +80,7 @@ $values = [
 
     <!-- footer -->
     <?php require __DIR__ . '/_footer.php'; ?>
+    <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>
