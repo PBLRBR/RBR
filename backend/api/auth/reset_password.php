@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../../helpers/password.php';
+
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -12,8 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($input)) {
@@ -49,11 +49,12 @@ try {
         exit;
     }
 
-    if (strlen($password) < 8) {
+    $passwordError = simartNewPasswordError($password);
+    if ($passwordError !== null) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'Password minimal 8 karakter.'
+            'message' => $passwordError
         ]);
         exit;
     }
@@ -67,6 +68,7 @@ try {
         exit;
     }
 
+    $pdo = require __DIR__ . '/../../config/database.php';
     $tokenHash = hash('sha256', $token);
 
     $pdo->beginTransaction();

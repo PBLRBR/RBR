@@ -15,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 wajibLogin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($input)) {
@@ -46,7 +44,7 @@ try {
     $jam_selesai = $input['jam_selesai'] ?? '';
 
     if (
-        !$id_user || !$id_tempat ||
+        !$id_user || !$id_tempat || $id_tempat < 1 ||
         $nama_acara === '' ||
         $penanggung_jawab === '' ||
         $kontak_wa === null ||
@@ -130,6 +128,17 @@ try {
     }
 
 
+    // Tanggal dan jam acara merupakan waktu lokal RBR (WIB).
+    $zonaWib = new DateTimeZone('Asia/Jakarta');
+    $waktuMulai = new DateTimeImmutable($tanggal_acara . ' ' . $jam_mulai, $zonaWib);
+    if ($waktuMulai <= new DateTimeImmutable('now', $zonaWib)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Jam mulai acara harus di masa depan (WIB).']);
+        exit;
+    }
+
+    $pdo = require __DIR__ . '/../../config/database.php';
+
     // Kunci tempat supaya validasi pembuatan dan persetujuan dilakukan berurutan.
     $pdo->beginTransaction();
     $stmtTempat = $pdo->prepare(
@@ -147,6 +156,40 @@ try {
         $pdo->rollBack();
         http_response_code(409);
         echo json_encode(['success' => false, 'message' => 'Tempat sedang tidak aktif dan tidak dapat dipesan.']);
+        exit;
+    }
+
+    // Periksa ulang waktu setelah menunggu lock tempat.
+    if ($waktuMulai <= new DateTimeImmutable('now', $zonaWib)) {
+        $pdo->rollBack();
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Jam mulai acara harus di masa depan (WIB).']);
+        exit;
+    }
+
+    // Satu akun tidak boleh mengajukan slot identik yang masih menunggu.
+    // Lock tempat di atas menyerialkan pengajuan paralel untuk tempat yang sama.
+    $stmtDuplikat = $pdo->prepare(
+        "SELECT 1 FROM reservasi
+         WHERE id_user = :id_user
+           AND id_tempat = :id_tempat
+           AND tanggal_acara = :tanggal_acara
+           AND jam_mulai = :jam_mulai
+           AND jam_selesai = :jam_selesai
+           AND status_reservasi = 'menunggu'
+         LIMIT 1"
+    );
+    $stmtDuplikat->execute([
+        'id_user' => $id_user,
+        'id_tempat' => $id_tempat,
+        'tanggal_acara' => $tanggal_acara,
+        'jam_mulai' => $jam_mulai,
+        'jam_selesai' => $jam_selesai
+    ]);
+    if ($stmtDuplikat->fetchColumn() !== false) {
+        $pdo->rollBack();
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'Anda sudah memiliki pengajuan reservasi yang sama dan masih menunggu persetujuan.']);
         exit;
     }
 
