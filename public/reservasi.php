@@ -26,11 +26,12 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
 <html lang="id">
 
 <head>
+    <link rel="icon" type="image/png" href="/images/rbr.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
-    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/style.css?v=20261128-public-qa">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261128-public-qa">
 </head>
 
 <body>
@@ -137,8 +138,8 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
     <!-- footer -->
     <?php require __DIR__ . '/_footer.php'; ?>
     <script src="/js/api.js"></script>
-    <script src="/js/main.js"></script>
-    <script src="/js/reservasi.js?v=20261125-reservation-popup"></script>
-    <script src="/js/phone-validation.js"></script>
+    <script src="/js/main.js?v=20261128-public-qa"></script>
+    <script src="/js/reservasi.js?v=20261128-public-qa"></script>
+    <script src="/js/phone-validation.js?v=20261128-public-qa"></script>
 </body>
 </html>
