@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../helpers/phone.php';
+require_once __DIR__ . '/../../helpers/password.php';
 header('Content-Type: application/json; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -9,12 +10,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     $data = json_decode(file_get_contents('php://input'), true);
     if (!is_array($data)) throw new InvalidArgumentException('JSON tidak valid.');
-    $nama = trim((string)($data['nama'] ?? ''));
-    $email = strtolower(trim((string)($data['email'] ?? '')));
+    $namaRaw = $data['nama'] ?? null;
+    $emailRaw = $data['email'] ?? null;
+    if (!is_string($namaRaw) || !is_string($emailRaw)) {
+        throw new InvalidArgumentException('Nama dan email harus berupa teks.');
+    }
+    $nama = trim($namaRaw);
+    $email = strtolower(trim($emailRaw));
     $hp = normalizeIndonesianMobile($data['no_hp'] ?? null);
     $password = $data['password'] ?? '';
-    if ($nama === '' || strlen($nama) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL) || $hp === null || !is_string($password) || strlen($password) < 8) {
-        throw new InvalidArgumentException('Nama, email, dan nomor HP seluler valid (10-13 digit awalan 08), serta password minimal 8 karakter wajib diisi.');
+    if ($nama === '' || strlen($nama) > 100 || str_contains($namaRaw, "\0") || strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL) || $hp === null) {
+        throw new InvalidArgumentException('Nama (maksimal 100 byte), email (maksimal 150 byte), dan nomor HP seluler valid (10-13 digit awalan 08) wajib diisi.');
+    }
+    $passwordError = simartNewPasswordError($password);
+    if ($passwordError !== null) {
+        throw new InvalidArgumentException($passwordError);
     }
     $pdo = require __DIR__ . '/../../config/database.php';
     $stmt = $pdo->prepare("INSERT INTO users (nama, email, no_hp, password, role) VALUES (:nama,:email,:no_hp,:password,'member') RETURNING id_user");
