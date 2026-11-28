@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($input)) {
@@ -32,7 +31,7 @@ try {
         FILTER_VALIDATE_INT
     );
 
-        foreach (['judul_karya', 'isi_karya', 'deskripsi'] as $field) {
+    foreach (['judul_karya', 'isi_karya', 'deskripsi'] as $field) {
         if (isset($input[$field]) && !is_string($input[$field])) {
             http_response_code(422);
             echo json_encode([
@@ -79,6 +78,11 @@ try {
         exit;
     }
 
+    simartValidateText($judul, 'judul_karya', 200);
+    simartValidateText($isi, 'isi_karya');
+    simartValidateText($deskripsi, 'deskripsi');
+
+    $pdo = require __DIR__ . '/../../config/database.php';
     $stmt = $pdo->prepare(
         'UPDATE karya
          SET id_kategori = :id_kategori,
@@ -117,7 +121,15 @@ try {
         'data' => $karya
     ]);
 
+} catch (InvalidArgumentException $e) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
+    if ($e instanceof PDOException && (string) $e->getCode() === '23503') {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Kategori karya tidak ditemukan.']);
+        exit;
+    }
     error_log($e->getMessage());
     http_response_code(500);
 

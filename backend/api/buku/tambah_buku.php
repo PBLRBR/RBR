@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!is_array($input)) {
@@ -49,6 +48,10 @@ try {
         );
     }
 
+    foreach (['judul' => 200, 'penulis' => 150, 'penerbit' => 150, 'foto_sampul' => 255, 'deskripsi' => null] as $field => $max) {
+        simartValidateText($input[$field] ?? null, $field, $max);
+    }
+
     if (!is_bool($bisaDijual)) {
         throw new InvalidArgumentException(
             'bisa_dijual harus bernilai true atau false.'
@@ -58,7 +61,7 @@ try {
     if ($tahunTerbit !== null && $tahunTerbit !== '') {
         $tahunTerbit = filter_var($tahunTerbit, FILTER_VALIDATE_INT);
 
-        if ($tahunTerbit === false || $tahunTerbit < 0 || $tahunTerbit > (int) date('Y')) {
+        if ($tahunTerbit === false || $tahunTerbit < 1 || $tahunTerbit > (int) date('Y')) {
             throw new InvalidArgumentException(
                 'Tahun terbit harus berupa angka yang valid.'
             );
@@ -73,8 +76,10 @@ try {
             !is_numeric($harga) ||
             !is_numeric($stok) ||
             (float) $harga < 0 ||
+            !is_finite((float) $harga) ||
+            round((float) $harga, 2) > 9999999999.99 ||
             filter_var($stok, FILTER_VALIDATE_INT) === false ||
-            (int) $stok < 0
+            (int) $stok < 0 || (int) $stok > 2147483647
         ) {
             throw new InvalidArgumentException(
                 'Buku yang dijual wajib memiliki kondisi baru/bekas, harga valid, dan stok berupa bilangan bulat nonnegatif.'
@@ -88,6 +93,8 @@ try {
         $harga = null;
         $stok = null;
     }
+
+    $pdo = require __DIR__ . '/../../config/database.php';
 
     $stmt = $pdo->prepare(
         'INSERT INTO buku (
