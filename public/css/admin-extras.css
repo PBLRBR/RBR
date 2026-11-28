@@ -1,0 +1,70 @@
+/* Checkbox "Buku untuk dijual" sejajar kiri */
+.form-group label:has(> input[type="checkbox"]) { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.form-group input[type="checkbox"] { width: auto; margin: 0; }
+
+/* Spasi tombol popup detail */
+#transaction-popup .popup-actions,
+#book-detail-popup .popup-actions { margin-top: 20px; }
+
+/* Pagination seragam */
+.simart-pager-wrap { margin-top: 16px; }
+.simart-pager { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+.simart-pager button,
+.simart-pager a,
+.simart-pager .is-disabled {
+    min-width: 34px; height: 34px; padding: 0 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--color-border); border-radius: 6px;
+    background: var(--color-bg-card); color: var(--color-text-main);
+    font-size: .85rem; text-decoration: none; cursor: pointer; transition: all .2s;
+}
+.simart-pager button:hover:not(:disabled),
+.simart-pager a:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.simart-pager .active { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-light); }
+.simart-pager .active:hover { color: var(--color-text-light) !important; }
+.simart-pager button:disabled,
+.simart-pager .is-disabled { opacity: .4; cursor: not-allowed; }
+.simart-pager-gap { color: var(--color-text-muted); padding: 0 2px; }
+.simart-pager-info { font-size: .8rem; color: var(--color-text-muted); margin-right: 8px; }
+
+/* Footer tabel (tombol lihat data lengkap + pagination) */
+.table-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.table-footer .simart-pager-wrap { margin: 0; }
+
+/* Reservasi: kartu compact */
+.rsv-list { gap: 10px; }
+.rsv-card {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "head actions" "details actions" "warn actions";
+    column-gap: 16px; padding: 12px 16px;
+}
+.rsv-card-head { grid-area: head; justify-content: flex-start; gap: 10px; align-items: center; }
+.rsv-card-head h3 { font-size: 1rem; }
+.rsv-card-head .badge { order: -1; }
+.rsv-by { font-size: .8rem; }
+.rsv-details {
+    grid-area: details; display: flex; flex-wrap: wrap; gap: 4px 18px;
+    margin-top: 8px; padding: 6px 10px; font-size: .85rem;
+}
+.rsv-details > div { display: flex; gap: 6px; align-items: baseline; }
+.rsv-details dt { font-size: .7rem; }
+.rsv-details dd { font-size: .85rem; }
+.rsv-warning { grid-area: warn; }
+.rsv-actions {
+    grid-area: actions; align-self: center; margin: 0; padding: 0; border: 0;
+    justify-content: flex-end; max-width: 330px;
+}
+.rsv-summary { margin-bottom: 14px; }
+@media (max-width: 850px) {
+    .rsv-card { grid-template-columns: 1fr; grid-template-areas: "head" "details" "warn" "actions"; }
+    .rsv-actions { max-width: none; justify-content: flex-start; margin-top: 10px; }
+    .rsv-card-head { flex-direction: row; }
+}
+
+/* Pemanfaatan ruangan: 2 progress bar per ruang */
+.simart-room-list { gap: 22px; }
+.simart-room-name { display: block; font-size: .92rem; margin-bottom: 8px; }
+.simart-room-row .simart-room-meta { margin-bottom: 4px; }
+.simart-room-row .simart-room-meta + .simart-room-track { margin-bottom: 10px; }
+.simart-room-row .simart-room-track:last-child { margin-bottom: 0; }
+.simart-room-fill.is-hours { background: var(--color-secondary, #c88142); }

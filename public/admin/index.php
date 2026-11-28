@@ -27,9 +27,27 @@ if (!is_string($rsvFilter) || !array_key_exists($rsvFilter, $rsvFilters)) {
     $rsvFilter = 'pending';
 }
 
+$metaStatus = ['menunggu'=>'pending','disetujui'=>'approved','ditolak'=>'rejected'];
+$rsvCount = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+$statusCounts = $pdo->query(
+    'SELECT status_reservasi, COUNT(*) AS jumlah
+     FROM reservasi
+     GROUP BY status_reservasi'
+);
+foreach ($statusCounts->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $status = $metaStatus[$row['status_reservasi']] ?? null;
+    if ($status !== null) {
+        $rsvCount[$status] = (int) $row['jumlah'];
+    }
+}
+
+$rsvPerPage = 5;
+$rsvTotal = $rsvFilter === 'all' ? array_sum($rsvCount) : $rsvCount[$rsvFilter];
+$rsvPages = max(1, (int) ceil($rsvTotal / $rsvPerPage));
 $rsvPage = filter_var($_GET['rsv_page'] ?? 1, FILTER_VALIDATE_INT, [
     'options' => ['min_range' => 1, 'max_range' => intdiv(PHP_INT_MAX, 20)],
 ]) ?: 1;
+$rsvPage = min($rsvPage, $rsvPages);
 
 $sql = 'SELECT r.id_reservasi, r.id_tempat, r.nama_acara, r.penanggung_jawab,
                r.kontak_wa, r.deskripsi_acara, r.tanggal_acara, r.jam_mulai,
@@ -41,43 +59,36 @@ if ($rsvFilter !== 'all') {
     $sql .= ' WHERE r.status_reservasi = :status';
 }
 
-$sql .= ' ORDER BY r.id_reservasi DESC LIMIT 21 OFFSET :offset';
+$sql .= ' ORDER BY r.id_reservasi DESC LIMIT ' . $rsvPerPage . ' OFFSET :offset';
 
 $stmtReservasi = $pdo->prepare($sql);
 if ($rsvFilter !== 'all') {
     $stmtReservasi->bindValue(':status', $rsvFilters[$rsvFilter]);
 }
-$stmtReservasi->bindValue(':offset', ($rsvPage - 1) * 20, PDO::PARAM_INT);
+$stmtReservasi->bindValue(':offset', ($rsvPage - 1) * $rsvPerPage, PDO::PARAM_INT);
 $stmtReservasi->execute();
 
 $resRows = $stmtReservasi->fetchAll(PDO::FETCH_ASSOC);
-$rsvHasNext = count($resRows) > 20;
-if ($rsvHasNext) {
-    array_pop($resRows);
-}
 
 $rsvUrl = static fn(string $filter, int $page): string =>
     '?' . http_build_query(['rsv_status' => $filter, 'rsv_page' => $page]) . '#reservasi';
-$metaStatus = ['menunggu'=>'pending','disetujui'=>'approved','ditolak'=>'rejected'];
+$rsvPageList = static function (int $page, int $pages): array {
+    $keep = array_unique(array_filter([1, $pages, $page - 1, $page, $page + 1], fn($p) => $p >= 1 && $p <= $pages));
+    sort($keep);
+    $out = [];
+    $prev = 0;
+    foreach ($keep as $p) {
+        if ($p - $prev > 1) $out[] = '…';
+        $out[] = $p;
+        $prev = $p;
+    }
+    return $out;
+};
 $reservations = [];
 foreach ($resRows as $r) {
     $reservations[] = [$r['penanggung_jawab'],$r['nama_acara'],$r['nama_tempat'],$r['tanggal_acara'],substr($r['jam_mulai'],0,5),substr($r['jam_selesai'],0,5),0,$r['kontak_wa'],'—',$metaStatus[$r['status_reservasi']] ?? 'pending',false,(int)$r['id_reservasi'],(int)$r['id_tempat'],$r['deskripsi_acara'] ?? ''];
 }
 $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Disetujui','badge-success'],'rejected'=>['Ditolak','badge-danger']];
-$rsvCount = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
-
-$statusCounts = $pdo->query(
-    'SELECT status_reservasi, COUNT(*) AS jumlah
-     FROM reservasi
-     GROUP BY status_reservasi'
-);
-
-foreach ($statusCounts->fetchAll(PDO::FETCH_ASSOC) as $row) {
-    $status = $metaStatus[$row['status_reservasi']] ?? null;
-    if ($status !== null) {
-        $rsvCount[$status] = (int) $row['jumlah'];
-    }
-}
 $metrics = $pdo->query('SELECT total_pendapatan AS total, jumlah_transaksi AS transaksi, jumlah_buku_terjual FROM v_dashboard_penjualan')->fetch(PDO::FETCH_ASSOC);
 $terjual = (int)$metrics['jumlah_buku_terjual'];
 $bulanIni = $pdo->query("
@@ -129,6 +140,7 @@ $latest = $pdo->query(
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/simart-fe-enhancements.css">
     <link rel="stylesheet" href="/css/dashboard-analytics.css">
+    <link rel="stylesheet" href="/css/admin-extras.css">
 </head>
 
 <body class="admin-body">
@@ -140,7 +152,6 @@ $latest = $pdo->query(
         </div>
         <div class="admin-user-info">
             <a href="/" class="btn-sm btn-secondary">Lihat Website</a>
-            <a href="/admin/#analytics" class="btn-sm btn-secondary">Dashboard Admin</a>
             <button class="btn-sm btn-secondary" type="button" data-logout>Logout</button>
         </div>
     </header>
@@ -202,7 +213,7 @@ $latest = $pdo->query(
                 </div>
 
                 <div class="admin-card margin-top-30">
-                    <h3>Aktivitas Transaksi Terbaru</h3>
+                    <h3 id="tx-title">Aktivitas Transaksi Terbaru</h3>
                     <table class="data-table margin-top-15">
                         <thead>
                             <tr><th>ID Transaksi</th><th>Tanggal</th><th>Item</th><th>Total</th><th>Metode</th></tr>
@@ -226,18 +237,26 @@ $latest = $pdo->query(
                             <?php if (!$latest): ?><tr><td colspan="5">Belum ada transaksi.</td></tr><?php endif; ?>
                         </tbody>
                     </table>
+                    <div class="table-footer">
+                        <button type="button" class="btn-sm btn-secondary" id="btn-tx-toggle">Lihat Data Lengkap</button>
+                        <div class="simart-pager-wrap" id="tx-pager"></div>
+                    </div>
                 </div>
                 <div class="admin-card margin-top-30">
-                    <h3>5 Buku Terlaris (Semua Periode)</h3>
+                    <h3 id="best-title">5 Buku Terlaris (Semua Periode)</h3>
                     <table class="data-table margin-top-15">
                         <thead><tr><th>Judul Buku</th><th>Total Terjual</th><th>Nilai Penjualan</th></tr></thead>
-                        <tbody>
+                        <tbody id="best-sellers">
                             <?php foreach ($bukuTerlaris as $b): ?>
                             <tr><td><?= $h($b['judul']) ?></td><td><?= (int)$b['total_terjual'] ?></td><td><?= $rp($b['pendapatan']) ?></td></tr>
                             <?php endforeach; ?>
                             <?php if (!$bukuTerlaris): ?><tr><td colspan="3">Belum ada penjualan.</td></tr><?php endif; ?>
                         </tbody>
                     </table>
+                    <div class="table-footer">
+                        <button type="button" class="btn-sm btn-secondary" id="btn-best-toggle">Lihat Data Lengkap</button>
+                        <div class="simart-pager-wrap" id="best-pager"></div>
+                    </div>
                 </div>
             </section>
 
@@ -440,25 +459,25 @@ $latest = $pdo->query(
                         </div>
                     </article>
                     <?php endforeach; ?>
-                       <p class="subtitle" id="rsv-empty" hidden>Tidak ada permintaan reservasi pada filter ini.</p>
-            </div>
-<?php if ($rsvPage > 1 || $rsvHasNext): ?>
-            <nav class="rsv-filters" aria-label="Halaman reservasi">
-                <?php if ($rsvPage > 1): ?>
-                    <a class="btn-secondary" href="<?= $h($rsvUrl($rsvFilter, $rsvPage - 1)) ?>">
-                        Sebelumnya
-                    </a>
+                    <p class="subtitle" id="rsv-empty" hidden>Tidak ada permintaan reservasi pada filter ini.</p>
+                </div>
+                <?php if ($rsvPages > 1): ?>
+                <div class="simart-pager-wrap">
+                    <nav class="simart-pager" aria-label="Halaman reservasi">
+                        <span class="simart-pager-info">Halaman <?= $rsvPage ?> dari <?= $rsvPages ?></span>
+                        <?php if ($rsvPage > 1): ?>
+                            <a href="<?= $h($rsvUrl($rsvFilter, $rsvPage - 1)) ?>" aria-label="Sebelumnya">‹</a>
+                        <?php else: ?><span class="is-disabled">‹</span><?php endif; ?>
+                        <?php foreach ($rsvPageList($rsvPage, $rsvPages) as $p): ?>
+                            <?php if ($p === '…'): ?><span class="simart-pager-gap">…</span>
+                            <?php else: ?><a<?= $p === $rsvPage ? ' class="active" aria-current="page"' : '' ?> href="<?= $h($rsvUrl($rsvFilter, $p)) ?>"><?= $p ?></a><?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php if ($rsvPage < $rsvPages): ?>
+                            <a href="<?= $h($rsvUrl($rsvFilter, $rsvPage + 1)) ?>" aria-label="Berikutnya">›</a>
+                        <?php else: ?><span class="is-disabled">›</span><?php endif; ?>
+                    </nav>
+                </div>
                 <?php endif; ?>
-
-                <span>Halaman <?= $rsvPage ?></span>
-
-                <?php if ($rsvHasNext): ?>
-                    <a class="btn-secondary" href="<?= $h($rsvUrl($rsvFilter, $rsvPage + 1)) ?>">
-                        Berikutnya
-                    </a>
-                <?php endif; ?>
-            </nav>
-            <?php endif; ?>
             </section>
         </main>
     </div>
@@ -596,6 +615,7 @@ $latest = $pdo->query(
 
     <script src="/js/api.js"></script>
     <script src="/js/admin.js"></script>
+    <script src="/js/admin-extras.js"></script>
     <script src="/js/dashboard-analytics.js" defer></script>
 </body>
 </html>
