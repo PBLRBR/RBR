@@ -6,11 +6,12 @@ $pageTitle = 'Buku Tamu | SIMART';
 <!doctype html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="/images/rbr.png">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= esc($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
-    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/style.css?v=20261128-public-qa">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261128-public-qa">
     <style>.visit-panel{max-width:600px;margin:36px auto;padding:28px;border:1px solid #ddd5c9;border-radius:16px;background:#fff}.visit-panel .form-group{margin-bottom:16px}.visit-message{margin-top:18px;padding:14px;border-radius:8px;background:#edf6ec}.visit-error{background:#ffeded;color:#8c231b}</style>
 </head>
 <body>
@@ -37,5 +38,5 @@ $pageTitle = 'Buku Tamu | SIMART';
     </div>
 </main>
 <?php require __DIR__ . '/_footer.php'; ?>
-<script src="/js/api.js"></script><script src="/js/main.js"></script><script src="/js/kunjungan.js"></script><script src="/js/phone-validation.js"></script>
+<script src="/js/api.js"></script><script src="/js/main.js?v=20261128-public-qa"></script><script src="/js/kunjungan.js"></script><script src="/js/phone-validation.js?v=20261128-public-qa"></script>
 </body></html>
