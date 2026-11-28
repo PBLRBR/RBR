@@ -14,8 +14,8 @@ foreach ($preview as $b) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="/css/style.css?v=20261125-reservation-popup">
-    <link rel="stylesheet" href="/css/responsive.css?v=20261125-reservation-popup">
+    <link rel="stylesheet" href="/css/style.css?v=20261128-home-nav">
+    <link rel="stylesheet" href="/css/responsive.css?v=20261128-home-nav">
 </head>
 
 <body>
@@ -146,6 +146,7 @@ foreach ($preview as $b) {
 
             <!-- form masuk -->
             <form id="form-login" class="auth-form active">
+                <p class="auth-warning auth-warning-success" id="login-warning" role="status" aria-live="polite" hidden></p>
                 <div class="form-group">
                     <label>Email atau Nomor Telepon</label>
                     <input type="text" placeholder="contoh: budi@ratna.org">
@@ -171,7 +172,7 @@ foreach ($preview as $b) {
     </div>
 
     <script src="/js/api.js"></script>
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20261128-home-nav"></script>
     <script src="/js/login.js"></script>
     <script src="/js/phone-validation.js"></script>
 </body>

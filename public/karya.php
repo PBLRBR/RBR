@@ -52,7 +52,7 @@ $stories = json_decode(file_get_contents($storiesFile), true) ?: [];
                 <span class="category-badge">Cerpen</span>
                 <h2><?= htmlspecialchars($story['title']) ?></h2>
                 <p><?= htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8') ?></p>
-                <span class="story-card-action">Baca cerpen lengkap <span aria-hidden="true">→</span></span>
+                <span class="story-card-action" aria-hidden="true"><span class="story-card-chevron">&gt;</span></span>
             </a>
             <?php endforeach; ?>
         </div>

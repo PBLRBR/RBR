@@ -66,7 +66,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                     <div class="calendar-weekdays">
                         <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
                     </div>
-                    <div class="calendar-days" id="calendar-days" data-booked-dates='<?= json_encode($bookedDates) ?>'></div>
+                    <div class="calendar-days" id="calendar-days" data-booked-dates='<?= json_encode($bookedDates) ?>' data-min-date="<?= htmlspecialchars($hariIniWib, ENT_QUOTES, 'UTF-8') ?>"></div>
                     <div class="calendar-legend">
                         <span class="legend-item"><span class="dot available"></span>Tersedia</span>
                         <span class="legend-item"><span class="dot booked"></span>Ada jadwal disetujui</span>
@@ -97,7 +97,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                                 <span class="reservation-alert-icon" aria-hidden="true">!</span>
                                 <h3 id="reservation-message-title">Perhatian</h3>
                                 <p class="reservation-alert-text"></p>
-                                <a class="btn-primary reservation-login-link" href="/?auth=login" hidden>Masuk</a>
+                                <a class="btn-primary reservation-login-link" href="/?auth=login&amp;next=%2Freservasi.php" hidden>Masuk</a>
                             </div>
                         </div>
                         <div class="form-group">

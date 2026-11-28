@@ -1,13 +1,7 @@
 <?php
 // Halaman Info Event (PHP + HTML dalam 1 file).
 $pageTitle = 'Info Event | SIMART';
-
-// data dummy event: ikon, kategori, judul, jadwal, deskripsi
-$events = [
-    ['📚', 'LITERASI', 'Diskusi Buku: Sastra dan Kehidupan', 'Sabtu, 24 Oktober 2026 · 14.00 WIB', 'Ruang berbagi cerita dan gagasan bersama pembaca serta pegiat literasi.'],
-    ['🎨', 'SENI & BUDAYA', 'Lokakarya Seni untuk Semua', 'Minggu, 1 November 2026 · 10.00 WIB', 'Kenali ragam ekspresi seni melalui sesi kreatif yang terbuka untuk umum.'],
-    ['🎭', 'PERTUNJUKAN', 'Apresiasi Karya Komunitas', 'Sabtu, 14 November 2026 · 19.00 WIB', 'Malam pertunjukan dan temu komunitas untuk merayakan karya lokal.'],
-];
+$events = require __DIR__ . '/_events.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -42,7 +36,7 @@ $events = [
 
         <!-- daftar event -->
         <div class="book-grid">
-            <?php foreach ($events as [$ikon, $kategori, $judul, $jadwal, $isi]): ?>
+            <?php foreach ($events as $index => [$ikon, $kategori, $judul, $jadwal, $isi]): ?>
             <article class="book-card">
                 <div class="book-cover"><span><?= $ikon ?></span></div>
                 <div class="book-info">
@@ -52,7 +46,7 @@ $events = [
                     <p><?= htmlspecialchars($isi) ?></p>
                     <div class="book-footer">
                         <span class="price">Rumah Budaya Ratna</span>
-                        <a href="#" class="btn-primary btn-sm">Detail Event</a>
+                        <a href="/detail-event.php?id=<?= $index ?>" class="btn-primary btn-sm">Detail Event</a>
                     </div>
                 </div>
             </article>
