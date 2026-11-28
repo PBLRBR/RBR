@@ -3,6 +3,46 @@
  * Session dan proteksi CSRF untuk seluruh endpoint /api yang dilewati router.php.
  * Token tidak mengandalkan database dan berlaku juga bagi pengunjung tanpa akun.
  */
+const SIMART_IDLE_TIMEOUT = 3600;
+const SIMART_ADMIN_MAX_SESSION = 43200;
+const SIMART_MEMBER_MAX_SESSION = 86400;
+
+function simartSessionProbe(): bool
+{
+    $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+    $route = $path === '/api/index.php' ? ($_GET['route'] ?? '') : $path;
+    return in_array($route, ['auth/me.php', 'auth/csrf.php', '/api/auth/me.php', '/api/auth/csrf.php'], true);
+}
+
+function simartSessionTouch(): void
+{
+    if (isset($_SESSION['user'])) {
+        $_SESSION['last_activity_at'] = time();
+    }
+}
+
+function simartSessionCheck(): void
+{
+    if (!isset($_SESSION['user'])) return;
+
+    $now = time();
+    // Sesi lama mendapat timestamp saat pertama kali memakai kebijakan baru.
+    $started = (int) ($_SESSION['login_at'] ?? $now);
+    $last = (int) ($_SESSION['last_activity_at'] ?? $now);
+    $max = ($_SESSION['user']['role'] ?? '') === 'admin'
+        ? SIMART_ADMIN_MAX_SESSION : SIMART_MEMBER_MAX_SESSION;
+
+    if ($now - $last >= SIMART_IDLE_TIMEOUT || $now - $started >= $max) {
+        // Hapus identitas autentikasi. Token CSRF anonim tetap bisa dipakai.
+        unset($_SESSION['user'], $_SESSION['login_at'], $_SESSION['last_activity_at']);
+        $_SESSION['session_expired'] = true;
+        return;
+    }
+
+    $_SESSION['login_at'] = $started;
+    $_SESSION['last_activity_at'] = $last;
+}
+
 function csrfStartSession(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
@@ -23,7 +63,15 @@ function csrfStartSession(): void
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
+    // Jangan biarkan GC default (24 menit) menghapus sesi sebelum kebijakan aplikasi.
+    if ((int) ini_get('session.gc_maxlifetime') < SIMART_MEMBER_MAX_SESSION) {
+        ini_set('session.gc_maxlifetime', (string) SIMART_MEMBER_MAX_SESSION);
+    }
     session_start();
+    simartSessionCheck();
+    if (!simartSessionProbe() && in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true)) {
+        simartSessionTouch();
+    }
 }
 
 function csrfToken(): string
@@ -61,4 +109,5 @@ function csrfRequireValid(): void
         ]);
         exit;
     }
+    if (!simartSessionProbe()) simartSessionTouch();
 }

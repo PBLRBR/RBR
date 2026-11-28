@@ -15,8 +15,16 @@ function startAppSession(): void {
 }
 function requireAppUser(bool $admin = false): void {
     startAppSession();
+    header('Cache-Control: no-store, private');
     if (empty($_SESSION['user']) || ($admin && ($_SESSION['user']['role'] ?? '') !== 'admin')) {
-        header('Location: /?auth=login', true, 302);
+        $target = $admin ? '/admin/' : (parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/');
+        $params = ['return_to' => $target];
+        if (!empty($_SESSION['session_expired']) && empty($_SESSION['user'])) {
+            $params['session'] = 'expired';
+        } else {
+            $params['auth'] = 'login';
+        }
+        header('Location: /?' . http_build_query($params), true, 302);
         exit;
     }
 }

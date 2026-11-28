@@ -37,6 +37,7 @@
             headers: { Accept: 'application/json' },
             signal,
         });
+        handleSessionUnauthorized(response.status, `laporan/${endpoint}.php`);
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
             throw new Error(`Respons API bukan JSON (HTTP ${response.status}).`);
@@ -130,8 +131,7 @@
     }
 
     function renderRoomsChart(container, data) {
-        // Hanya 3 ruangan; tiap ruangan punya 2 progress bar (reservasi & jam).
-        const rows = data.slice(0, 3).map(row => ({
+        const rows = data.map(row => ({
             name: String(row.nama_tempat ?? 'Tanpa Nama'),
             count: Math.max(0, Number(row.jumlah_reservasi) || 0),
             hours: Math.max(0, Number(row.total_jam_terpakai) || 0),
@@ -140,24 +140,20 @@
             showEmpty(container, 'Belum ada reservasi disetujui pada periode ini.');
             return;
         }
-        const maxCount = Math.max(...rows.map(row => row.count));
-        const maxHours = Math.max(...rows.map(row => row.hours));
+        const maxCount = Math.max(1, ...rows.map(row => row.count));
         const list = element('div', 'simart-room-list');
         rows.forEach(row => {
             const item = element('div', 'simart-room-row');
-            item.append(element('strong', 'simart-room-name', row.name));
-            [
-                ['Total reservasi', `${row.count} reservasi`, maxCount ? row.count / maxCount : 0, ''],
-                ['Total jam', `${amount(row.hours)} jam`, maxHours ? row.hours / maxHours : 0, ' is-hours'],
-            ].forEach(([label, value, ratio, extra]) => {
-                const meta = element('div', 'simart-room-meta');
-                meta.append(element('span', '', label), element('span', '', value));
-                const track = element('div', 'simart-room-track');
-                const fill = element('div', 'simart-room-fill' + extra);
-                fill.style.width = `${Math.max(0, Math.min(100, ratio * 100))}%`;
-                track.append(fill);
-                item.append(meta, track);
-            });
+            const meta = element('div', 'simart-room-meta');
+            meta.append(
+                element('strong', '', row.name),
+                element('span', '', `${row.count} reservasi · ${amount(row.hours)} jam`),
+            );
+            const track = element('div', 'simart-room-track');
+            const fill = element('div', 'simart-room-fill');
+            fill.style.width = `${Math.max(0, Math.min(100, row.count / maxCount * 100))}%`;
+            track.append(fill);
+            item.append(meta, track);
             list.append(item);
         });
         container.replaceChildren(list);
@@ -190,7 +186,7 @@
                 </article>
                 <article class="simart-analytics-card">
                     <h4>F8 · Pemanfaatan Ruangan</h4>
-                    <p>Total reservasi disetujui dan total jam pemakaian per ruang.</p>
+                    <p>Frekuensi reservasi yang disetujui per ruang.</p>
                     <div id="dash-rooms-chart" class="simart-chart" aria-live="polite"></div>
                     <div id="dash-rooms-summary" class="simart-analytics-foot"></div>
                 </article>

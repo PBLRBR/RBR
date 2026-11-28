@@ -15,7 +15,10 @@ function wajibLogin(): void
 
         echo json_encode([
             'success' => false,
-            'message' => 'Silakan login terlebih dahulu.'
+            'message' => !empty($_SESSION['session_expired'])
+                ? 'Sesi telah berakhir. Silakan login kembali.'
+                : 'Silakan login terlebih dahulu.',
+            'code' => !empty($_SESSION['session_expired']) ? 'SESSION_EXPIRED' : 'AUTH_REQUIRED'
         ]);
         exit;
     }
