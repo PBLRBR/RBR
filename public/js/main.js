@@ -110,25 +110,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // popup masuk / daftar (dibuka lewat ?auth=login atau ?auth=register)
+    // Popup autentikasi bersama tanpa berpindah halaman.
     const modal = document.getElementById('modal-auth');
     if (modal) {
         const show = (tab) => {
             ['login', 'register'].forEach(name => {
-                const on = name === tab;
-                document.getElementById(`tab-${name}-btn`).classList.toggle('active', on);
-                document.getElementById(`form-${name}`).classList.toggle('active', on);
+                const active = name === tab;
+                document.getElementById(`tab-${name}-btn`).classList.toggle('active', active);
+                document.getElementById(`form-${name}`).classList.toggle('active', active);
             });
         };
-        const auth = new URLSearchParams(location.search).get('auth');
-        if (auth) {
+        const openModal = (tab) => {
+            if (!['login', 'register'].includes(tab)) return;
+            show(tab);
             modal.style.display = 'flex';
-            show(auth === 'register' ? 'register' : 'login');
-        }
+        };
+        const closeModal = () => { modal.style.display = 'none'; };
+
+        document.querySelectorAll('[data-auth-open]').forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                const tab = link.dataset.authOpen;
+                // Tutup drawer navigasi mobile sebelum membuka popup.
+                link.closest('.nav-container.nav-open')
+                    ?.querySelector('.mobile-nav-close')?.click();
+                openModal(tab);
+            });
+        });
+        const auth = new URLSearchParams(location.search).get('auth');
+        if (['login', 'register'].includes(auth)) openModal(auth);
+
         document.getElementById('tab-login-btn').addEventListener('click', () => show('login'));
         document.getElementById('tab-register-btn').addEventListener('click', () => show('register'));
-        document.getElementById('close-modal').addEventListener('click', () => modal.style.display = 'none');
-        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        document.getElementById('close-modal').addEventListener('click', closeModal);
+        modal.addEventListener('click', event => {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && modal.style.display === 'flex') closeModal();
+        });
     }
 
     // pencarian & filter kategori katalog buku
