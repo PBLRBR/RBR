@@ -72,10 +72,10 @@ try {
 
     $_SESSION['user']['nama'] = $profil['nama'];
     responsProfil(200, 'Profil berhasil disimpan.', $profil);
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     error_log($e->getMessage());
 
-    if ((string) $e->getCode() === '23505') {
+    if ($e instanceof PDOException && (string) $e->getCode() === '23505') {
         responsProfil(409, 'Nomor WhatsApp sudah digunakan.');
         exit;
     }
