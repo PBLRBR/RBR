@@ -42,7 +42,6 @@ if (!$profile) {
     <main class="container page-content">
         <h2>Pengaturan Profil</h2>
         <p class="subtitle">Perbarui nama tampilan dan nomor WhatsApp di halaman ini.</p>
-        </p>
 
         <div class="profile-layout">
             <!-- kartu ringkasan profil -->
@@ -75,7 +74,7 @@ if (!$profile) {
                         <div>
                             <label for="profile-phone">Nomor WhatsApp</label>
                             <input id="profile-phone" name="no_hp" type="tel"
-                                value="<?= esc($profile['no_hp'] ?? '') ?>" maxlength="20">
+                                data-simart-phone value="<?= esc($profile['no_hp'] ?? '') ?>" maxlength="20">
                         </div>
                     </div>
 
@@ -93,6 +92,7 @@ if (!$profile) {
     <?php require __DIR__ . '/_footer.php'; ?>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/phone-validation.js"></script>
 </body>
 
 </html>
