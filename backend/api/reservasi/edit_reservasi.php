@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';
 require_once __DIR__ . '/../../helpers/reservasi.php';
@@ -14,11 +15,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
     $input = json_decode(file_get_contents('php://input'), true);
     if (!is_array($input)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Format data tidak valid.']);
+        exit;
+    }
+
+    $setujui = array_key_exists('setujui', $input) ? $input['setujui'] : false;
+
+    if (!is_bool($setujui)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Pilihan setujui harus berupa boolean.',
+        ]);
         exit;
     }
 
@@ -63,6 +74,14 @@ try {
         exit;
     }
 
+    simartValidateText($nama_acara, 'nama_acara', 150);
+    simartValidateText($penanggung_jawab, 'penanggung_jawab', 100);
+    foreach (['deskripsi_acara' => null, 'poster_acara' => 255, 'tautan_info' => 255] as $field => $max) {
+        simartValidateText($input[$field] ?? null, $field, $max);
+    }
+
+    $pdo = require __DIR__ . '/../../config/database.php';
+    // Kunci tempat supaya validasi pembuatan dan persetujuan dilakukan berurutan.
     $pdo->beginTransaction();
 
     $stmtTempat = $pdo->prepare(
@@ -122,6 +141,10 @@ try {
         exit;
     }
 
+    $perubahanStatus = $setujui
+        ? ", status_reservasi = 'disetujui', alasan_penolakan = NULL"
+        : '';
+
     $stmt = $pdo->prepare(
         'UPDATE reservasi SET
             id_tempat = :id_tempat,
@@ -133,7 +156,7 @@ try {
             jam_mulai = :jam_mulai,
             jam_selesai = :jam_selesai,
             poster_acara = :poster,
-            tautan_info = :tautan
+            tautan_info = :tautan' . $perubahanStatus . '
          WHERE id_reservasi = :id
          RETURNING id_reservasi, nama_acara, status_reservasi'
     );
@@ -162,7 +185,7 @@ try {
 
     $reservasi['jumlah_ditolak_otomatis'] = 0;
 
-    if ($reservasiLama['status_reservasi'] === 'disetujui' && $jadwalBerubah) {
+    if ($setujui || ($reservasiLama['status_reservasi'] === 'disetujui' && $jadwalBerubah)) {
         $reservasi['jumlah_ditolak_otomatis'] = tolakReservasiMenungguYangBentrok(
             $pdo,
             $id_reservasi,
@@ -180,6 +203,12 @@ try {
         'data' => $reservasi
     ]);
 
+} catch (InvalidArgumentException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo->inTransaction())
         $pdo->rollBack();

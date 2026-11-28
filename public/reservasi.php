@@ -98,7 +98,7 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
                                 <span class="reservation-alert-icon" aria-hidden="true">!</span>
                                 <h3 id="reservation-message-title">Perhatian</h3>
                                 <p class="reservation-alert-text"></p>
-                                <a class="btn-primary reservation-login-link" href="/?auth=login&amp;next=%2Freservasi.php" hidden>Masuk</a>
+                                <a class="btn-primary reservation-login-link" href="/?auth=login&amp;next=%2Freservasi.php" data-auth-open="login" hidden>Masuk</a>
                             </div>
                         </div>
                         <div class="form-group">
@@ -137,9 +137,11 @@ $rooms = $pdo->query("SELECT id_tempat, nama_tempat, kapasitas FROM tempat WHERE
 
     <!-- footer -->
     <?php require __DIR__ . '/_footer.php'; ?>
+    <?php require __DIR__ . '/_auth-modal.php'; ?>
     <script src="/js/api.js"></script>
-    <script src="/js/main.js?v=20261128-public-qa"></script>
-    <script src="/js/reservasi.js?v=20261128-public-qa"></script>
-    <script src="/js/phone-validation.js?v=20261128-public-qa"></script>
+    <script src="/js/main.js?v=20261128-auth-modal"></script>
+    <script src="/js/reservasi.js?v=20261125-reservation-popup"></script>
+    <script src="/js/phone-validation.js"></script>
+    <script src="/js/login.js"></script>
 </body>
 </html>

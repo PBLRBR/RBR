@@ -527,9 +527,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // reservasi: filter status, setujui, tolak, edit
-    const rsvList = $('.rsv-list');
+    const rsvList = $('#rsv-results');
     const statusMeta = { pending: ['Menunggu Review', 'badge-warning'], approved: ['Disetujui', 'badge-success'], rejected: ['Ditolak', 'badge-danger'] };
-    const rsvFilter = $('.rsv-filter.active')?.dataset.filter ?? 'pending';
+    let rsvFilter = $('.rsv-filter.active')?.dataset.filter ?? 'pending';
 
     const refreshRsv = () => {
         let shown = 0;
@@ -542,6 +542,180 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#rsv-empty').hidden = shown > 0;
     };
 
+    let rsvRequest;
+    const rsvSearchForm = $('#rsv-search-form');
+
+    async function loadRsvPage(pageUrl) {
+        rsvRequest?.abort();
+
+        const request = new AbortController();
+        rsvRequest = request;
+
+        const partialUrl = new URL(pageUrl);
+        partialUrl.searchParams.set('rsv_partial', '1');
+        rsvList.setAttribute('aria-busy', 'true');
+        const loadingMessage = $('#rsv-loading');
+        const requestedFilter = pageUrl.searchParams.get('rsv_status') ?? 'pending';
+        const filterLabels = {
+            pending: 'Menunggu Review',
+            approved: 'Disetujui',
+            rejected: 'Ditolak',
+            all: 'Semua',
+        };
+
+        loadingMessage.textContent =
+            `Memuat reservasi: ${filterLabels[requestedFilter] ?? 'Menunggu Review'}…`;
+
+        try {
+            const response = await fetch(partialUrl, {
+                signal: request.signal,
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok || response.redirected) {
+                throw new Error('Gagal memuat daftar reservasi.');
+            }
+
+            const html = await response.text();
+            if (request.signal.aborted) return;
+
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const results = doc.getElementById('rsv-results');
+
+            if (!results) {
+                throw new Error('Respons daftar reservasi tidak valid.');
+            }
+
+            rsvFilter = pageUrl.searchParams.get('rsv_status') ?? 'pending';
+            const search = pageUrl.searchParams.get('rsv_q') ?? '';
+
+            rsvList.replaceChildren(...results.childNodes);
+            for (const status of ['pending', 'approved', 'rejected']) {
+                $(`[data-count="${status}"]`).textContent = results.dataset[status];
+            }
+
+            const pendingCount = Number(results.dataset.pending);
+            const navCount = $('.nav-count');
+            navCount.textContent = pendingCount;
+            navCount.hidden = pendingCount === 0;
+            rsvSearchForm.elements.namedItem('rsv_status').value = rsvFilter;
+
+            $$('.rsv-filter[data-filter]').forEach(filterLink => {
+                filterLink.classList.toggle('active', filterLink.dataset.filter === rsvFilter);
+
+                const filterUrl = new URL(filterLink.href);
+                filterUrl.searchParams.set('rsv_q', search);
+                filterLink.href = filterUrl.href;
+            });
+
+            pageUrl.searchParams.set('rsv_page', results.dataset.page);
+            history.replaceState(null, '', pageUrl);
+            refreshRsv();
+        } catch {
+            if (!request.signal.aborted) {
+                location.assign(pageUrl.href);
+            }
+        } finally {
+            if (rsvRequest === request) {
+                rsvList.removeAttribute('aria-busy');
+                loadingMessage.textContent = '';
+            }
+        }
+    }
+
+    $('#tab-reservasi').addEventListener('click', event => {
+        const link = event.target.closest(
+            'a.rsv-filter, nav[aria-label="Halaman reservasi"] a'
+        );
+
+        if (!link || event.button !== 0 ||
+            event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+            return;
+        }
+
+        event.preventDefault();
+        clearTimeout(rsvSearchTimer);
+
+        const pageUrl = new URL(link.href);
+        const search = rsvSearchInput.value.trim();
+
+        if ((pageUrl.searchParams.get('rsv_q') ?? '') !== search) {
+            pageUrl.searchParams.set('rsv_q', search);
+            pageUrl.searchParams.set('rsv_page', '1');
+        }
+
+        loadRsvPage(pageUrl);
+    });
+
+    const rsvSearchInput = rsvSearchForm.elements.namedItem('rsv_q');
+    let rsvSearchTimer;
+    let rsvBeforeSearch = null;
+
+    const searchRsv = () => {
+        clearTimeout(rsvSearchTimer);
+
+        const pageUrl = new URL(rsvSearchForm.action);
+        pageUrl.search = new URLSearchParams(new FormData(rsvSearchForm)).toString();
+        pageUrl.searchParams.set('rsv_q', rsvSearchInput.value.trim());
+        pageUrl.searchParams.set('rsv_page', '1');
+
+        loadRsvPage(pageUrl);
+    };
+
+    rsvSearchInput.addEventListener('input', () => {
+        clearTimeout(rsvSearchTimer);
+        rsvRequest?.abort();
+
+        const keyword = rsvSearchInput.value.trim().toLowerCase();
+        const currentUrl = new URL(location.href);
+        const isFirstPage = (currentUrl.searchParams.get('rsv_page') ?? '1') === '1';
+        const isUnfiltered = !currentUrl.searchParams.get('rsv_q');
+
+        if (keyword && isFirstPage && isUnfiltered &&
+            rsvBeforeSearch?.status !== rsvFilter) {
+            rsvBeforeSearch = {
+                status: rsvFilter,
+                results: rsvList.cloneNode(true),
+            };
+        }
+
+        if (!keyword) {
+            if (rsvBeforeSearch?.status === rsvFilter) {
+                rsvList.replaceChildren(...rsvBeforeSearch.results.childNodes);
+            }
+
+            rsvBeforeSearch = null;
+            rsvList.querySelector('.rsv-pagination')?.style.removeProperty('display');
+            refreshRsv();
+            searchRsv();
+            return;
+        }
+
+        rsvList.querySelector('.rsv-pagination')?.style.setProperty('display', 'none');
+        rsvList.querySelectorAll('.rsv-card').forEach(card => {
+            const matchesStatus = rsvFilter === 'all' || card.dataset.status === rsvFilter;
+            const matchesKeyword = [
+                card.dataset.agenda,
+                card.dataset.pemohon,
+                card.dataset.ruangan,
+            ].some(value => {
+                if (keyword === '') return true;
+
+                const text = (value ?? '').toLowerCase();
+                return Array.from(text.matchAll(/[\p{L}\p{N}_]+/gu))
+                    .some(word => text.startsWith(keyword, word.index));
+            });
+
+            card.hidden = !matchesStatus || !matchesKeyword;
+        });
+
+        $('#rsv-empty').hidden = true;
+        rsvSearchTimer = setTimeout(searchRsv, 150);
+    });
+    rsvSearchForm.addEventListener('submit', event => {
+        event.preventDefault();
+        searchRsv();
+    });
     const setStatus = (card, status) => {
         const previousStatus = card.dataset.status;
 
@@ -564,6 +738,23 @@ document.addEventListener('DOMContentLoaded', () => {
         badge.className = `badge rsv-badge ${statusMeta[status][1]}`;
         badge.textContent = statusMeta[status][0];
         refreshRsv();
+    };
+
+    const reloadRsvAfterSave = () => {
+        rsvBeforeSearch = null;
+        clearTimeout(rsvSearchTimer);
+
+        const pageUrl = new URL(location.href);
+        const search = rsvSearchInput.value.trim();
+
+        if ((pageUrl.searchParams.get('rsv_q') ?? '') !== search) {
+            pageUrl.searchParams.set('rsv_page', '1');
+        }
+
+        pageUrl.searchParams.set('rsv_status', rsvFilter);
+        pageUrl.searchParams.set('rsv_q', search);
+
+        return loadRsvPage(pageUrl);
     };
 
     const updateStatus = async (card, status, alasan = null) => {
@@ -610,7 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         location.assign(url);
                     }
                 } else {
-                    window.location.reload();
+                    await reloadRsvAfterSave();
                 }
             } catch (error) {
                 if (wa) wa.close();
@@ -641,31 +832,24 @@ document.addEventListener('DOMContentLoaded', () => {
             penanggung_jawab: fields.pemohon.value.trim(),
             kontak_wa: d.wa, deskripsi_acara: d.deskripsi || ''
         };
-        const card = editingCard;
-        let editSaved = false;
         editSaveButton.disabled = true;
         editApproveButton.disabled = true;
 
         try {
             await apiRequest('reservasi/edit_reservasi.php', {
                 method: 'PUT',
-                body: payload
+                body: { ...payload, setujui: andApprove },
             });
-            editSaved = true;
-
-            if (andApprove) await updateStatus(card, 'approved');
         } catch (error) {
-            alert(editSaved
-                ? `Perubahan tersimpan, tetapi persetujuan belum terkonfirmasi. ${error.message}`
-                : error.message);
+            alert(error.message);
+            return;
         } finally {
-            if (!editSaved) {
-                editSaveButton.disabled = false;
-                editApproveButton.disabled = false;
-            }
+            editSaveButton.disabled = false;
+            editApproveButton.disabled = false;
         }
 
-        if (editSaved) window.location.reload();
+        closePopup(rsvPopup);
+        await reloadRsvAfterSave();
     };
     rsvList.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
@@ -682,7 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, async () => {
                 try {
                     await updateStatus(card, 'pending');
-                    window.location.reload();
+                    await reloadRsvAfterSave();
                 } catch (error) {
                     alert(error.message);
                 }

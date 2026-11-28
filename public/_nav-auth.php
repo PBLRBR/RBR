@@ -12,7 +12,7 @@ if (!str_starts_with($authReturn, '/') || str_starts_with($authReturn, '//')) $a
         <a class="btn-secondary user-profile" href="<?= ($user['role'] ?? '') === 'admin' ? '/admin/' : '/profil.php' ?>"><img src="/images/rbr.png" alt="" class="profile-avatar"><span class="nav-account-name"><?= ($user['role'] ?? '') === 'admin' ? 'Admin' : esc($user['nama'] ?? 'Akun') ?></span></a>
         <button type="button" class="btn-secondary" data-logout>Keluar</button>
     <?php else: ?>
-        <a class="btn-secondary" href="/?auth=login&amp;next=<?= rawurlencode($authReturn) ?>">Masuk</a>
-        <a class="btn-primary" href="/?auth=register&amp;next=<?= rawurlencode($authReturn) ?>">Daftar</a>
+        <a class="btn-secondary" href="/?auth=login&amp;next=<?= rawurlencode($authReturn) ?>" data-auth-open="login">Masuk</a>
+        <a class="btn-primary" href="/?auth=register&amp;next=<?= rawurlencode($authReturn) ?>" data-auth-open="register">Daftar</a>
     <?php endif; ?>
 </div>

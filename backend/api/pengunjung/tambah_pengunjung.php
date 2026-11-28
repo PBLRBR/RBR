@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../../helpers/phone.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -15,9 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 wajibAdmin();
 
 try {
-    $pdo = require __DIR__ . '/../../config/database.php';
-
     $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!is_array($input)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Format JSON tidak valid.']);
+        exit;
+    }
 
     $namaInput = $input['nama_pengunjung'] ?? null;
     $nama = is_string($namaInput) ? trim($namaInput) : '';
@@ -38,6 +43,9 @@ try {
         exit;
     }
 
+    simartValidateText($nama, 'nama_pengunjung', 100);
+
+    $pdo = require __DIR__ . '/../../config/database.php';
     $stmt = $pdo->prepare(
         'INSERT INTO pengunjung (id_user, nama_pengunjung, no_hp)
          VALUES (NULL, :nama, :no_hp)
@@ -55,6 +63,9 @@ try {
         'data' => $stmt->fetch()
     ]);
 
+} catch (InvalidArgumentException $e) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (PDOException $e) {
     error_log($e->getMessage());
 
@@ -72,4 +83,8 @@ try {
         'success' => false,
         'message' => 'Gagal menambahkan pengunjung.'
     ]);
+} catch (Throwable $e) {
+    error_log($e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Gagal menambahkan pengunjung.']);
 }

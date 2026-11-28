@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             redirectingAfterSubmit = true;
             window.setTimeout(() => location.assign('/riwayat.php'), 1600);
         } catch (error) {
-            const needsLogin = error.message.toLowerCase().includes('login');
+            const needsLogin = error.status === 401;
             showMessage(error.message, false, needsLogin);
         }
         finally { if (!redirectingAfterSubmit) button.disabled = false; }

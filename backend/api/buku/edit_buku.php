@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/input_validation.php';
 require_once __DIR__ . '/../auth/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -39,9 +40,6 @@ try {
     $judul = trim($input['judul'] ?? '');
     $penulis = trim($input['penulis'] ?? '');
 
-    $judul = trim($input['judul'] ?? '');
-    $penulis = trim($input['penulis'] ?? '');
-
     if (!$idBuku || $idBuku < 1) {
         throw new InvalidArgumentException('ID buku wajib berupa bilangan bulat positif.');
     }
@@ -65,12 +63,16 @@ try {
     $expectedStok = $input['expected_stok'];
     if ($expectedStok !== null) {
         $expectedStok = filter_var($expectedStok, FILTER_VALIDATE_INT);
-        if ($expectedStok === false || $expectedStok < 0) {
+        if ($expectedStok === false || $expectedStok < 0 || $expectedStok > 2147483647) {
             throw new InvalidArgumentException('Stok awal tidak valid.');
         }
     }
     $deskripsi = trim($input['deskripsi'] ?? '');
     $fotoSampul = trim($input['foto_sampul'] ?? '');
+
+    foreach (['judul' => 200, 'penulis' => 150, 'penerbit' => 150, 'foto_sampul' => 255, 'deskripsi' => null] as $field => $max) {
+        simartValidateText($input[$field] ?? null, $field, $max);
+    }
 
     if (!is_bool($bisaDijual)) {
         throw new InvalidArgumentException(
@@ -81,7 +83,7 @@ try {
     if ($tahunTerbit !== null && $tahunTerbit !== '') {
         $tahunTerbit = filter_var($tahunTerbit, FILTER_VALIDATE_INT);
 
-        if ($tahunTerbit === false || $tahunTerbit < 0 || $tahunTerbit > (int) date('Y')) {
+        if ($tahunTerbit === false || $tahunTerbit < 1 || $tahunTerbit > (int) date('Y')) {
             throw new InvalidArgumentException('Tahun terbit tidak valid.');
         }
     } else {
@@ -94,8 +96,10 @@ try {
             !is_numeric($harga) ||
             !is_numeric($stok) ||
             (float) $harga < 0 ||
+            !is_finite((float) $harga) ||
+            round((float) $harga, 2) > 9999999999.99 ||
             filter_var($stok, FILTER_VALIDATE_INT) === false ||
-            (int) $stok < 0
+            (int) $stok < 0 || (int) $stok > 2147483647
         ) {
             throw new InvalidArgumentException(
                 'Buku yang dijual wajib memiliki kondisi baru/bekas, harga valid, dan stok bilangan bulat nonnegatif.'

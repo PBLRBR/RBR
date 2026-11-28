@@ -60,6 +60,10 @@ $pageTitle = $story['title'] . ' | Karya Bu Ratna';
     </main>
 
     <?php require __DIR__ . '/_footer.php'; ?>
-    <script src="/js/main.js?v=20261128-public-qa"></script>
+    <?php require __DIR__ . '/_auth-modal.php'; ?>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js?v=20261128-auth-modal"></script>
+    <script src="/js/login.js"></script>
+    <script src="/js/phone-validation.js"></script>
 </body>
 </html>
