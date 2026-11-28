@@ -1,5 +1,11 @@
 <?php
+$rsvStart = hrtime(true);
 require_once __DIR__ . '/../_data.php';
+requireAppUser(true);
+
+$rsvBeforeDb = hrtime(true);
+$pdo = db();
+$rsvAfterDb = hrtime(true);
 requireAppUser(true);
 $pdo = db();
 $pageTitle = 'Admin Dashboard | SIMART RBR';
@@ -53,31 +59,67 @@ if ($rsvSearch !== '') {
 
 $where = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
 
-$stmtTotal = $pdo->prepare('SELECT COUNT(*)' . $from . $where);
-$stmtTotal->execute($params);
-$rsvTotal = (int) $stmtTotal->fetchColumn();
-
-$rsvTotalPages = max(1, (int) ceil($rsvTotal / $rsvPerPage));
-$rsvPage = min($rsvPage, $rsvTotalPages);
-$rsvHasNext = $rsvPage < $rsvTotalPages;
-
 $stmtReservasi = $pdo->prepare(
-    'SELECT r.id_reservasi, r.id_tempat, r.nama_acara, r.penanggung_jawab,
-            r.kontak_wa, r.deskripsi_acara, r.tanggal_acara, r.jam_mulai,
-            r.jam_selesai, r.status_reservasi, t.nama_tempat'
-    . $from . $where
-    . ' ORDER BY r.id_reservasi DESC LIMIT :limit OFFSET :offset'
+    "WITH pengaturan AS (
+        SELECT CAST(:halaman AS bigint) AS halaman,
+               CAST(:per_halaman AS integer) AS per_halaman
+    ),
+    hasil AS (
+        SELECT r.id_reservasi, r.id_tempat, r.nama_acara, r.penanggung_jawab,
+               r.kontak_wa, r.deskripsi_acara, r.tanggal_acara, r.jam_mulai,
+               r.jam_selesai, r.status_reservasi, t.nama_tempat
+        {$from}{$where}
+    ),
+    jumlah_hasil AS (
+        SELECT COUNT(*) AS total_hasil FROM hasil
+    ),
+    ringkasan AS (
+        SELECT
+            COUNT(*) FILTER (WHERE status_reservasi = 'menunggu') AS pending,
+            COUNT(*) FILTER (WHERE status_reservasi = 'disetujui') AS approved,
+            COUNT(*) FILTER (WHERE status_reservasi = 'ditolak') AS rejected
+        FROM reservasi
+    ),
+    halaman_hasil AS (
+        SELECT *
+        FROM hasil
+        ORDER BY id_reservasi DESC
+        LIMIT (SELECT per_halaman FROM pengaturan)
+        OFFSET (
+            SELECT LEAST(halaman - 1, GREATEST(total_hasil - 1, 0) / per_halaman)
+                   * per_halaman
+            FROM pengaturan CROSS JOIN jumlah_hasil
+        )
+    )
+    SELECT h.*, j.total_hasil, s.pending, s.approved, s.rejected
+    FROM jumlah_hasil j
+    CROSS JOIN ringkasan s
+    LEFT JOIN halaman_hasil h ON TRUE
+    ORDER BY h.id_reservasi DESC"
 );
 
 foreach ($params as $nama => $nilai) {
     $stmtReservasi->bindValue(':' . $nama, $nilai, PDO::PARAM_STR);
 }
-
-$stmtReservasi->bindValue(':limit', $rsvPerPage, PDO::PARAM_INT);
-$stmtReservasi->bindValue(':offset', ($rsvPage - 1) * $rsvPerPage, PDO::PARAM_INT);
+$stmtReservasi->bindValue(':halaman', $rsvPage, PDO::PARAM_INT);
+$stmtReservasi->bindValue(':per_halaman', $rsvPerPage, PDO::PARAM_INT);
 $stmtReservasi->execute();
 
-$resRows = $stmtReservasi->fetchAll(PDO::FETCH_ASSOC);
+$rows = $stmtReservasi->fetchAll(PDO::FETCH_ASSOC);
+$rsvAfterList = hrtime(true);
+
+$counts = $rows[0];
+$rsvTotal = (int) $counts['total_hasil'];
+$rsvCount = [
+    'pending' => (int) $counts['pending'],
+    'approved' => (int) $counts['approved'],
+    'rejected' => (int) $counts['rejected'],
+];
+
+$rsvTotalPages = max(1, (int) ceil($rsvTotal / $rsvPerPage));
+$rsvPage = min($rsvPage, $rsvTotalPages);
+$rsvHasNext = $rsvPage < $rsvTotalPages;
+$resRows = $counts['id_reservasi'] === null ? [] : $rows;
 
 $rsvUrl = static fn(string $filter, int $page): string =>
     '?' . http_build_query([
@@ -91,10 +133,15 @@ foreach ($resRows as $r) {
     $reservations[] = [$r['penanggung_jawab'],$r['nama_acara'],$r['nama_tempat'],$r['tanggal_acara'],substr($r['jam_mulai'],0,5),substr($r['jam_selesai'],0,5),0,$r['kontak_wa'],'—',$metaStatus[$r['status_reservasi']] ?? 'pending',false,(int)$r['id_reservasi'],(int)$r['id_tempat'],$r['deskripsi_acara'] ?? ''];
 }
 $statusMeta = ['pending'=>['Menunggu Review','badge-warning'],'approved'=>['Disetujui','badge-success'],'rejected'=>['Ditolak','badge-danger']];
+
 if (($_GET['rsv_partial'] ?? '') === '1') {
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
-
+    header(sprintf(
+        'Server-Timing: db;dur=%.2f, reservations;dur=%.2f',
+        ($rsvAfterDb - $rsvBeforeDb) / 1e6,
+        ($rsvAfterList - $rsvAfterDb) / 1e6
+    ));
     require __DIR__ . '/_reservasi-list.php';
     exit;
 }
@@ -105,20 +152,7 @@ foreach ($dbBooks as $b) {
     $sale = boolPg($b['bisa_dijual']);
     $books[] = [$b['judul'],$b['penulis'],$b['kategori_tampil'],(float)($b['harga'] ?? 0),(int)($b['stok'] ?? 0),$b['kondisi'] ?? 'koleksi','bk-blue',(int)$b['id_buku'],(int)$b['id_kategori'],$b['deskripsi'] ?? '',$b['penerbit'] ?? '',$b['tahun_terbit'] ?? '',$sale,$b['foto_sampul'] ?? ''];
 }
-$rsvCount = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
 
-$statusCounts = $pdo->query(
-    'SELECT status_reservasi, COUNT(*) AS jumlah
-     FROM reservasi
-     GROUP BY status_reservasi'
-);
-
-foreach ($statusCounts->fetchAll(PDO::FETCH_ASSOC) as $row) {
-    $status = $metaStatus[$row['status_reservasi']] ?? null;
-    if ($status !== null) {
-        $rsvCount[$status] = (int) $row['jumlah'];
-    }
-}
 $metrics = $pdo->query('SELECT total_pendapatan AS total, jumlah_transaksi AS transaksi, jumlah_buku_terjual FROM v_dashboard_penjualan')->fetch(PDO::FETCH_ASSOC);
 $terjual = (int)$metrics['jumlah_buku_terjual'];
 $bulanIni = $pdo->query("
@@ -458,6 +492,7 @@ $latest = $pdo->query(
                             placeholder="Cari acara, pemohon, atau ruangan">
                     </form>
                 </div>
+                <p id="rsv-loading" class="subtitle" role="status"></p>
                 <?php require __DIR__ . '/_reservasi-list.php'; ?>
             </section>
         </main>
